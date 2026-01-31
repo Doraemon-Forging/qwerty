@@ -56,6 +56,7 @@
         .active-forge .nav-icon { filter: drop-shadow(0 0 8px var(--accent-blue)); }
         .active-spt .nav-icon { filter: drop-shadow(0 0 8px var(--accent-purple)); }
         .active-power .nav-icon { filter: drop-shadow(0 0 8px var(--accent-red)); }
+        .active-stats .nav-emoji { filter: drop-shadow(0 0 8px var(--accent-green)); transition: filter 0.3s; }
         .stats-header .nav-icon { height: 3.5em !important; margin-right: 15px; }
 
         .progress-badge { font-size: 0.8em; background: #333; padding: 2px 6px; border-radius: 4px; color: #ccc; font-family: monospace; }
@@ -668,8 +669,8 @@
             <img src="icons/tree_power.png" class="nav-icon"> POWER <span class="progress-badge" id="prog-power">0/0</span>
         </div>
         <div class="nav-tab" id="tab-stats" onclick="switchTree('stats')">
-            <span style="font-size: 1.3em; margin-bottom: 1px;">📊</span> SUMMARY
-        </div>
+    <span class="nav-emoji" style="font-size: 1.3em; margin-bottom: 1px;">📊</span> SUMMARY
+</div>
     </div>
 
     <div class="control-bar">
@@ -2219,8 +2220,8 @@ function getEggSpeedAtTime(techIdSuffix, targetTimeMs) {
             <li><b>🔧 Setup:</b> Input your current in-game tech levels.</li>
             <li><b>📅 Plan:</b> Queue future tech upgrades. Clicking nodes here adds them to your future timeline.</li>
             <li><b>📜 Logs:</b> View the planned schedule. Click any row in the log to edit it. (Mobile only)</li>
-<li><b><img src="icons/hammergold.png" style="height:1.2em; vertical-align:middle;">Calc:</b> Open the Forge Calculator to calculate hammer efficiency, gold gain, and forge upgrades.</li>
-<li><b><img src="icons/EggCommon.png" style="height:1.2em; vertical-align:middle;">Egg:</b> Open the Egg Planner to manage your hatching schedule.</li>
+<li><b><img src="icons/hammergold.png" style="height:1.2em; vertical-align:middle;"> Calc:</b> Open the Forge Calculator to calculate hammer efficiency, gold gain, and forge upgrades.</li>
+<li><b><img src="icons/EggCommon.png" style="height:1.2em; vertical-align:middle;"> Egg:</b> Open the Egg Planner to manage your hatching schedule.</li>
 
         </ul>
 
