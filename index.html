@@ -657,6 +657,31 @@
                 margin-bottom: 0;
             }
         }
+
+        /* The Link itself stays grey */
+        .help-link, .help-link:visited {
+            color: #888 !important;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+
+        .github-icon {
+            height: 1.2em;
+            filter: invert(1) grayscale(1) brightness(0.8);
+            opacity: 0.7;
+            transition: 0.3s ease;
+        }
+
+        .help-link:hover {
+            color: var(--accent-blue) !important;
+        }
+
+        .help-link:hover .github-icon {
+            filter: invert(1) grayscale(1) brightness(1.2) drop-shadow(0 0 3px var(--accent-blue));
+    opacity: 1;
+    transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="view-planner">
@@ -2257,8 +2282,8 @@ function getEggSpeedAtTime(techIdSuffix, targetTimeMs) {
             <li><b>🔧 Setup:</b> Input your current in-game tech levels.</li>
             <li><b>📅 Plan:</b> Queue future tech upgrades. Clicking nodes here adds them to your future timeline.</li>
             <li><b>📜 Logs:</b> View the planned schedule. Click any row in the log to edit it. (Mobile only)</li>
-<li><b><img src="icons/hammergold.png" style="height:1.2em; vertical-align:middle;"> Calc:</b> Open the Forge Calculator to calculate hammer efficiency, gold gain, and forge upgrades.</li>
-<li><b><img src="icons/EggCommon.png" style="height:1.2em; vertical-align:middle;"> Egg:</b> Open the Egg Planner to manage your hatching schedule.</li>
+<li><b><img src="icons/hammergold.png" style="height:1.5em; vertical-align:middle;"> Calc:</b> Open the Forge Calculator to calculate hammer efficiency, gold gain, and forge upgrades.</li>
+<li><b><img src="icons/EggCommon.png" style="height:1.5em; vertical-align:middle;"> Egg:</b> Open the Egg Planner to manage your hatching schedule.</li>
 
         </ul>
 
@@ -2286,10 +2311,16 @@ function getEggSpeedAtTime(techIdSuffix, targetTimeMs) {
 <li><b>🥚 Egg Planner:</b> Manage your egg hatching schedule. It automatically accounts for planned tech upgrades to give you accurate hatch times.</li>
         </ul>
 
-        <div style="display: flex; justify-content: center; margin-top: 30px; padding-bottom: 10px;">
-            <img src="icons/AbyssDoraemon.png" alt="In-game Profile" style="max-width: 280px; height: auto; border-radius: 4px;">
-        </div>
-    </div>
+        <div style="display: flex; justify-content: center; margin-top: 20px;">
+    <img src="icons/AbyssDoraemon.png" alt="In-game Profile" style="max-width: 280px; height: auto; border-radius: 4px;">
 </div>
+
+<div style="padding: 10px 0; display: flex; flex-direction: column; align-items: center;">
+    <a href="https://github.com/Doraemon-Forging/TechPlanner" target="_blank" class="help-link" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.95em;">
+        <img src="https://github.githubassets.com/favicons/favicon.svg" class="github-icon" alt="GitHub">
+        Source Code: Doraemon-Forging/TechPlanner
+    </a>
+</div>
+    </div> </div>
 </body>
 </html>
