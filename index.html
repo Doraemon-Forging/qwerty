@@ -309,7 +309,7 @@
         .close-modal { color: #aaa; position: sticky; top: 0; float: right; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10; background: var(--panel-bg); padding: 0 5px; }
         .close-modal:hover { color: #fff; }
 
-        .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; text-align: center; }
+        .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; text-align: center; }
         .cost-table th, .cost-table td { border: 1px solid #444; padding: 8px 4px; }
         .cost-table th { background: #252525; color: var(--accent-blue); }
         .cost-total-col { font-weight: bold; color: #fff; background: rgba(255,255,255,0.05); }
@@ -318,18 +318,18 @@
         .modal-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top:10px; }
         .modal-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top:10px; }
         .grid-header { background:#333; color:var(--accent-blue); font-weight:bold; padding:5px; font-size:0.8em; text-align:center; }
-        .grid-cell { background:#222; border:1px solid #333; padding:5px; font-size:0.75em; text-align:center; white-space:nowrap; }
+        .grid-cell { background:#222; border:1px solid #333; padding:5px; font-size:0.8em; text-align:center; white-space:nowrap; }
         .pagination-bar { display: flex; justify-content: center; margin-bottom: 10px; gap: 5px; }
         .page-btn { background: #333; border: 1px solid #555; color: #ccc; cursor: pointer; padding: 4px 10px; border-radius: 4px; }
         .page-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
         
-        .mini-table { width: 100%; border-collapse: collapse; font-size: 1em; }
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
         .mini-table td { border: none; padding: 2px 2px; }
         .mini-table td:first-child { text-align: right; width: 45px; padding-right: 8px; color: #888; border-right: 1px solid #444; white-space: nowrap; }
         .mini-table td:last-child { text-align: left; padding-left: 8px; white-space: nowrap; }
         .mini-row:nth-child(even) { background: rgba(255,255,255,0.05); }
 
-        .table-disclaimer { font-size: 0.8em; color: #888; margin-bottom: 10px; font-style: italic; display: block; border-left: 2px solid #555; padding-left: 8px; background: rgba(255,255,255,0.03); padding: 4px 8px; }
+        .table-disclaimer { font-size: 0.8em; color: #888; margin-bottom: 10px; font-style: italic; display: block; padding-left: 8px; background: rgba(255,255,255,0.03); padding: 4px 8px; }
 
         /* --- CALCULATOR STYLES --- */
         .calc-wrapper { margin-bottom: 12px; }
@@ -773,7 +773,7 @@
             <span class="close-modal" onclick="document.getElementById('tableModal').style.display='none'">&times;</span>
             <h2 id="table-title" style="display:flex; align-items:center; gap:10px;">Table</h2>
             <div id="table-subtitle" style="margin-bottom:5px; color:#aaa; font-style:italic;"></div>
-            <div class="table-disclaimer" id="table-disclaimer-text">Values are estimated. Actual in-game numbers may vary slightly due to rounding.</div>
+            <div class="table-disclaimer" id="table-disclaimer-text">Values may differ slightly from the real in-game value but should still be fairly accurate.</div>
             <div id="table-body"></div>
         </div>
     </div>
@@ -1695,7 +1695,7 @@ document.getElementById('table-disclaimer-text').style.display = 'none';
         h += `</div><div class="modal-grid-3">`;
 
         const { start, end } = ranges[page - 1];
-        const icon = `<img src="icons/fm_gold.png" style="height:0.9em;vertical-align:middle">`;
+        const icon = `<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:middle">`;
         const totalItems = (end - start) + 1;
         const perCol = Math.ceil(totalItems / 3);
 
@@ -1725,12 +1725,12 @@ document.getElementById('table-disclaimer-text').style.display = 'block';
         document.getElementById('table-subtitle').innerText = isT ? `Speed: +${cur}% ➜ +${proj}%` : `Discount: -${cur}% ➜ -${proj}%`;
         let h = `<div class="pagination-bar"><button class="page-btn ${page===1?'active':''}" onclick="showForgeTable('${type}',${cur},${proj},1)">Lv 1-19</button><button class="page-btn ${page===2?'active':''}" onclick="showForgeTable('${type}',${cur},${proj},2)">Lv 20-34</button></div>`;
         h += `<div class="modal-grid-2"><div class="grid-header">Level</div><div class="grid-header">${isT?'Duration':'Cost'}</div>`;
-        const start = (page===1)?1:20, end = (page===1)?19:34, icon = `<img src="icons/fm_gold.png" style="height:0.9em;vertical-align:middle">`;
+        const start = (page===1)?1:20, end = (page===1)?19:34, icon = `<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:middle">`;
         for(let i=start; i<=end; i++) {
             if(!forgeLevelData[i]) continue;
             const [cost, hours] = forgeLevelData[i], mins = hours*60;
             let v1 = isT?formatSmartTime(mins/(1+cur/100)):formatForgeCost(Math.round(cost*(1-cur/100))), v2 = isT?formatSmartTime(mins/(1+proj/100)):formatForgeCost(Math.round(cost*(1-proj/100)));
-            h += `<div class="grid-cell">${i} ➜ ${i+1}</div><div class="grid-cell">${(v1===v2)?v1+(isT?'':icon):v1+' ➜ <span style="color:#2ecc71">'+v2+'</span>'+(isT?'':icon)}</div>`;
+            h += `<div class="grid-cell">${i} ➜ ${i+1}</div><div class="grid-cell">${(v1===v2)?v1+(isT?'':' ' + icon):v1+' ➜ <span style="color:#2ecc71">'+v2+'</span>'+(isT?'':' ' + icon)}</div>`;
         }
         c.innerHTML = h+'</div>'; document.getElementById('tableModal').style.display='block';
     }
