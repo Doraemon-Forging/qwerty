@@ -309,7 +309,11 @@
         .close-modal { color: #aaa; position: sticky; top: 0; float: right; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10; background: var(--panel-bg); padding: 0 5px; }
         .close-modal:hover { color: #fff; }
 
-        .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; text-align: center; }
+        .cost-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 10px; font-size: 0.85em; text-align: center; }
+.cost-table th:first-child, 
+.cost-table td:first-child {
+    width: 40px; 
+    background: rgba(255,255,255,0.02);}
         .cost-table th, .cost-table td { border: 1px solid #444; padding: 8px 4px; }
         .cost-table th { background: #252525; color: var(--accent-blue); }
         .cost-total-col { font-weight: bold; color: #fff; background: rgba(255,255,255,0.05); }
@@ -1645,36 +1649,64 @@ if(document.getElementById('eggModal').style.display === 'block') renderEggLog()
     }
 
     function showPotionTable(discount) {
-        const c = document.getElementById('table-body');
-document.getElementById('table-disclaimer-text').style.display = 'block';
-        document.getElementById('table-title').innerHTML = '<img src="icons/red_potion.png" style="height:1.2em;vertical-align:bottom"> Tech Upgrade Cost';
-        document.getElementById('table-subtitle').innerText = `Discount: -${discount}%`;
-        let h = '<table class="cost-table"><thead><tr><th>Tier</th>';
-        for(let i=1;i<=5;i++) h+=`<th>Lv ${i}</th>`;
-        h+='<th class="cost-total-col">Total</th></tr></thead><tbody>';
-        for(let t=1;t<=5;t++){
-            let tot=0; h+=`<tr><td><b>${toRoman(t)}</b></td>`;
-            potionCosts[t].forEach(b=>{ const f=Math.round(b*(1-discount/100)); tot+=f; h+=`<td>${f.toLocaleString()}</td>`; });
-            h+=`<td class="cost-total-col">${tot.toLocaleString()}</td></tr>`;
+    const c = document.getElementById('table-body');
+    document.getElementById('table-disclaimer-text').style.display = 'block';
+    document.getElementById('table-title').innerHTML = '<img src="icons/red_potion.png" style="height:1.2em;vertical-align:bottom"> Tech Upgrade Cost';
+    document.getElementById('table-subtitle').innerText = `Discount: -${discount}%`;
+
+    let h = '<table class="cost-table"><thead><tr><th>Level</th>';
+    for(let t=1; t<=5; t++) h += `<th>Tier ${toRoman(t)}</th>`;
+    h += '</tr></thead><tbody>';
+
+    for(let i=0; i<5; i++) {
+        h += `<tr><td><b>Lv ${i+1}</b></td>`;
+        for(let t=1; t<=5; t++) {
+            const cost = Math.round(potionCosts[t][i] * (1 - discount / 100));
+            h += `<td>${cost.toLocaleString()}</td>`;
         }
-        c.innerHTML = h+'</tbody></table>'; document.getElementById('tableModal').style.display='block';
+        h += '</tr>';
     }
+    h += '<tr class="cost-total-col"><td><b>Total</b></td>';
+    for(let t=1; t<=5; t++) {
+        let tierTotal = 0;
+        potionCosts[t].forEach(b => tierTotal += Math.round(b * (1 - discount / 100)));
+        h += `<td>${tierTotal.toLocaleString()}</td>`;
+    }
+    h += '</tr></tbody></table>';
+
+    c.innerHTML = h;
+    document.getElementById('tableModal').style.display = 'block';
+}
 
     function showTechTimerTable(speedBonus) {
-        const c = document.getElementById('table-body');
-document.getElementById('table-disclaimer-text').style.display = 'block';
-        document.getElementById('table-title').innerText = '⏱️ Tech Research Timer';
-        document.getElementById('table-subtitle').innerText = `Speed Bonus: +${speedBonus}%`;
-        let h = '<table class="cost-table"><thead><tr><th>Tier</th>';
-        for(let i=1;i<=5;i++) h+=`<th>Lv ${i}</th>`;
-        h+='<th class="cost-total-col">Total</th></tr></thead><tbody>';
-        for(let t=1;t<=5;t++){
-            let tot=0; h+=`<tr><td><b>${toRoman(t)}</b></td>`;
-            tierTimes[t].forEach(b=>{ const f=b/(1+speedBonus/100); tot+=f; h+=`<td>${formatSmartTime(f)}</td>`; });
-            h+=`<td class="cost-total-col">${formatSmartTime(tot)}</td></tr>`;
+    const c = document.getElementById('table-body');
+    document.getElementById('table-disclaimer-text').style.display = 'block';
+    document.getElementById('table-title').innerText = '⏱️ Tech Research Timer';
+    document.getElementById('table-subtitle').innerText = `Speed Bonus: +${speedBonus}%`;
+
+    let h = '<table class="cost-table"><thead><tr><th>Level</th>';
+    for(let t=1; t<=5; t++) h += `<th>Tier ${toRoman(t)}</th>`;
+    h += '</tr></thead><tbody>';
+
+    for(let i=0; i<5; i++) {
+        h += `<tr><td><b>Lv ${i+1}</b></td>`;
+        for(let t=1; t<=5; t++) {
+            const time = tierTimes[t][i] / (1 + speedBonus / 100);
+            h += `<td>${formatSmartTime(time)}</td>`;
         }
-        c.innerHTML = h+'</tbody></table>'; document.getElementById('tableModal').style.display='block';
+        h += '</tr>';
     }
+    h += '<tr class="cost-total-col"><td><b>Total</b></td>';
+    for(let t=1; t<=5; t++) {
+        let tierTotal = 0;
+        tierTimes[t].forEach(b => tierTotal += b / (1 + speedBonus / 100));
+        h += `<td>${formatSmartTime(tierTotal)}</td>`;
+    }
+    h += '</tr></tbody></table>';
+
+    c.innerHTML = h;
+    document.getElementById('tableModal').style.display = 'block';
+}
 
     function showEqSellTable(cur, proj, page = 1) {
         const c = document.getElementById('table-body');
