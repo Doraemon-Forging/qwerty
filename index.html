@@ -1088,16 +1088,20 @@ const formatEggTime = (totalMins) => {
                 if(d.calcWorld) document.getElementById('calc-world').value = d.calcWorld;
                 if(d.calcStage) document.getElementById('calc-stage').value = d.calcStage;
                 if(d.calcForgeLv) document.getElementById('calc-forge-lv').value = d.calcForgeLv;
-                if(d.calcHammers) document.getElementById('calc-hammers').value = d.calcHammers;
-                if(d.calcTarget) document.getElementById('calc-target').value = d.calcTarget;
+                document.getElementById('calc-hammers').value = d.calcHammers || "0";
+                document.getElementById('calc-target').value = d.calcTarget || "0";
                 if(d.calcStartDate) syncCalcDate(d.calcStartDate);
-            } catch(e) { console.error("Load failed", e); }
+            } catch(e) { console.error("Load failed", e); }		
         }
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        const iso = now.toISOString().slice(0,16);
-        if(!document.getElementById('start-date').value) syncMainDate(iso);
-        syncCalcDate(iso);
+updateCalculator();
+       	 const now = new Date();
+	now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+	const iso = now.toISOString().slice(0,16);
+
+	if(!document.getElementById('start-date').value) syncMainDate(iso);
+	if(!document.getElementById('calc-start-date').value) {
+   	syncCalcDate(iso);
+}
         renderTree('forge');
         updateCalculations();
         window.addEventListener('resize', drawLines);
