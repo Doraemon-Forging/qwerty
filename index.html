@@ -542,8 +542,7 @@
             .tier-label { display: none; }
             .modal-content { width: 98%; padding: 10px; margin: 5% auto; max-height: 85vh; }
             .modal-grid-5 { grid-template-columns: 1fr 1fr 1fr; }
-            .modal-grid-3 { grid-template-columns: 1fr; }
-            
+            .modal-grid-3 { grid-template-columns: 1fr 1fr; gap: 10px 5px;}
             .tree-container, .stats-container { height: 100%; padding-bottom: 40px; flex: 1; }
             
             #calc-start-date { display: none !important; }
@@ -1729,9 +1728,11 @@ document.getElementById('table-disclaimer-text').style.display = 'none';
         const { start, end } = ranges[page - 1];
         const icon = `<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:middle">`;
         const totalItems = (end - start) + 1;
-        const perCol = Math.ceil(totalItems / 3);
+        
+const colCount = window.innerWidth <= 768 ? 2 : 3;
+const perCol = Math.ceil(totalItems / colCount);
 
-        for (let col = 0; col < 3; col++) {
+        for (let col = 0; col < colCount; col++) {
             h += `<div><table class="mini-table">`;
             const cs = start + (col * perCol);
             const ce = Math.min(end, cs + perCol - 1);
