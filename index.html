@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tech Tree Planner</title>
+    <link rel="icon" type="image/png" href="icons/app-icon.png">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-blue: #4facfe;
+            --accent-orange: #f39c12;
+            --accent-purple: #9b59b6;
+            --accent-red: #e74c3c;
+            --accent-green: #2ecc71;
+            --locked-color: #252525;
+            --line-color: #666;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; 
+            height: 100vh; 
+            height: 100dvh; 
+            display: flex; flex-direction: column; overflow: hidden; user-select: none;
+        }
+
+        /* --- SCROLLBAR FIX --- */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; border: 2px solid var(--bg-color); }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        /* --- UI COMPONENTS --- */
+/* New class for bigger tool icons */
+.icon-large {
+    height: 1.8em; /* Increased from 1.2em */
+    vertical-align: middle;
+    margin-right: 2px;
+    /* Negative margin to counteract the size increase so it doesn't push the button height */
+    margin-top: -2px; 
+    margin-bottom: -2px;
+}
+        .nav-bar { background: #000; display: flex; padding: 0 20px; border-bottom: 1px solid #333; overflow-x: auto; flex-shrink: 0; }
+        .nav-tab { padding: 15px 20px; cursor: pointer; font-weight: bold; color: #888; border-bottom: 3px solid transparent; transition: 0.3s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .nav-tab:hover { color: #fff; }
+        .nav-tab.active-forge { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        .nav-tab.active-spt { color: var(--accent-purple); border-bottom-color: var(--accent-purple); }
+        .nav-tab.active-power { color: var(--accent-red); border-bottom-color: var(--accent-red); }
+        .nav-tab.active-stats { color: var(--accent-green); border-bottom-color: var(--accent-green); }
+        
+        .nav-icon { height: 3em; vertical-align: middle; transition: filter 0.3s; }
+        .active-forge .nav-icon { filter: drop-shadow(0 0 8px var(--accent-blue)); }
+        .active-spt .nav-icon { filter: drop-shadow(0 0 8px var(--accent-purple)); }
+        .active-power .nav-icon { filter: drop-shadow(0 0 8px var(--accent-red)); }
+        .stats-header .nav-icon { height: 3.5em !important; margin-right: 15px; }
+
+        .progress-badge { font-size: 0.8em; background: #333; padding: 2px 6px; border-radius: 4px; color: #ccc; font-family: monospace; }
+        .active-forge .progress-badge { background: rgba(79, 172, 254, 0.2); color: var(--accent-blue); }
+        .active-spt .progress-badge { background: rgba(155, 89, 182, 0.2); color: var(--accent-purple); }
+        .active-power .progress-badge { background: rgba(231, 76, 60, 0.2); color: var(--accent-red); }
+
+        /* --- CONTROL BAR LAYOUT --- */
+        .control-bar { 
+            background: var(--panel-bg); 
+            padding: 10px 20px; 
+            display: flex; 
+            align-items: center; 
+            flex-wrap: nowrap; /* Desktop: keep in one line */
+            border-bottom: 2px solid #333; 
+            z-index: 10; 
+            gap: 10px; 
+            flex-shrink: 0; 
+        }
+
+        /* 1. Left Group (Setup/Plan/Logs) */
+        .control-left { 
+            display: flex; 
+            gap: 15px; /* <--- This creates the gap between [Logs] and [Calc] on Desktop */
+            align-items: center;
+            margin-right: auto; 
+        }
+
+        /* Renamed to 'pill' so we can use it on both groups */
+        .btn-group-pill { display: flex; background: #000; border-radius: 20px; padding: 3px; }
+
+       /* 3. Right Group - Clustered tightly and pushed to the far right */
+        .control-right { 
+            display: flex;
+            justify-content: flex-end; /* This forces everything to the right wall */
+            align-items: center;
+            gap: 8px; /* This creates the exact "2 space bar" gap between everything */
+            flex: 1;
+        }
+
+        .btn-help { 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            background: #444; 
+            color: #fff; 
+            border: 1px solid #666; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            flex-shrink: 0; /* Prevents the circle from squishing */
+        }
+        
+        .btn-group-modes { display: flex; background: #000; border-radius: 20px; padding: 3px; }
+        .btn-group-actions { display: flex; gap: 5px; }
+
+        .mode-btn { padding: 8px 15px; border-radius: 18px; border: none; background: transparent; color: #888; cursor: pointer; font-weight: bold; font-size: 0.85em; transition: 0.2s; }
+        .mode-btn.active.setup { background: var(--accent-orange); color: #000; }
+        .mode-btn.active.plan { background: #fff; color: #000; }
+        .mode-btn.active.logs { background: #2980b9; color: #fff; } 
+        .mode-btn.active.insert { background: #e74c3c; color: #fff; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        
+        .btn-io { background: #333; color: #ccc; border: 1px solid #555; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .btn-io:hover { background: #444; color: #fff; }
+        .btn-io:disabled { opacity: 0.3; cursor: default; }    
+        .btn-help:hover { background: #fff; color: #000; }
+
+        /* DATE PICKERS */
+        .date-picker input { background: #333; border: 1px solid #555; color: #fff; padding: 5px; border-radius: 4px; color-scheme: dark; }
+        #date-desktop { display: block; }
+        
+        /* Shared style for custom date dropdowns */
+        .date-custom-wrapper { display: none; gap: 5px; align-items: center; }
+        .date-select { background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px; font-weight: bold; font-size: 0.85em; }
+
+        /* --- WORKSPACE --- */
+        .workspace { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .tree-container { flex: 1; overflow-y: auto; position: relative; padding: 40px; display: flex; justify-content: center; padding-bottom: 40px; }
+        
+        .tree-canvas { position: relative; width: 800px; padding-top: 40px; padding-bottom: 150px; min-height: 100%; }
+
+        .tree-reset-btn { 
+            position: absolute; 
+            top: 0; 
+            right: -10px; 
+            background: #333; 
+            color: #ccc; 
+            border: 1px solid #555; 
+            padding: 4px 12px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.8em; 
+            font-weight: bold; 
+            z-index: 100; 
+        }
+        .tree-reset-btn:hover { background: var(--accent-red); color: #fff; }
+        
+        .stats-container { display: none; flex: 1; overflow-y: auto; padding: 40px; background: #181818; }
+        .stats-group { margin-bottom: 40px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333; overflow: hidden; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .stats-header { padding: 15px 20px; font-weight: bold; font-size: 1.1em; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; }
+        .stats-header.forge { background: rgba(79, 172, 254, 0.1); color: var(--accent-blue); }
+        .stats-header.spt { background: rgba(155, 89, 182, 0.1); color: var(--accent-purple); }
+        .stats-header.power { background: rgba(231, 76, 60, 0.1); color: var(--accent-red); }
+        
+        .stats-row { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid #2a2a2a; transition: 0.2s; }
+        .stats-row:last-child { border-bottom: none; }
+        .stats-row:hover { background: #252525; }
+        
+        .stat-icon-box { width: 40px; height: 40px; background: #111; border: 1px solid #444; border-radius: 6px; display: flex; justify-content: center; align-items: center; margin-right: 15px; flex-shrink: 0; }
+        .stat-icon-img { width: 80%; height: 80%; object-fit: contain; }
+        .stat-info { flex: 1; }
+        .stat-name { font-weight: bold; color: #fff; margin-bottom: 4px; display:flex; align-items:center; }
+        .stat-value { font-size: 0.9em; color: #aaa; font-family: 'Segoe UI', monospace; }
+        .stat-arrow { color: #666; margin: 0 8px; }
+        .stat-new { color: var(--accent-green); font-weight: bold; }
+        .stat-key-icon { height: 1.2em; vertical-align: middle; margin-bottom: 2px; }
+
+        .btn-table { background: #333; border: 1px solid #555; color: #ccc; border-radius: 4px; padding: 1px 6px; font-size: 0.75em; margin-left: 8px; cursor: pointer; vertical-align: middle; }
+        .btn-table:hover { background: #555; color: #fff; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 420px; background: var(--panel-bg); border-left: 2px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: #252525; font-weight: bold; color: #888; border-bottom: 1px solid #333; display: flex; flex-direction:column; gap:10px; }
+        .sidebar-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        .resource-grid { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+        .resource-box { 
+            flex: 1; background: #151515; padding: 8px 5px; border-radius: 6px; 
+            text-align: center; font-family: 'Segoe UI', monospace; font-weight: bold; 
+            font-size: 1.1em; border: 1px solid #333;
+            display: flex; justify-content: center; align-items: center; gap: 6px;
+        }
+
+        /* --- LOG LIST STYLES --- */
+        .log-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 10px; 
+            padding-bottom: 150px; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-anchor { 
+            background: #111; 
+            border: 1px solid #333; 
+            border-radius: 4px; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+        }
+
+        /* Fixes the layout inside the anchor to push label left and clock right */
+        .log-anchor .calc-row-input {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Responsive behavior for the sidebar clock */
+        @media (min-width: 769px) {
+            .log-anchor #date-mobile-custom { display: none !important; }
+        }
+
+       @media (max-width: 768px) {
+            /* Hide the new Desktop Cluster (Date + Trash button) entirely on mobile */
+            #desktop-log-controls { display: none !important; }
+            
+            /* Keep mobile controls visible */
+            .log-anchor #date-mobile-custom { display: flex !important; }
+            /* --- UPDATED LOG ANCHOR FOR ONE-ROW MOBILE LAYOUT --- */
+.log-anchor .calc-row-input { 
+    flex-direction: row !important; 
+    align-items: center !important; 
+    justify-content: space-between !important; 
+    gap: 8px; 
+}
+
+.log-anchor label { 
+    text-align: left; 
+    margin-bottom: 0; 
+    white-space: nowrap; 
+    font-size: 0.85em;
+    flex-shrink: 0;
+}
+
+.log-anchor #date-mobile-custom {
+    flex: 1;
+    justify-content: flex-end;
+}
+        }
+        
+        .log-row { border-bottom: 1px solid #333; transition: background 0.2s; }
+        .log-row.expanded { background: #2c2c2c; }
+        .log-entry { display: flex; justify-content: space-between; align-items: flex-start; font-size: 0.85em; padding: 10px; cursor: pointer; border-left: 3px solid transparent; }
+        .log-entry:hover { background: #333; }
+        .log-entry.forge { border-left-color: var(--accent-blue); }
+        .log-entry.spt { border-left-color: var(--accent-purple); }
+        .log-entry.power { border-left-color: var(--accent-red); }
+        .log-entry.delay { background: #34495e; color: #ecf0f1; border-left: 3px solid #7f8c8d; }
+        .log-time { color: var(--accent-green); font-weight: bold; font-size: 1.1em; }
+        .log-details { font-size: 0.85em; color: #888; margin-top: 4px; white-space: nowrap; }
+        .log-controls { display: none; padding: 10px; background: #222; justify-content: space-around; border-top: 1px solid #444; animation: slideDown 0.2s ease-out; flex-wrap: wrap; gap: 5px; }
+        .log-row.expanded .log-controls { display: flex; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-ctrl { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8em; color: #fff; display: flex; align-items: center; gap: 5px; flex: 1; justify-content: center; }
+        
+        /* --- TREE NODES --- */
+        .connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .connector { stroke: var(--line-color); stroke-width: 2; fill: none; opacity: 0.2; transition: 0.3s; }
+        .connector.active-forge { stroke: var(--accent-blue); opacity: 1; filter: drop-shadow(0 0 2px var(--accent-blue)); }
+        .connector.active-spt { stroke: var(--accent-purple); opacity: 1; filter: drop-shadow(0 0 2px var(--accent-purple)); }
+        .connector.active-power { stroke: var(--accent-red); opacity: 1; filter: drop-shadow(0 0 2px var(--accent-red)); }
+
+        .tier-block { margin-bottom: 60px; position: relative; z-index: 1; }
+        .tier-label { position: absolute; left: -80px; top: 0; font-size: 2em; font-weight: bold; color: #333; writing-mode: vertical-rl; text-orientation: mixed; }
+
+        .node { width: 64px; height: 64px; background: var(--locked-color); border: 2px solid #444; border-radius: 8px; position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); overflow: hidden; }
+        .node:hover { transform: scale(1.05); border-color: #888; }
+        .node.unlocked { background: #2c3e50; border-color: #5d6d7e; }
+        .tree-spt .node.unlocked { background: #4a235a; border-color: #7d3c98; }
+        .tree-power .node.unlocked { background: #641e16; border-color: #922b21; }
+        
+        .node.active-setup { border-color: var(--accent-orange) !important; box-shadow: 0 0 10px var(--accent-orange) !important; }
+        .node.active-plan { border-color: #fff !important; box-shadow: 0 0 10px rgba(255,255,255,0.4) !important; }
+        .node.maxed { border-color: #ffd700 !important; color: #ffd700; }
+
+        .node-img { width: 85%; height: 85%; object-fit: contain; pointer-events: none; }
+        .node-fallback { font-size: 24px; display: none; }
+        .node-level { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 1px 5px; border-radius: 4px; margin-top: -12px; z-index: 5; position: absolute; bottom: 2px; }
+        .node-tier-badge { position: absolute; top: 0; left: 0; background: #000; color: #888; font-size: 9px; padding: 1px 4px; border-bottom-right-radius: 6px; font-weight: bold; border-right: 1px solid #444; border-bottom: 1px solid #444; z-index: 5; }
+        .node-speed-badge { position: absolute; top: 0; right: 0; background: #000; color: #2ecc71; font-size: 9px; padding: 1px 4px; border-bottom-left-radius: 6px; font-weight: bold; border-left: 1px solid #444; border-bottom: 1px solid #444; z-index: 5; }
+        
+        .floating-label {
+            position: fixed; top: 0; left: 0; transform: translate(-50%, -100%);
+            background: rgba(20, 20, 20, 0.95); border: 1px solid #555; padding: 6px 12px;
+            border-radius: 6px; color: #fff; font-size: 0.9em; pointer-events: none;
+            z-index: 10000; transition: opacity 0.5s; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); white-space: nowrap;
+        }
+
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background-color: var(--panel-bg); margin: 5% auto; padding: 20px; border: 1px solid #444; width: 600px; border-radius: 8px; color: #ddd; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal h2 { margin-top: 0; color: var(--accent-blue); }
+        .modal h3 { border-bottom: 1px solid #444; padding-bottom: 5px; margin-top: 20px; font-size: 1em; color: #fff; }
+        .close-modal { color: #aaa; position: sticky; top: 0; float: right; font-size: 28px; font-weight: bold; cursor: pointer; z-index: 10; background: var(--panel-bg); padding: 0 5px; }
+        .close-modal:hover { color: #fff; }
+
+        .cost-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; text-align: center; }
+        .cost-table th, .cost-table td { border: 1px solid #444; padding: 8px 4px; }
+        .cost-table th { background: #252525; color: var(--accent-blue); }
+        .cost-total-col { font-weight: bold; color: #fff; background: rgba(255,255,255,0.05); }
+
+        .modal-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-top:10px; }
+        .modal-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top:10px; }
+        .modal-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top:10px; }
+        .grid-header { background:#333; color:var(--accent-blue); font-weight:bold; padding:5px; font-size:0.8em; text-align:center; }
+        .grid-cell { background:#222; border:1px solid #333; padding:5px; font-size:0.75em; text-align:center; white-space:nowrap; }
+        .pagination-bar { display: flex; justify-content: center; margin-bottom: 10px; gap: 5px; }
+        .page-btn { background: #333; border: 1px solid #555; color: #ccc; cursor: pointer; padding: 4px 10px; border-radius: 4px; }
+        .page-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 1em; }
+        .mini-table td { border: none; padding: 2px 2px; }
+        .mini-table td:first-child { text-align: right; width: 45px; padding-right: 8px; color: #888; border-right: 1px solid #444; white-space: nowrap; }
+        .mini-table td:last-child { text-align: left; padding-left: 8px; white-space: nowrap; }
+        .mini-row:nth-child(even) { background: rgba(255,255,255,0.05); }
+
+        .table-disclaimer { font-size: 0.8em; color: #888; margin-bottom: 10px; font-style: italic; display: block; border-left: 2px solid #555; padding-left: 8px; background: rgba(255,255,255,0.03); padding: 4px 8px; }
+
+        /* --- CALCULATOR STYLES --- */
+        .calc-wrapper { margin-bottom: 12px; }
+        .calc-row-input { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.9em; }
+        .calc-row-input label { color: #aaa; }
+        .calc-input-tiny { width: 100px; background: #333; border: 1px solid #555; color: #fff; padding: 3px; border-radius: 4px; text-align: right; }
+        .calc-select-tiny { width: 45px; background: #333; border: 1px solid #555; color: #fff; padding: 3px; border-radius: 4px; text-align: center; }
+
+        /* Fix desktop width for date input */
+        #calc-start-date { width: 220px !important; }
+
+        .calc-result-box { background: #151515; padding: 8px; border-radius: 6px; border: 1px solid #333; margin-top: 5px; }
+        /* FONT SIZE ADJUSTMENT HERE: Reduced from 1.1em to 0.9em to match labels */
+        .calc-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #222; font-size: 0.9em; }
+        .calc-line:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        
+        .calc-label { color: #ffffff; font-weight: normal; display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+        .calc-val-group { display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 1.1em; }
+        .calc-val-before { color: #888; }
+        .calc-arrow { color: #fff; font-size: 1em; }
+        .calc-val-after { color: var(--accent-green); font-weight: bold; }
+        .calc-icon { height: 1.2em; vertical-align: middle; }
+        
+        .calc-section-title { color: #fff; font-weight: bold; margin-top: 15px; margin-bottom: 5px; font-size: 0.9em; border-bottom: 1px solid #444; }
+        .info-tooltip { cursor: pointer; color: #888; font-size: 0.9em; }
+
+        .desktop-text { margin-left: 4px; }
+        .mode-btn.logs { display: none; } 
+        
+        .calc-time-block { display: inline; }
+        .calc-date-comma { display: inline; }
+        .calc-multiline-date { display: inline-block; vertical-align: middle; }
+
+        #calc-date-mobile { display: none; margin-left: auto; gap: 5px; }
+
+.mobile-only-btn { display: none; }
+        .sidebar-scroll-wrapper { display: flex; flex-direction: column; height: 100%; }
+        #mobile-date-container { display: none; }
+
+        @media (max-width: 768px) {
+            .nav-bar { display: grid; grid-template-columns: 1fr 1fr; padding: 0; gap: 1px; background: #333; height: auto; border-bottom: none; }
+            .nav-tab { background: #121212; padding: 2px 2px; font-size: 0.8em; justify-content: center; height: 35px; }
+            .nav-icon { 
+        height: 2.2em; 
+        margin-bottom: 2px;
+    }
+
+            /* --- CONTROL BAR REVAMP --- */
+            .control-bar { 
+                flex-direction: column; 
+                height: auto; 
+                padding: 4px;
+                gap: 5px;
+                align-items: stretch;
+            }
+
+            /* ROW 1: Setup | Plan | Logs | Calc | Egg */
+            .control-left { 
+                width: 100%; 
+                margin: 0; 
+                flex-direction: row; /* Force side-by-side */
+                justify-content: space-between;
+                gap: 4px; /* Tiny gap between the two groups */
+            }
+
+            /* Generic container style for mobile */
+            .btn-group-pill { 
+                display: flex; 
+                justify-content: space-between; 
+            }
+
+            /* MAGIC MATH: This keeps buttons equal width */
+            .nav-group { flex: 3; } /* Takes 60% of width (3 buttons) */
+            .tool-group { flex: 2; } /* Takes 40% of width (2 buttons) */
+            .mode-btn { 
+                flex: 1; 
+                padding: 6px 0; /* Reduced side padding to fit 5 items */
+                font-size: 0.75em; 
+                text-align: center;
+                display: flex; justify-content: center; align-items: center; gap: 3px;
+            }
+            .mobile-only-btn { display: flex; background: #222; color:#ccc; }
+
+            /* ROW 2: Save | Load | ? | Undo | Redo */
+            /* Using CSS Grid to force the ? to remain perfectly centered */
+            .control-right { 
+                display: grid;
+                width: 100%;
+                /* 5 Cols: 1fr | 1fr | auto | 1fr | 1fr */
+                grid-template-columns: 1fr 1fr auto 1fr 1fr;
+                gap: 5px;
+                margin-top: 0;
+                justify-items: stretch; /* Stretch buttons to fill width */
+            }
+
+            /* MAGIC TRICK: display: contents makes the browser ignore the container divs 
+               (btn-group-actions and ur-group) so the buttons sit directly in the grid above */
+            .control-right .btn-group-actions, #ur-group { display: contents; }
+
+            /* Button Styling */
+            /* Only stretch buttons inside the Control Bar Grid */
+.control-right .btn-io { padding: 6px 0; justify-content: center; font-size: 0.75em; width: 100%; }
+/* For Egg Planner, keep them normal width with side padding */
+.btn-io { width: auto; padding: 5px 10px; }
+            
+            /* FORCE TEXT VISIBLE: Save, Load, Undo, Redo */
+            .btn-io span, .desktop-text { display: inline !important; font-size: 1em; margin-left: 3px; }
+
+            /* Center the Help (?) button */
+            .btn-help { width: 28px; height: 28px; margin: 0 auto; }
+
+            /* Hide Desktop Elements */
+            #date-desktop { display: none; }
+            .sidebar-row { display: none; }
+
+            /* --- SIDEBAR & LOGS SCROLLING --- */
+            .sidebar { 
+                display: none; width: 100%; height: 100%; border: none; 
+                overflow-y: auto; 
+            }
+            
+            .sidebar-scroll-wrapper {
+                display: block; 
+                padding-bottom: 80px; 
+            }
+
+            /* 1. Header (Resources) - FIXED SINGLE ROW */
+            .sidebar-header { 
+                padding: 10px; 
+                background: transparent; 
+                border-bottom: none;
+                display: flex !important; /* Force flex */
+                flex-direction: row !important; /* Force horizontal */
+                align-items: center; 
+                justify-content: space-between; /* Pushes Stats Left, Button Right */
+                height: auto;
+                width: 100%;
+                box-sizing: border-box;
+                white-space: nowrap;
+            }
+
+            /* Resource Group: Potion + Time */
+            .resource-grid { 
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start; 
+                gap: 6px; 
+                margin: 0; 
+                flex: 0 0 auto; /* Stop it from taking up the whole row */
+                width: auto;
+            }
+
+            .resource-box { 
+                padding: 4px 6px; 
+                font-size: 0.85em; 
+                margin: 0; 
+                flex: 0 0 auto;
+                width: auto; 
+                background: #151515;
+                border-radius: 6px;
+                border: 1px solid #333;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            
+            /* The Clear Button */
+            #mobile-clear-btn { 
+                display: block !important; 
+                padding: 6px 10px; 
+                background: #222; 
+                border: 1px solid #444; 
+                color: #ccc; 
+                border-radius: 4px; 
+                font-size: 0.8em; 
+                margin: 0; 
+                flex-shrink: 0; /* Prevents button from being squished */
+            }
+
+            /* 2. Mobile Date Picker */
+            #mobile-date-container {
+                display: block;
+                background: #1a1a1a;
+                margin: 0 10px 10px 10px;
+                padding: 8px;
+                border-radius: 6px;
+                border: 1px solid #333;
+            }
+            #date-mobile-custom { display: flex; justify-content: center; margin: 0; }
+            /* Only make the Sidebar Date Picker big */
+#mobile-date-container .date-select { padding: 6px; font-size: 1em; }
+/* Keep others small (Egg/Calc) */
+.date-select { padding: 3px; font-size: 0.85em; }
+
+            /* 3. Log List */
+            .log-container { padding: 0 10px; overflow: visible; height: auto; }
+
+            /* View switching logic */
+            body.view-log .sidebar { display: block; flex: 1; }
+            body.view-log .tree-container { display: none !important; }
+            body.view-log .stats-container { display: none !important; }
+            body.view-planner .sidebar { display: none; }
+
+            /* Other Mobile adjustments */
+            .workspace { flex-direction: column; }
+            .tier-label { display: none; }
+            .modal-content { width: 98%; padding: 10px; margin: 5% auto; max-height: 85vh; }
+            .modal-grid-5 { grid-template-columns: 1fr 1fr 1fr; }
+            .modal-grid-3 { grid-template-columns: 1fr; }
+            
+            .tree-container, .stats-container { height: 100%; padding-bottom: 40px; flex: 1; }
+            
+            #calc-start-date { display: none !important; }
+            #calc-date-mobile { display: flex; }
+            .calc-time-block { display: block; margin-top: 2px; }
+            .calc-date-comma { display: none; }
+            .calc-multiline-date { text-align: right; }
+            .calc-date-single .calc-time-block { display: inline; margin-top: 0; }
+            .calc-date-single .calc-date-comma { display: inline; }
+            .calc-row-input > :not(label) { margin-right: 12px; }
+
+            .node { width: 58px; height: 58px; }
+            .mode-btn.logs { display: flex; } 
+
+            .cost-table { font-size: 0.8em; table-layout: fixed; width: 100%; letter-spacing: -0.5px; }
+            .cost-table th, .cost-table td { padding: 2px 1px; text-align: center; }
+            .mini-table { font-size: 0.8em; }
+            .grid-header, .grid-cell { font-size: 0.7em; padding: 3px; }
+
+            #egg-date-desktop { display: none; }
+            #egg-date-mobile { display: flex; margin-left: auto; }
+            .egg-selector { padding: 10px 5px; gap: 2px; }
+            .egg-btn img { width: 36px; height: 36px; }
+
+            /* Reset Button Position */
+            .tree-reset-btn { 
+                margin-top: 0; 
+                margin-right: 0;
+                position: absolute; 
+                top: 0;
+                right: -10px;
+            }
+        }
+        
+        #mobile-clear-btn { display: none; }
+/* --- EGG PLANNER STYLES --- */
+        .egg-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .egg-title { color: #9b59b6; font-size: 1.5em; font-weight: bold; }
+        
+        /* Undo/Redo/Clear Group */
+        .egg-actions { display: flex; gap: 5px; }
+        
+        .egg-selector { background: #181818; padding: 15px; border-radius: 8px; border: 1px solid #333; display: flex; justify-content: space-between; gap: 5px; margin-bottom: 20px; }
+        .egg-btn { background: transparent; border: none; cursor: pointer; transition: transform 0.2s; flex: 1; display: flex; justify-content: center; }
+        .egg-btn img { width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); }
+        .egg-btn:hover img { transform: scale(1.15); filter: drop-shadow(0 0 8px #9b59b6); }
+        .egg-log-container { 
+            max-height: 400px; 
+            overflow-y: auto; 
+            border-top: 2px solid #333; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .egg-row { display: flex; flex-direction: column; border-bottom: 1px solid #333; padding: 10px 10px; border-left: 4px solid transparent; background: #1e1e1e; position: relative; }
+        .egg-row.common { border-left-color: #AE988C; }
+        .egg-row.rare { border-left-color: #3498db; }
+        .egg-row.epic { border-left-color: #2ecc71; }
+        .egg-row.legendary { border-left-color: #f1c40f; }
+        .egg-row.ultimate { border-left-color: #B25C5C; }
+        .egg-row.mythic { border-left-color: #9b59b6; }
+        
+        /* Flex container for the top row */
+        .egg-row-header { display: flex; justify-content: space-between; align-items: flex-start; cursor: pointer; }
+        
+        .egg-info { display: flex; align-items: center; gap: 12px; }
+        /* Fix for oval images: Auto width, fixed height */
+        .egg-info img { height: 40px; width: auto; object-fit: contain; }
+        .egg-name { font-weight: normal; font-size: 0.85em; color: #bbb; }
+        
+        /* Right side container */
+        .egg-details-right { text-align: right; }
+        .egg-time-finish { font-size: 1em; font-weight: bold; color: var(--accent-green); }
+        .egg-meta { font-size: 0.8em; color: #888; margin-top: 2px; }
+        
+        .egg-ctrls { display: none; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #444; justify-content: flex-end; }
+        .egg-row.expanded .egg-ctrls { display: flex; }
+        .egg-row:hover { background: #252525; }
+        
+        .egg-insert-active { border: 2px solid #e74c3c !important; animation: pulse 1s infinite; }
+
+        /* Date Picker Logic */
+        #egg-date-desktop { display: block; }
+        #egg-date-mobile { display: none; gap: 5px; align-items: center; }
+
+        @media (max-width: 768px) {
+            #egg-date-desktop { display: none; }
+            #egg-date-mobile { display: flex; margin-left: auto; }
+            /* Adjust selector for mobile */
+            .egg-selector { padding: 10px 5px; gap: 2px; }
+            .egg-btn img { width: 36px; height: 36px; }
+        }
+/* DESKTOP ONLY: Force buttons to be identical height for symmetry */
+        @media (min-width: 769px) {
+            .mode-btn {
+                height: 25px !important; 
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 15px !important; 
+                box-sizing: border-box !important;
+            }
+            
+            /* FIX: Explicitly hide the Logs button on Desktop */
+            .mode-btn.logs {
+                display: none !important;
+            }
+            
+            /* Ensure the image doesn't stretch the button */
+            .icon-large {
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body class="view-planner">
+
+    <div class="nav-bar">
+        <div class="nav-tab active-forge" id="tab-forge" onclick="switchTree('forge')">
+            <img src="icons/tree_forge.png" class="nav-icon"> FORGE <span class="progress-badge" id="prog-forge">0/0</span>
+        </div>
+        <div class="nav-tab" id="tab-spt" onclick="switchTree('spt')">
+            <img src="icons/tree_SPT.png" class="nav-icon"> SPT <span class="progress-badge" id="prog-spt">0/0</span>
+        </div>
+        <div class="nav-tab" id="tab-power" onclick="switchTree('power')">
+            <img src="icons/tree_power.png" class="nav-icon"> POWER <span class="progress-badge" id="prog-power">0/0</span>
+        </div>
+        <div class="nav-tab" id="tab-stats" onclick="switchTree('stats')">
+            <span style="font-size: 1.3em; margin-bottom: 1px;">📊</span> SUMMARY
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <!-- ROW 1: Setup, Plan, Logs + NEW Calc & Egg Buttons -->
+        <div class="control-left">
+            <div class="btn-group-pill nav-group">
+                <button class="mode-btn active setup" id="btn-setup" onclick="setMode('setup')">🔧 Setup</button>
+                <button class="mode-btn plan" id="btn-plan" onclick="setMode('plan')">📅 Plan</button>
+                <button class="mode-btn logs" id="btn-logs" onclick="setMode('log')">📜 Logs</button>
+            </div>
+
+            <div class="btn-group-pill tool-group">
+                <button class="mode-btn" onclick="showCalculator()">
+                    <img src="icons/hammergold.png" class="icon-large"> Calc
+                </button>
+                
+                <button class="mode-btn" onclick="openEggPlanner()">
+                    <img src="icons/EggCommon.png" class="icon-large"> Egg
+                </button>
+            </div>
+        </div>
+
+       <div class="control-right">
+        <div class="btn-group-actions">
+            <button class="btn-io" onclick="downloadData()">💾 <span>Save</span></button>
+            <button class="btn-io" onclick="document.getElementById('file-upload').click()">📂 <span>Load</span></button>
+            <input type="file" id="file-upload" style="display:none" accept=".json,application/json" onchange="uploadData(this)">
+        </div>
+
+        <button class="btn-help" id="main-help-btn" onclick="toggleHelp()">?</button>
+
+        <div class="btn-group-actions" id="ur-group">
+            <button class="btn-io" id="btn-undo" onclick="undo()" disabled>↩️ <span class="desktop-text">Undo</span></button>
+            <button class="btn-io" id="btn-redo" onclick="redo()" disabled>↪️ <span class="desktop-text">Redo</span></button>
+        </div>
+    </div>
+    </div>
+
+    <div class="workspace">
+        <div class="tree-container" id="tree-container">
+            <div class="tree-canvas" id="canvas">
+                <button class="tree-reset-btn" id="tree-reset-action" onclick="resetCurrentTree()">Reset</button>
+                <svg class="connections-layer" id="svg-layer"></svg>
+            </div>
+        </div>
+        
+        <div class="stats-container" id="stats-container">
+            <div id="stats-content"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-scroll-wrapper">
+                <!-- 1. Resource Summary & Clear Button -->
+               <div class="sidebar-header">
+    <div class="resource-grid">
+        <div class="resource-box" style="color:#e74c3c">
+            <img src="icons/red_potion.png" style="height:1em;"> 
+            <span id="res-val">0</span> 
+        </div>
+        <div class="resource-box" style="color:#f39c12" id="time-val">
+            ⏱️ 0d 0h
+        </div>
+    </div>
+
+    <button id="mobile-clear-btn" onclick="clearPlan()">CLEAR</button>
+</div>
+
+                <!-- 3. The Log List -->
+                <div class="log-container">
+    <div class="log-anchor">
+    <div class="calc-row-input" style="margin-bottom: 0;">
+        <label style="color: #fff; font-weight: bold; font-size: 0.9em;">Start:</label>
+        
+        <div id="desktop-log-controls" style="display:flex; align-items:center; gap:8px;">
+            <input type="datetime-local" id="start-date" class="calc-input-tiny" 
+                style="width: 200px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" 
+                onchange="syncMainDate(this.value)">
+            
+            <button class="btn-table" onclick="clearPlan()" title="Clear Log" style="margin:0; padding: 5px 8px; font-size: 1.1em; border-color:#555;">
+                🗑️
+            </button>
+        </div>
+
+        <div id="date-mobile-custom" class="date-custom-wrapper">
+            <select id="dm-month" class="date-select" onchange="updateFromDropdowns('main')"></select>
+            <select id="dm-day" class="date-select" onchange="updateFromDropdowns('main')"></select>
+            <select id="dm-hour" class="date-select" onchange="updateFromDropdowns('main')"></select>
+            <span style="color: #888;">:</span>
+            <select id="dm-min" class="date-select" onchange="updateFromDropdowns('main')"></select>
+        </div>
+    </div>
+</div>
+
+<div id="log-list"></div>
+</div> </div> </div></div>
+    
+
+<div id="tableModal" class="modal">
+        <div class="modal-content" style="width:700px; max-width:95%;">
+            <span class="close-modal" onclick="document.getElementById('tableModal').style.display='none'">&times;</span>
+            <h2 id="table-title" style="display:flex; align-items:center; gap:10px;">Table</h2>
+            <div id="table-subtitle" style="margin-bottom:5px; color:#aaa; font-style:italic;"></div>
+            <div class="table-disclaimer" id="table-disclaimer-text">Values are estimated. Actual in-game numbers may vary slightly due to rounding.</div>
+            <div id="table-body"></div>
+        </div>
+    </div>
+
+    <!-- THIS IS THE NEW FIXED EGG PLANNER -->
+    <div id="eggModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="document.getElementById('eggModal').style.display='none'">&times;</span>
+        
+        <div class="egg-header-row">
+            <span class="egg-title">Egg Planner</span>
+            <div class="egg-actions">
+                <button class="btn-io" id="btn-egg-undo" onclick="undoEgg()" disabled>↩️</button>
+                <button class="btn-io" id="btn-egg-redo" onclick="redoEgg()" disabled>↪️</button>
+                <button class="btn-io" onclick="clearEggPlan()">Clear</button>
+            </div>
+        </div>
+
+        <div class="calc-wrapper">
+            <div class="calc-row-input" style="justify-content: flex-start; gap: 10px;">
+                <label>Start:</label>
+                <input type="datetime-local" id="egg-date-desktop" class="calc-input-tiny" style="width:200px;" onchange="syncEggDate(this.value)">
+                
+                <div id="egg-date-mobile" class="date-custom-wrapper">
+                    <select id="em-month" class="date-select" onchange="updateEggFromDropdowns()"></select>
+                    <select id="em-day" class="date-select" onchange="updateEggFromDropdowns()"></select>
+                    <select id="em-hour" class="date-select" onchange="updateEggFromDropdowns()"></select>
+                    <span>:</span>
+                    <select id="em-min" class="date-select" onchange="updateEggFromDropdowns()"></select>
+                </div>
+            </div>
+        </div>
+
+        <p style="color:#aaa; font-size:0.9em; margin: 10px 0;">Choose which egg type you want to hatch next:</p>
+
+        <div class="egg-selector" id="egg-selector-box" style="margin-bottom: 10px;">
+            <button class="egg-btn" onclick="addEggToQueue('common')"><img src="icons/EggCommon.png" title="Common"></button>
+            <button class="egg-btn" onclick="addEggToQueue('rare')"><img src="icons/EggRare.png" title="Rare"></button>
+            <button class="egg-btn" onclick="addEggToQueue('epic')"><img src="icons/EggEpic.png" title="Epic"></button>
+            <button class="egg-btn" onclick="addEggToQueue('legendary')"><img src="icons/EggLegendary.png" title="Legendary"></button>
+            <button class="egg-btn" onclick="addEggToQueue('ultimate')"><img src="icons/EggUltimate.png" title="Ultimate"></button>
+            <button class="egg-btn" onclick="addEggToQueue('mythic')"><img src="icons/EggMythic.png" title="Mythic"></button>
+        </div>
+
+        <div id="egg-total-summary" style="padding: 15px; background: #181818; border: 1px solid #333; border-radius: 8px; margin-bottom: 20px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; color: #aaa; box-sizing: border-box;">
+            <span>⏱️ Total Queue Time:</span>
+            <b id="egg-total-time-val" style="color: var(--accent-orange); font-size: 1.1em;">0s</b>
+        </div>
+
+        <div class="egg-log-container" id="egg-log-list" style="border-top: 2px solid #333;"></div>
+    </div> </div> 
+    
+   <div id="calcModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('calcModal').style.display='none'">&times;</span>
+            <h2 style="color: var(--accent-blue)">Forge Calculator</h2>
+            
+            <div class="calc-wrapper">
+                <div class="calc-row-input">
+                    <label>Hammer:</label>
+                    <input type="text" id="calc-hammers" value="1,000" class="calc-input-tiny" 
+                        oninput="updateCalculator()" 
+                        onfocus="unformatInput(this)" 
+                        onblur="formatInput(this)">
+                </div>
+                <div id="calc-res-1" class="calc-result-box"></div>
+            </div>
+
+            <div class="calc-wrapper">
+                <div class="calc-row-input">
+                    <label>Target Gold:</label>
+                    <input type="text" id="calc-target" value="1,000,000" class="calc-input-tiny" 
+                        oninput="updateCalculator()" 
+                        onfocus="unformatInput(this)" 
+                        onblur="formatInput(this)">
+                </div>
+                <div id="calc-res-2" class="calc-result-box"></div>
+            </div>
+            
+            <div class="calc-wrapper">
+                <div class="calc-section-title" style="margin-top:0">Thief Dungeon</div>
+                <div class="calc-row-input">
+                    <label>Level:</label>
+                    <div>
+                        <select id="calc-world" class="calc-select-tiny" onchange="updateCalculator()">
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                            <option value="9">9</option><option value="10">10</option>
+                        </select>
+                        <span>-</span>
+                        <select id="calc-stage" class="calc-select-tiny" onchange="updateCalculator()">
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                            <option value="9">9</option><option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="calc-res-3" class="calc-result-box"></div>
+            </div>
+
+            
+<div class="calc-wrapper">
+    <div class="calc-section-title">Daily Totals</div>
+    <div id="calc-res-4"></div>
+</div>
+
+            <div class="calc-wrapper">
+                <div class="calc-section-title">Forge Upgrade</div>
+                <div class="calc-row-input">
+                    <label>Current Forge Lv:</label>
+                    <select id="calc-forge-lv" class="calc-select-tiny" onchange="updateCalculator()">
+                    </select>
+                </div>
+                <div class="calc-row-input">
+                    <label>Start:</label>
+                    <input type="datetime-local" id="calc-start-date" class="calc-input-tiny" onchange="syncCalcDate(this.value)">
+                    <div id="calc-date-mobile" class="date-custom-wrapper">
+                        <select id="cm-month" class="date-select" onchange="updateFromDropdowns('calc')"></select>
+                        <select id="cm-day" class="date-select" onchange="updateFromDropdowns('calc')"></select>
+                        <select id="cm-hour" class="date-select" onchange="updateFromDropdowns('calc')"></select>
+                        <span>:</span>
+                        <select id="cm-min" class="date-select" onchange="updateFromDropdowns('calc')"></select>
+                    </div>
+                </div>
+                <div id="calc-res-5" class="calc-result-box"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- VIEW LOGIC ---
+    function setMobileView(view) {
+        document.body.classList.remove('view-planner', 'view-log');
+        document.body.classList.add(view==='log' ? 'view-log' : 'view-planner');
+    }
+
+    // --- CONFIG DATA ---
+    const tierTimes = { 1:[5,10,20,40,80], 2:[160,320,640,1280,1433.6], 3:[1605.6,1798.3,2014.1,2255.8,2526.5], 4:[2829.67,3169.23,3549.54,3975.49,4452.54], 5:[4986.85,5585.27,6255.50,7006.16,7846.90] };
+    const potionCosts = { 1:[40,56,78,110,154], 2:[215,301,422,590,826], 3:[1157,1319,1504,1714,1954], 4:[2228,2540,2895,3300,3763], 5:[4289,4890,5574,6355,7244] };
+    const forgeLevelData = { 1:[400,0.08333], 2:[700,0.25], 3:[1500,0.5], 4:[3500,1], 5:[10000,2], 6:[25000,7.55], 7:[50000,13.1], 8:[100000,18.666], 9:[150000,24.216], 10:[250000,35], 11:[337500,49], 12:[455625,65], 13:[615094,85], 14:[830377,107], 15:[1121008,129], 16:[1513361,151], 17:[2043038,174], 18:[2758101,196], 19:[3723436,218], 20:[5026639,240.88], 21:[6785963,263.1], 22:[9161050,285.32], 23:[12367417,307.54], 24:[16696013,329.76], 25:[20035215,351.98], 26:[24042258,374.2], 27:[28850710,396.42], 28:[34620852,418.64], 29:[41545022,440.86], 30:[49854027,463.08], 31:[59824832,485.3], 32:[71789799,507.52], 33:[86147759,529.74], 34:[103377310,551.96] };
+    const bracketFloors = [1,6,11,16,21,26,31,36,41,46,51,56,61,66,71,76,81,86,91,96,101,106,111,116,121,126,131,136,141,146];
+
+const formatEggTime = (totalMins) => {
+    const h = Math.floor(totalMins / 60);
+    const m = Math.floor(totalMins % 60);
+    const s = Math.round((totalMins * 60) % 60);
+
+    let parts = [];
+    if (h > 0) parts.push(h + "h");
+    if (m > 0) parts.push(m + "m");
+    if (s > 0) parts.push(s + "s");
+
+    return parts.join(" ") || "0s";
+};
+    const eggStat=(l,b,n)=>`Speed +${l*10}% (${formatEggTime(b/(1+l*0.1))})`;
+
+    const TREES = {
+        forge: {
+            name: "Forge", colorClass: "active-forge", maxLevels: 230,
+            structure: [
+                {id:"timer",r:0,c:0},{id:"disc",r:0,c:1},{id:"sell",r:1,c:0.5},
+                {id:"h_bonus",r:2,c:0},{id:"c_bonus",r:2,c:1},{id:"auto",r:3,c:0.5},
+                {id:"free",r:4,c:0.5},{id:"max",r:5,c:0.5},{id:"off_c",r:6,c:0},{id:"off_h",r:6,c:1}
+            ],
+            meta: {
+                timer:{n:"Forge Timer",p:[],m:5,stat:l=>`Speed +${l*4}%`},
+                disc:{n:"Forge Disc",p:[],m:5,stat:l=>`Cost -${l*2}%`},
+                sell:{n:"Eq. Sell Price",p:["timer","disc"],m:5,stat:l=>`Price +${l*2}%`},
+                h_bonus:{n:"Thief Hammer Bonus",p:["sell"],m:5,stat:l=>`Bonus +${l*2}%`}, 
+                c_bonus:{n:"Thief Coin Bonus",p:["sell"],m:5,stat:l=>`Bonus +${l*2}%`},
+                auto:{n:"Auto Forge",p:["h_bonus","c_bonus"],m:1,stat:l=>`Hammers +${l}`},
+                free:{n:"Free Forge Chance",p:["auto"],m:5,stat:l=>`Chance +${l}%`},
+                max: { n: "Max Offline", p: ["free"], m: 5, stat: (l) => {
+                    const p = l*16; 
+                    const m = 240 * (1 + p/100);
+                    const h = Math.floor(m/60);
+                    const min = Math.round(m%60);
+                    return `Time +${p}% (${h}h ${min}m)`;
+                }},
+                off_c: { n: "Offline Coin", p: ["max"], m: 5, stat: (l) => {
+                    const p = l*2;
+                    const r = 1 * (1 + p/100); 
+                    const d = r * 86400;       
+                    if(l===0) return `Bonus +0% (1 <img src="icons/fm_gold.png" class="stat-key-icon">/s | 86.4k <img src="icons/fm_gold.png" class="stat-key-icon">/d)`;
+                    const rStr = r.toFixed(2);
+                    const dStr = (d/1000).toFixed(1) + 'k';
+                    return `Bonus +${p}% (${rStr} <img src="icons/fm_gold.png" class="stat-key-icon">/s | ${dStr} <img src="icons/fm_gold.png" class="stat-key-icon">/d)`;
+                }}, 
+                off_h: { n: "Offline Hammer", p: ["max"], m: 5, stat: (l) => {
+                    const p = l*2;
+                    const r = 1 * (1 + p/100); 
+                    const d = r * 1440;        
+                    if(l===0) return `Bonus +0% (1 <img src="icons/fm_hammer.png" class="stat-key-icon">/min | 1440 <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
+                    const rStr = r.toFixed(2);
+                    const dStr = d.toFixed(1); 
+                    return `Bonus +${p}% (${rStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/min | ${dStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
+                }}
+            }
+        },
+        spt: {
+            name: "Skills, Pets & Tech", colorClass: "active-spt", maxLevels: 425,
+            structure: [
+                {id:"timer",r:0,c:0.5},{id:"skill_dmg",r:1,c:0.5},
+                {id:"skill_pd",r:2,c:0},{id:"skill_ph",r:2,c:1},{id:"disc",r:3,c:0.5},
+                {id:"pet_dmg",r:4,c:0},{id:"pet_hp",r:4,c:1},{id:"ticket",r:5,c:0.5},
+                {id:"egg1",r:6,c:0},{id:"egg2",r:6,c:1},{id:"egg3",r:7,c:0},{id:"egg4",r:7,c:1},
+                {id:"egg5",r:8,c:0},{id:"egg6",r:8,c:1},{id:"lucky",r:9,c:0.5},
+                {id:"key_g",r:10,c:0},{id:"key_r",r:10,c:1}
+            ],
+            meta: {
+                timer:{n:"Tech Research Timer",p:[],m:5,speed:0.04,stat:l=>`Speed +${l*4}%`},
+                skill_dmg:{n:"Skill Damage",p:["timer"],m:5,stat:l=>`Dmg +${l*2}%`},
+                skill_pd:{n:"Skill Passive Dmg",p:["skill_dmg"],m:5,stat:l=>`Base Dmg +${l*2}%`},
+                skill_ph:{n:"Skill Passive HP",p:["skill_dmg"],m:5,stat:l=>`Base HP +${l*2}%`},
+                disc:{n:"Tech Upgrade Cost",p:["skill_pd","skill_ph"],m:5,stat:l=>`Cost -${l*2}%`,isDiscount:true},
+                pet_dmg:{n:"Pet Dmg Mastery",p:["disc"],m:5,stat:l=>`Bonus Dmg +${l*2}%`},
+                pet_hp:{n:"Pet HP Mastery",p:["disc"],m:5,stat:l=>`Bonus HP +${l*2}%`},
+                ticket: { n: "Skill Summon Cost", p: ["pet_dmg", "pet_hp"], m: 5, stat: (l) => {
+                    const p = l*1;
+                    const v = 200 * (1 - p/100);
+                    return `Cost -${p}% (${Math.round(v)}<img src="icons/green_ticket.png" class="stat-key-icon">)`;
+                }},
+                egg1:{n:"Common Egg Timer",p:["ticket"],m:5,stat:l=>eggStat(l,30)},
+                egg2:{n:"Rare Egg Timer",p:["ticket"],m:5,stat:l=>eggStat(l,120)},
+                egg3:{n:"Epic Egg Timer",p:["egg1"],m:5,stat:l=>eggStat(l,240)},
+                egg4:{n:"Legendary Egg Timer",p:["egg2"],m:5,stat:l=>eggStat(l,480)},
+                egg5:{n:"Ultimate Egg Timer",p:["egg3"],m:5,stat:l=>eggStat(l,960)},
+                egg6:{n:"Mythic Egg Timer",p:["egg4"],m:5,stat:l=>eggStat(l,1920)},
+                lucky:{n:"Invasion Egg",p:["egg5","egg6"],m:5,stat:l=>`Chance +${l*4}%`},
+                key_g:{n:"Ghost Town Ticket",p:["lucky"],m:5,stat:l=>`Drop +${l}%`},
+                key_r:{n:"Zombie Rush Potion",p:["lucky"],m:5,stat:l=>`Drop +${l*2}%`}
+            }
+        },
+        power: {
+            name: "Power", colorClass: "active-power", maxLevels: 500,
+            structure: [
+                {id:"weapon_1",r:0,c:0},{id:"helmet_1",r:0,c:1},
+                {id:"gloves_1",r:1,c:0},{id:"armor_1",r:1,c:1},
+                {id:"necklace_1",r:2,c:0},{id:"boots_1",r:2,c:1},
+                {id:"ring_1",r:3,c:0},{id:"belt_1",r:3,c:1},
+                {id:"mount_dmg",r:4,c:0.5},{id:"mount_hp",r:5,c:0.5},
+                {id:"weapon_2",r:6,c:0},{id:"helmet_2",r:6,c:1},
+                {id:"gloves_2",r:7,c:0},{id:"armor_2",r:7,c:1},
+                {id:"necklace_2",r:8,c:0},{id:"boots_2",r:8,c:1},
+                {id:"ring_2",r:9,c:0},{id:"belt_2",r:9,c:1},
+                {id:"mount_cost",r:10,c:0.5},{id:"mount_chance",r:11,c:0.5}
+            ],
+            meta: {
+                weapon_1:{n:"Weapon Mastery",p:[],m:5,stat:l=>`Dmg +${l*2}%`},
+                helmet_1:{n:"Helmet Mastery",p:[],m:5,stat:l=>`HP +${l*2}%`},
+                gloves_1:{n:"Gloves Mastery",p:["weapon_1"],m:5,stat:l=>`Dmg +${l*2}%`},
+                armor_1:{n:"Body Mastery",p:["helmet_1"],m:5,stat:l=>`HP +${l*2}%`},
+                necklace_1:{n:"Necklace Mastery",p:["gloves_1"],m:5,stat:l=>`Dmg +${l*2}%`},
+                boots_1:{n:"Shoe Mastery",p:["armor_1"],m:5,stat:l=>`HP +${l*2}%`},
+                ring_1:{n:"Ring Mastery",p:["necklace_1"],m:5,stat:l=>`Dmg +${l*2}%`},
+                belt_1:{n:"Belt Mastery",p:["boots_1"],m:5,stat:l=>`HP +${l*2}%`},
+                mount_dmg:{n:"Mount Dmg",p:["ring_1","belt_1"],m:5,stat:l=>`Dmg +${l*2}%`},
+                mount_hp:{n:"Mount HP",p:["mount_dmg"],m:5,stat:l=>`HP +${l*2}%`},
+                weapon_2:{n:"Weapon Lv Up",p:["mount_hp"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                helmet_2:{n:"Helmet Lv Up",p:["mount_hp"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                gloves_2:{n:"Gloves Lv Up",p:["weapon_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                armor_2:{n:"Body Lv Up",p:["helmet_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                necklace_2:{n:"Necklace Lv Up",p:["gloves_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                boots_2:{n:"Shoe Lv Up",p:["armor_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                ring_2:{n:"Ring Lv Up",p:["necklace_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                belt_2:{n:"Belt Lv Up",p:["boots_2"],m:5,stat:l=>`Max Level ${99+l*2}`,isSlot:true,base:99},
+                mount_cost:{
+                    n:"Mount Summon Cost",p:["ring_2","belt_2"],m:5,
+                    stat:(l)=>{
+                        const p=l*1; const v=Math.ceil(50*(1-p/100));
+                        return `Cost -${p}% (${v}<img src="icons/mount_key.png" class="stat-key-icon">)`;
+                    }
+                },
+                mount_chance:{n:"Mount Chance",p:["mount_cost"],m:5,stat:l=>`Chance +${l*2}%`}
+            }
+        }
+    };
+
+    let activeTreeKey='forge', currentMode='setup', setupLevels={}, planQueue=[], expandedLogIndex=-1, insertModeIndex=-1, historyStack=[], redoStack=[], lineUpdateRequested = false;
+    let scrollPositions = { forge: 0, spt: 0, power: 0, stats: 0 };
+
+    function formatResourceValue(val, type) {
+        if (type === 'hammer') return Math.round(val).toLocaleString(); 
+        if (val < 1000) return val.toFixed(1);
+        if (val < 1000000) return (val / 1000).toFixed(1) + 'k';
+        return (val / 1000000).toFixed(2) + 'm';
+    }
+
+    function formatThiefGold(val) {
+        if (val < 1000) return Math.floor(val);
+        if (val < 1000000) return (Math.floor(val / 100) / 10).toFixed(1) + 'k';
+        return (Math.floor(val / 10000) / 100).toFixed(2) + 'm';
+    }
+
+    function init() {
+        populateDateDropdowns();
+        populateForgeDropdown();
+        const saved = localStorage.getItem('techPlannerData');
+        if(saved) {
+            try {
+                const d = JSON.parse(saved);
+                setupLevels = d.setupLevels || {};
+                planQueue = d.planQueue || [];
+               eggPlanQueue = d.eggPlanQueue || [];
+                if(d.startDate) syncMainDate(d.startDate);
+                if(d.eggStartDate) syncEggDate(d.eggStartDate);
+                
+                // Restore Forge Calculator values
+                if(d.calcWorld) document.getElementById('calc-world').value = d.calcWorld;
+                if(d.calcStage) document.getElementById('calc-stage').value = d.calcStage;
+                if(d.calcForgeLv) document.getElementById('calc-forge-lv').value = d.calcForgeLv;
+                if(d.calcHammers) document.getElementById('calc-hammers').value = d.calcHammers;
+                if(d.calcTarget) document.getElementById('calc-target').value = d.calcTarget;
+                if(d.calcStartDate) syncCalcDate(d.calcStartDate);
+            } catch(e) { console.error("Load failed", e); }
+        }
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const iso = now.toISOString().slice(0,16);
+        if(!document.getElementById('start-date').value) syncMainDate(iso);
+        syncCalcDate(iso);
+        renderTree('forge');
+        updateCalculations();
+        window.addEventListener('resize', drawLines);
+        window.addEventListener('keydown', (e) => {
+            if((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+            if((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
+            // Page Up / Page Down Logic
+            if (e.key === 'PageUp' || e.key === 'PageDown') {
+                e.preventDefault();
+                const container = activeTreeKey === 'stats' ? document.getElementById('stats-container') : document.getElementById('tree-container');
+                if (container) {
+                    const direction = e.key === 'PageUp' ? -1 : 1;
+                    container.scrollBy({ top: direction * (container.clientHeight * 0.8), behavior: 'smooth' });
+                }
+            }
+        });
+if (eggPlanQueue.length > 0) renderEggLog();
+    }
+
+    function populateDateDropdowns() {
+        const m = document.getElementById('dm-month');
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        months.forEach((n,i)=> m.add(new Option(n, i+1)));
+        const d = document.getElementById('dm-day');
+        for(let i=1;i<=31;i++) d.add(new Option(i,i));
+        const h = document.getElementById('dm-hour');
+        for(let i=0;i<24;i++) h.add(new Option(i.toString().padStart(2,'0'), i));
+        const min = document.getElementById('dm-min');
+        for(let i=0;i<60;i++) min.add(new Option(i.toString().padStart(2,'0'), i));
+        const cm = document.getElementById('cm-month');
+        months.forEach((n,i)=> cm.add(new Option(n, i+1)));
+        const cd = document.getElementById('cm-day');
+        for(let i=1;i<=31;i++) cd.add(new Option(i,i));
+        const ch = document.getElementById('cm-hour');
+        for(let i=0;i<24;i++) ch.add(new Option(i.toString().padStart(2,'0'), i));
+        const cmin = document.getElementById('cm-min');
+        for(let i=0;i<60;i++) cmin.add(new Option(i.toString().padStart(2,'0'), i));
+    }
+
+    function populateForgeDropdown() {
+        const s = document.getElementById('calc-forge-lv');
+        for(let i=1; i<=34; i++) s.add(new Option(i, i));
+        s.value = 20; 
+    }
+
+    function syncMainDate(val) {
+    if (!val) return; // Ignore empty values while typing
+    const date = new Date(val);
+    if (isNaN(date.getTime())) return; // Stop if the date is invalid (like while typing '02')
+
+    document.getElementById('start-date').value = val;
+    document.getElementById('dm-month').value = date.getMonth()+1;
+    document.getElementById('dm-day').value = date.getDate();
+    document.getElementById('dm-hour').value = date.getHours();
+    document.getElementById('dm-min').value = date.getMinutes();
+    
+    updateCalculations();
+}
+
+    function syncCalcDate(val) {
+    if (!val) return;
+    const date = new Date(val);
+    if (isNaN(date.getTime())) return;
+
+    document.getElementById('calc-start-date').value = val;
+    document.getElementById('cm-month').value = date.getMonth()+1;
+    document.getElementById('cm-day').value = date.getDate();
+    document.getElementById('cm-hour').value = date.getHours();
+    document.getElementById('cm-min').value = date.getMinutes();
+    
+    updateCalculator();
+}
+
+    function updateFromDropdowns(source) {
+        const prefix = source === 'calc' ? 'cm' : 'dm';
+        const now = new Date();
+        const y = now.getFullYear(); 
+        const m = parseInt(document.getElementById(`${prefix}-month`).value)-1;
+        const d = parseInt(document.getElementById(`${prefix}-day`).value);
+        const h = parseInt(document.getElementById(`${prefix}-hour`).value);
+        const min = parseInt(document.getElementById(`${prefix}-min`).value);
+        const newDate = new Date(y, m, d, h, min);
+        if (newDate < now && (now - newDate) > 2592000000) newDate.setFullYear(y+1);
+        newDate.setMinutes(newDate.getMinutes() - newDate.getTimezoneOffset());
+        const iso = newDate.toISOString().slice(0,16);
+        if(source === 'calc') syncCalcDate(iso); else syncMainDate(iso);
+    }
+
+    function saveToLocalStorage() {
+    const d = {
+        setupLevels, 
+        planQueue, 
+        startDate: document.getElementById('start-date').value,
+        eggPlanQueue,
+        eggStartDate: document.getElementById('egg-date-desktop').value,
+        // New: Forge Calculator values
+        calcWorld: document.getElementById('calc-world').value,
+        calcStage: document.getElementById('calc-stage').value,
+        calcForgeLv: document.getElementById('calc-forge-lv').value,
+        calcHammers: document.getElementById('calc-hammers').value,
+        calcTarget: document.getElementById('calc-target').value,
+        calcStartDate: document.getElementById('calc-start-date').value
+    };
+    localStorage.setItem('techPlannerData', JSON.stringify(d));
+}
+
+    function pushHistory() {
+        if(historyStack.length > 50) historyStack.shift();
+        historyStack.push(JSON.stringify({setupLevels, planQueue, startDate: document.getElementById('start-date').value}));
+        redoStack = []; 
+        updateUndoRedoBtns();
+        saveToLocalStorage();
+    }
+    function undo() {
+        if(historyStack.length === 0) return;
+        redoStack.push(JSON.stringify({setupLevels, planQueue, startDate: document.getElementById('start-date').value}));
+        const last = JSON.parse(historyStack.pop());
+        setupLevels=last.setupLevels; planQueue=last.planQueue; syncMainDate(last.startDate); 
+        updateUndoRedoBtns(); updateCalculations(); saveToLocalStorage();
+    }
+    function redo() {
+        if(redoStack.length === 0) return;
+        historyStack.push(JSON.stringify({setupLevels, planQueue, startDate: document.getElementById('start-date').value}));
+        const next = JSON.parse(redoStack.pop());
+        setupLevels=next.setupLevels; planQueue=next.planQueue; syncMainDate(next.startDate);
+        updateUndoRedoBtns(); updateCalculations(); saveToLocalStorage();
+    }
+    function updateUndoRedoBtns() {
+        document.getElementById('btn-undo').disabled = historyStack.length === 0;
+        document.getElementById('btn-undo').style.opacity = historyStack.length === 0 ? "0.3" : "1";
+        document.getElementById('btn-redo').disabled = redoStack.length === 0;
+        document.getElementById('btn-redo').style.opacity = redoStack.length === 0 ? "0.3" : "1";
+    }
+
+    function switchTree(key) {
+        const currentContainer = activeTreeKey === 'stats' ? document.getElementById('stats-container') : document.getElementById('tree-container');
+        if(currentContainer) scrollPositions[activeTreeKey] = currentContainer.scrollTop;
+        activeTreeKey = key;
+        if (window.innerWidth <= 768 && currentMode === 'log') setMode('plan');
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active-forge','active-spt','active-power','active-stats'));
+        document.querySelector(`#tab-${key}`).classList.add(key==='stats'?'active-stats':TREES[key].colorClass);
+        const treeCont = document.getElementById('tree-container');
+        const statsCont = document.getElementById('stats-container');
+        treeCont.style.display = key==='stats'?'none':'flex';
+        statsCont.style.display = key==='stats'?'flex':'none';
+        const newContainer = key === 'stats' ? statsCont : treeCont;
+        newContainer.scrollTop = scrollPositions[key] || 0;
+        if(key === 'stats') renderStats();
+        else {
+            document.getElementById('canvas').className = `tree-canvas tree-${key}`;
+            renderTree(key);
+            setTimeout(drawLines, 0);
+        }
+    }
+
+    function renderTree(key) {
+        const canvas = document.getElementById('canvas');
+        Array.from(canvas.children).forEach(c => { if(!c.classList.contains('connections-layer') && !c.classList.contains('tree-reset-btn')) c.remove(); });
+        const data = TREES[key];
+        for(let t=1; t<=5; t++) {
+            const block = document.createElement('div'); block.className='tier-block';
+            const label = document.createElement('div'); label.className='tier-label'; label.innerText=`TIER ${toRoman(t)}`;
+            block.appendChild(label);
+            const rows={};
+            data.structure.forEach(nDef => {
+                const fullId = `${key}_T${t}_${nDef.id}`;
+                const meta = data.meta[nDef.id];
+                if(!meta) return;
+                if(!rows[nDef.r]) {
+                    const rDiv = document.createElement('div');
+                    rDiv.style="display:flex;justify-content:center;margin-bottom:30px;width:100%";
+                    block.appendChild(rDiv);
+                    rows[nDef.r] = rDiv;
+                }
+                const node = document.createElement('div');
+                node.className='node'; node.id=fullId; node.dataset.name=meta.n; node.title=`${meta.n} ${toRoman(t)}`;
+                if(nDef.c === 1) node.style.marginLeft="120px";
+                const iconPath = `icons/${key}_${nDef.id}.png`;
+                const fallbackEmoji = key==='forge'?'🔨':(key==='spt'?'🐾':'⚔️');
+                const speedBadge = meta.speed ? `<div class="node-speed-badge">⚡</div>` : '';
+                node.innerHTML = `<div class="node-tier-badge">${toRoman(t)}</div>
+                    <img src="${iconPath}" class="node-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                    <div class="node-fallback" style="display:none">${fallbackEmoji}</div>
+                    ${speedBadge}
+                    <div class="node-level">0/${meta.m}</div>`;
+                node.onclick = (e) => { if(e.shiftKey && currentMode === 'setup') handleShiftClick(fullId); else handleClick(fullId, false); };
+                node.oncontextmenu = (e) => { e.preventDefault(); handleClick(fullId, true); };
+                rows[nDef.r].appendChild(node);
+            });
+            canvas.appendChild(block);
+        }
+        updateCalculations();
+    }
+
+    function renderStats() {
+        const container = document.getElementById('stats-content');
+        container.innerHTML = '';
+        const state = calcState();
+        // 1. Prepare variables for Isolated Calculation
+        let totalAvgCur=0, totalAvgSellIso=0; 
+        const slots=[];
+        TREES.power.structure.forEach(s=>{ if(TREES.power.meta[s.id].isSlot) slots.push(s.id); });
+
+        slots.forEach(sid => {
+            // Get Current Level (l)
+            let l=0; for(let t=1; t<=5; t++) l+=(setupLevels[`power_T${t}_${sid}`]||0);
+            
+            // Current Avg: Current Level + Current Bonus
+            totalAvgCur += getSlotStats(99+l*2, state.totalSellBonusCur).avg;
+
+            // Isolated Sell Projection: Current Level + FUTURE Bonus
+            // This isolates the contribution of the Eq. Sell Price node
+            totalAvgSellIso += getSlotStats(99+l*2, state.totalSellBonusProj).avg;
+        });
+
+        const globCur = totalAvgCur/slots.length;
+        const globProj_SellIso = totalAvgSellIso/slots.length;
+        
+        // Lines defining searchIcon/eggIcon REMOVED here
+
+        ['forge','spt','power'].forEach(key => {
+            const treeData = TREES[key];
+            const group = document.createElement('div'); group.className='stats-group';
+            const header = document.createElement('div'); header.className=`stats-header ${key}`;
+            
+            // Just the Title, no icons added
+            header.innerHTML = `<img src="icons/tree_${key==='spt'?'SPT':key}.png" class="nav-icon"> ${treeData.name.toUpperCase()}`;
+            
+            // Lines appending icons REMOVED here
+
+            group.appendChild(header);
+            let hasStats = false;
+            treeData.structure.forEach(ns => {
+                const meta = treeData.meta[ns.id];
+                if(!meta || !meta.stat) return;
+                let curT=0, projT=0;
+                for(let t=1;t<=5;t++) {
+                    const id=`${key}_T${t}_${ns.id}`;
+                    curT+=(setupLevels[id]||0); projT+=(state.levels[id]||0);
+                }
+                hasStats = true;
+                let txtCur = meta.stat(curT);
+                let txtProj = meta.stat(projT);
+                if(key==='forge' && ns.id=== 'sell') {
+                    // Logic: Use globProj_SellIso (Future Bonus + Current Items)
+                    txtCur += ` <span style="color:#aaa;font-size:0.9em">(Avg: ${formatResourceValue(globCur,'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span> <button class="btn-table" onclick="showEqSellTable(${curT*2},${projT*2},4)">🔍</button>`;
+                    txtProj += ` <span style="font-size:0.9em">(Avg: ${formatResourceValue(globProj_SellIso,'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
+                } else if(meta.isSlot) {
+                    // Logic: Use state.totalSellBonusCur for BOTH (Future Items + Current Bonus)
+                    const sCur = getSlotStats(99+curT*2, state.totalSellBonusCur);
+                    
+                    // CHANGE HERE: We use state.totalSellBonusCur instead of Proj
+                    const sProj = getSlotStats(99+projT*2, state.totalSellBonusCur);
+                    
+                    txtCur = `Max ${99+curT*2} <span style="color:#aaa;font-size:0.9em">(Range: ${sCur.range} | Avg: ${formatResourceValue(sCur.avg,'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
+                    txtProj = `Max ${99+projT*2} <span style="font-size:0.9em">(Range: ${sProj.range} | Avg: ${formatResourceValue(sProj.avg,'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
+                
+                } else if(meta.isDiscount) {
+                    txtCur += ` <button class="btn-table" onclick="showPotionTable(${curT*2})">🔍</button>`;
+                    if(projT>curT) txtProj += ` <button class="btn-table" onclick="showPotionTable(${projT*2})">🔍</button>`;
+                } else if(key==='spt' && ns.id=== 'timer') {
+                    txtCur += ` <button class="btn-table" onclick="showTechTimerTable(${curT*4})">🔍</button>`;
+                    if(projT>curT) txtProj += ` <button class="btn-table" onclick="showTechTimerTable(${projT*4})">🔍</button>`;
+                } else if(key==='forge' && ns.id=== 'disc') {
+                    txtCur += ` <button class="btn-table" onclick="showForgeTable('disc',${curT*2},${projT*2},2)">🔍</button>`;
+                } else if(key==='forge' && ns.id=== 'timer') {
+                    txtCur += ` <button class="btn-table" onclick="showForgeTable('timer',${curT*4},${projT*4},2)">🔍</button>`;
+                }
+                let finalHTML = txtCur;
+                if(projT > curT) finalHTML += `<span class="stat-arrow">➜</span> <span class="stat-new">${txtProj}</span>`;
+                const row = document.createElement('div'); row.className='stats-row';
+                row.innerHTML = `<div class="stat-icon-box"><img src="icons/${key}_${ns.id}.png" class="stat-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="stat-icon-fallback" style="display:none">?</div></div><div class="stat-info"><div class="stat-name">${meta.n}</div><div class="stat-value">${finalHTML}</div></div>`;
+                group.appendChild(row);
+            });
+            if(hasStats) container.appendChild(group);
+        });
+
+        // --- GHOST ROW SPACER FOR MOBILE CLEARANCE (Optimized Height) ---
+        const ghostRow = document.createElement('div');
+        ghostRow.className = 'stats-row';
+        ghostRow.style.visibility = 'hidden';
+        ghostRow.style.height = '15px'; 
+        ghostRow.innerHTML = '<div class="stat-icon-box"></div><div class="stat-info"><div class="stat-name">Spacer</div></div>';
+        container.appendChild(ghostRow);
+    }
+
+    function calcState(customQueue) {
+        const levels = {...setupLevels};
+        let totalMin=0, history=[], speed=0, totalPotions=0, totalSellBonusCur=0, currentDiscount=0;
+        Object.keys(setupLevels).forEach(id=>{
+            const m=getMeta(id); if(m&&m.n=== "Eq. Sell Price") totalSellBonusCur+=(setupLevels[id]*2);
+        });
+        Object.keys(levels).forEach(id=>{
+            const m=getMeta(id);
+            if(m&&m.speed) speed += m.speed * levels[id];
+            if(m&&m.isDiscount) currentDiscount += levels[id]*2;
+        });
+        if(speed>1) speed=1;
+        const q = customQueue || planQueue, brokenSteps = [];
+        q.forEach((item,i)=>{
+            if(item.type==='delay') {
+                totalMin += item.mins; history.push({type:'delay', mins:item.mins, idx:i});
+            } else {
+                if(!isUnlocked(item.id, levels)) { brokenSteps.push(i); return; }
+                const cur = levels[item.id]||0, m = getMeta(item.id);
+                if(cur >= m.m) return; 
+                const tier = getTier(item.id), timeBase = tierTimes[tier][cur], finalTime = timeBase / (1+speed);
+                const potionBase = potionCosts[tier][cur], finalPotion = Math.round(potionBase * (1-(currentDiscount/100)));
+                totalMin += finalTime; totalPotions += finalPotion; levels[item.id] = cur+1;
+                const spStr = Math.round(speed*100);
+                if(m.speed) { speed += m.speed; if(speed>1) speed=1; }
+                if(m.isDiscount) currentDiscount += 2;
+                history.push({type:'node', id:item.id, name:m.n, lvl:levels[item.id], added:finalTime, cost:finalPotion, speedStr:`+${spStr}% Speed`, idx:i, tree:item.id.split('_')[0]});
+            }
+        });
+        let totalSellBonusProj=0;
+        Object.keys(levels).forEach(id=>{ const m=getMeta(id); if(m&&m.n=== "Eq. Sell Price") totalSellBonusProj+=(levels[id]*2); });
+        return { levels, totalMin, history, finalSpeed:speed, brokenSteps, totalPotions, totalSellBonusCur, totalSellBonusProj };
+    }
+
+    function getMinLevel(maxLv) {
+        if(maxLv === 99) return 96;
+        let floor = 1;
+        for(let f of bracketFloors) if(f <= maxLv - 5) floor = f; else break;
+        return floor;
+    }
+
+    function getSlotStats(maxLv, bonus) {
+        let total=0, count=0, minLv = getMinLevel(maxLv);
+        for(let i=minLv; i<=maxLv; i++) { total += Math.round(20 * Math.pow(1.01, i-1) * (100+bonus)/100); count++; }
+        return { range:`${minLv}-${maxLv}`, avg:(count>0?total/count:0) };
+    }
+
+    function formatSmartTime(totalMins) {
+        // NEW: Precision logic for less than 60 minutes
+        if (totalMins < 60) {
+            const mFloor = Math.floor(totalMins);
+            const s = Math.round((totalMins - mFloor) * 60);
+            
+            if (s === 60) return `${mFloor + 1}m`; // Roll over if 59s -> 60s
+            if (mFloor === 0 && s > 0) return `${s}s`;
+            if (mFloor === 0 && s === 0) return `0m`;
+            return s > 0 ? `${mFloor}m ${s}s` : `${mFloor}m`;
+        }
+        
+        const m = Math.round(totalMins);
+        if (m < 60) return `${m}m`; // Safety catch
+        let h = Math.floor(m / 60), minLeft = m % 60;
+        if (h < 24) return minLeft > 0 ? `${h}h ${minLeft}m` : `${h}h`;
+        const d = Math.floor(h / 24), hLeft = h % 24;
+        let res = `${d}d`; if (hLeft > 0) res += ` ${hLeft}h`; if (minLeft > 0) res += ` ${minLeft}m`;
+        return res;
+    }
+
+    function formatForgeCost(val) {
+        if(val<1000) return val;
+        if(val<10000) return (val/1000).toFixed(2)+'k';
+        if(val<1000000) return (val/1000).toFixed(1)+'k';
+        return (val/1000000).toFixed(2)+'m';
+    }
+
+    function updateCalculations() {
+        const state = calcState(), start = new Date(document.getElementById('start-date').value), startTime = start.getTime();
+        document.getElementById('res-val').innerText = state.totalPotions.toLocaleString();
+        document.getElementById('time-val').innerText = `⏱️ ${formatSmartTime(state.totalMin)}`;
+        let counts={forge:0,spt:0,power:0};
+        Object.keys(setupLevels).forEach(id=> counts[id.split('_')[0]] += setupLevels[id]);
+        ['forge','spt','power'].forEach(k => {
+            const max = TREES[k].maxLevels;
+            document.getElementById(`prog-${k}`).innerText = `${counts[k]}/${max} (${((counts[k]/max)*100).toFixed(1)}%)`;
+        });
+        const vLvls = currentMode==='setup' ? setupLevels : state.levels;
+        document.querySelectorAll('.node').forEach(el => {
+            const lvl = vLvls[el.id]||0, m = getMeta(el.id); if(!m) return;
+            el.querySelector('.node-level').innerText=`${lvl}/${m.m}`;
+            el.className = 'node';
+            if(isUnlocked(el.id, vLvls)) el.classList.add('unlocked');
+            if(setupLevels[el.id]) el.classList.add('active-setup');
+            if(lvl > (setupLevels[el.id]||0)) el.classList.add('active-plan');
+            if(lvl >= m.m) el.classList.add('maxed');
+            el.style.opacity = (!isUnlocked(el.id, vLvls) && lvl===0) ? "0.3" : "1";
+        });
+        const list = document.getElementById('log-list'); list.innerHTML='';
+                let curTime = startTime;
+        state.history.forEach(h => {
+            const row = document.createElement('div'); row.className=`log-row ${expandedLogIndex===h.idx?'expanded':''}`;
+            let durMs = (h.type==='delay'?h.mins:h.added)*60000; curTime += durMs;
+            const finishDate = new Date(curTime), durStr = formatSmartTime(h.type==='delay'?h.mins:h.added);
+            const finishDateStr = finishDate.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}) + ', ' + finishDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            let content = '';
+            if(h.type==='delay') content = `<div class="log-entry delay" onclick="toggleExp(${h.idx})"><span>💤 DELAY (+${h.mins}m)</span><span class="log-time">${finishDateStr}</span></div>`;
+            else {
+                const tierNum = getTier(h.id), costHtml = `${h.cost} <img src="icons/red_potion.png" style="height:1em; vertical-align:middle" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline'"><span style="display:none">🔴</span>`;
+                content = `<div class="log-entry ${h.tree}" onclick="toggleExp(${h.idx})"><div style="color:#fff"><b>${h.name} ${toRoman(tierNum)}</b> <small>Lv ${h.lvl}</small></div><div style="text-align:right"><div class="log-time">${finishDateStr}</div><div class="log-details">${costHtml} | ⏱️ ${durStr} | ${h.speedStr}</div></div></div>`;
+            }
+            row.innerHTML = content + `<div class="log-controls"><button class="btn-ctrl" style="background:#c0392b" onclick="delStep(${h.idx})">🗑️ Delete</button><button class="btn-ctrl" style="background:#2980b9" onclick="markDone(${h.idx}, '${finishDate.toISOString()}')">✅ Done</button><button class="btn-ctrl" style="background:#27ae60" onclick="addDelay(${h.idx})">➕ Delay</button><button class="btn-ctrl" style="background:#f39c12" onclick="activateInsert(${h.idx})">⤵️ Insert</button></div>`;
+            list.appendChild(row);
+        });
+        drawLines(); if(activeTreeKey==='stats') renderStats();
+        const pBtn = document.getElementById('btn-plan');
+        if(insertModeIndex > -1) { pBtn.innerHTML="⤵️ INSERTING..."; pBtn.classList.add('insert'); } else { pBtn.innerHTML="📅 Plan"; pBtn.classList.remove('insert'); 
+if(document.getElementById('eggModal').style.display === 'block') renderEggLog();}
+    }
+
+    function showCalculator() { document.getElementById('calcModal').style.display='block'; updateCalculator(); }
+    function getTechBonuses(lvls) {
+        let speed=0, sell=0, hBonus=0, cBonus=0, free=0, offH=0, offC=0, forgeDisc=0;
+        const sumLvl = (id) => { let s=0; for(let t=1; t<=5; t++) s+=(lvls[`forge_T${t}_${id}`]||0); return s; };
+        speed = sumLvl('timer') * 4; sell = sumLvl('sell') * 2; hBonus = sumLvl('h_bonus') * 2; cBonus = sumLvl('c_bonus') * 2; free = sumLvl('free'); forgeDisc = sumLvl('disc') * 2;
+        offH = sumLvl('off_h') * 2; offC = sumLvl('off_c') * 2;
+        let totalAvg=0, count=0;
+        TREES.power.structure.forEach(s => {
+            if(TREES.power.meta[s.id].isSlot) {
+                let l=0; for(let t=1; t<=5; t++) l+=(lvls[`power_T${t}_${s.id}`]||0);
+                totalAvg += getSlotStats(99+l*2, sell).avg; count++;
+            }
+        });
+        return { speed, sell, hBonus, cBonus, free, offH, offC, avgGold: count>0?totalAvg/count:0, forgeDisc };
+    }
+
+   // --- HELPER FUNCTIONS ---
+    function cleanInput(el) {
+        el.value = el.value.replace(/[^0-9.]/g, '');
+        if ((el.value.match(/\./g) || []).length > 1) el.value = el.value.replace(/\.+$/, "");
+    }
+
+    function formatInput(el) {
+        if(!el.value) return;
+        // Removes commas, parses number, then adds commas back
+        const val = parseFloat(el.value.replace(/,/g, ''));
+        if(!isNaN(val)) el.value = val.toLocaleString();
+    }
+
+    function unformatInput(el) {
+        if(!el.value) return;
+        // Removes commas so you can edit the number easily
+        el.value = el.value.replace(/,/g, '');
+    }
+
+    // --- CALCULATOR LOGIC ---
+    function updateCalculator() {
+        const hammerEl = document.getElementById('calc-hammers');
+        const targetEl = document.getElementById('calc-target');
+        
+        // 1. Clean formatting for Math
+        const hIn = parseFloat(hammerEl.value.replace(/,/g, ''))||0;
+        const gTarget = parseFloat(targetEl.value.replace(/,/g, ''))||0;
+
+        const world = parseInt(document.getElementById('calc-world').value);
+        const stage = parseInt(document.getElementById('calc-stage').value);
+        const fLv = parseInt(document.getElementById('calc-forge-lv').value);
+        const sDate = new Date(document.getElementById('calc-start-date').value);
+        
+        // 2. Get Stats
+        const curStats = getTechBonuses(setupLevels);
+        const projStats = getTechBonuses(calcState().levels);
+
+        const genLine = (label, v1, v2, iconKey, tooltip="") => {
+            const tt = tooltip ? `<span class="info-tooltip" title="${tooltip}" onclick="alert('${tooltip}')">(?)</span>` : '';
+            const iconImg = iconKey ? `<img src="icons/${iconKey}.png" class="calc-icon">` : '';
+            // CSS Tweak: remove border-bottom from the last item in a group naturally
+            return `<div class="calc-line"><div class="calc-label">${label} ${tt}</div><div class="calc-val-group">${v1===v2 ? `<span>${v1}</span>` : `<span class="calc-val-before">${v1}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${v2}</span>`}${iconImg}</div></div>`;
+        };
+
+        // 3. Logic: Hammer Efficiency
+        let h1 = '', effH1 = hIn/(1-curStats.free/100), effH2 = hIn/(1-projStats.free/100);
+        h1 += genLine('Effective Hammer', formatResourceValue(effH1,'hammer'), formatResourceValue(effH2,'hammer'), 'fm_hammer');
+        h1 += genLine('Gold', formatResourceValue(effH1*curStats.avgGold,'gold'), formatResourceValue(effH2*projStats.avgGold,'gold'), 'fm_gold');
+        document.getElementById('calc-res-1').innerHTML = h1;
+
+        // 4. Logic: Hammer Needed
+        document.getElementById('calc-res-2').innerHTML = genLine('Hammer Needed', formatResourceValue(gTarget/curStats.avgGold*(1-curStats.free/100),'hammer'), formatResourceValue(gTarget/projStats.avgGold*(1-projStats.free/100),'hammer'), 'fm_hammer');
+
+        // 5. Logic: Thief Dungeon
+        const stepIndex = (world-1)*10+(stage-1), baseGold = 4000+(stepIndex*180), baseHammer = 60+(stepIndex*4);
+        const dungG1 = Math.round(baseGold*(1+curStats.cBonus/100)), dungG2 = Math.round(baseGold*(1+projStats.cBonus/100));
+        const dungH1 = Math.round(baseHammer*(1+curStats.hBonus/100)), dungH2 = Math.round(baseHammer*(1+projStats.hBonus/100));
+        let h3 = genLine('Thief Gold', formatThiefGold(dungG1), formatThiefGold(dungG2), 'fm_gold');
+        h3 += genLine('Thief Hammer', dungH1, dungH2, 'fm_hammer');
+        document.getElementById('calc-res-3').innerHTML = h3;
+
+        // 6. Logic: Daily Totals
+        const offG1 = 86400*(1+curStats.offC/100), offG2 = 86400*(1+projStats.offC/100);
+        const offH1 = 1440*(1+curStats.offH/100), offH2 = 1440*(1+projStats.offH/100);
+
+        // Define the style for the two separate boxes
+        // background #151515 matches the standard "calc-result-box" look
+        const boxStyle = "background: #151515; border-radius: 6px; border: 1px solid #333; padding: 8px;";
+
+        // Block 1: Raw Stats
+        let block1 = genLine('Offline Gold', formatResourceValue(offG1,'gold'), formatResourceValue(offG2,'gold'), 'fm_gold');
+        block1 += genLine('Offline Hammer', formatResourceValue(offH1,'hammer'), formatResourceValue(offH2,'hammer'), 'fm_hammer');
+        block1 += genLine('Thief Gold (2x)', formatResourceValue(dungG1*2,'gold'), formatResourceValue(dungG2*2,'gold'), 'fm_gold');
+        block1 += genLine('Thief Hammer (2x)', dungH1*2, dungH2*2, 'fm_hammer');
+
+        // Block 2: Values (Calculated)
+        const hammerVal1 = (offH1 + dungH1*2) / (1-curStats.free/100) * curStats.avgGold;
+        const hammerVal2 = (offH2 + dungH2*2) / (1-projStats.free/100) * projStats.avgGold;
+        const total1 = (offG1 + dungG1*2) + hammerVal1;
+        const total2 = (offG2 + dungG2*2) + hammerVal2;
+
+        let block2 = genLine('Daily Hammer Value', formatResourceValue(hammerVal1,'gold'), formatResourceValue(hammerVal2,'gold'), 'fm_gold', 'Total gold value of daily hammers, including Free Forge procs');
+        block2 += genLine('Total Daily Value', formatResourceValue(total1,'gold'), formatResourceValue(total2,'gold'), 'fm_gold');
+
+        // Assemble: Two boxes separated by a 10px margin
+        let h4 = `<div style="${boxStyle} margin-bottom: 10px;">${block1}</div>`;
+        h4 += `<div style="${boxStyle}">${block2}</div>`;
+
+        document.getElementById('calc-res-4').innerHTML = h4;
+
+        // 7. Logic: Forge Upgrade
+        if(forgeLevelData[fLv]) {
+            const baseMins = forgeLevelData[fLv][1]*60;
+            const f1 = baseMins/(1+curStats.speed/100);
+            
+            const mainStartTime = new Date(document.getElementById('start-date').value).getTime();
+            const state = calcState();
+            let speedBonusAtStart = curStats.speed;
+            let runningTimeOffset = 0;
+            state.history.forEach(h => {
+                const stepDuration = (h.type === 'delay' ? h.mins : h.added);
+                runningTimeOffset += stepDuration;
+                if(h.tree === 'forge' && h.id && h.id.includes('timer')) {
+                    const techFinishTime = mainStartTime + (runningTimeOffset * 60000);
+                    if (techFinishTime <= sDate.getTime()) { speedBonusAtStart += 4; }
+                }
+            });
+
+            const f2 = baseMins/(1+speedBonusAtStart/100);
+            const dFinish = new Date(sDate.getTime()+f1*60000);
+            const dFinishProj = new Date(sDate.getTime()+f2*60000);
+            const timeStr = (d)=>d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            const dateStr = (d)=>d.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+            const formatDT = (d)=>`<span class="calc-multiline-date">${dateStr(d)}<span class="calc-date-comma">, </span><span class="calc-time-block">${timeStr(d)}</span></span>`;
+            
+            let finishHtml = '';
+            if (dFinish.getTime() === dFinishProj.getTime()) finishHtml = `<div class="calc-val-group calc-date-single"><span>${formatDT(dFinish)}</span></div>`;
+            else finishHtml = `<div class="calc-val-group"><span>${formatDT(dFinish)}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${formatDT(dFinishProj)}</span></div>`;
+
+            let h5 = `<div class="calc-line"><div class="calc-label">Finish</div>${finishHtml}</div>`;
+            h5 += genLine('Duration', formatSmartTime(f1), formatSmartTime(f2));
+            const cRaw = forgeLevelData[fLv][0];
+            h5 += genLine('Cost', formatResourceValue(Math.round(cRaw*(1-curStats.forgeDisc/100)),'gold'), formatResourceValue(Math.round(cRaw*(1-projStats.forgeDisc/100)),'gold'), 'fm_gold');
+            document.getElementById('calc-res-5').innerHTML = h5;
+        }
+        
+        saveToLocalStorage();
+    }
+
+    function showPotionTable(discount) {
+        const c = document.getElementById('table-body');
+document.getElementById('table-disclaimer-text').style.display = 'block';
+        document.getElementById('table-title').innerHTML = '<img src="icons/red_potion.png" style="height:1.2em;vertical-align:bottom"> Tech Upgrade Cost';
+        document.getElementById('table-subtitle').innerText = `Discount: -${discount}%`;
+        let h = '<table class="cost-table"><thead><tr><th>Tier</th>';
+        for(let i=1;i<=5;i++) h+=`<th>Lv ${i}</th>`;
+        h+='<th class="cost-total-col">Total</th></tr></thead><tbody>';
+        for(let t=1;t<=5;t++){
+            let tot=0; h+=`<tr><td><b>${toRoman(t)}</b></td>`;
+            potionCosts[t].forEach(b=>{ const f=Math.round(b*(1-discount/100)); tot+=f; h+=`<td>${f.toLocaleString()}</td>`; });
+            h+=`<td class="cost-total-col">${tot.toLocaleString()}</td></tr>`;
+        }
+        c.innerHTML = h+'</tbody></table>'; document.getElementById('tableModal').style.display='block';
+    }
+
+    function showTechTimerTable(speedBonus) {
+        const c = document.getElementById('table-body');
+document.getElementById('table-disclaimer-text').style.display = 'block';
+        document.getElementById('table-title').innerText = '⏱️ Tech Research Timer';
+        document.getElementById('table-subtitle').innerText = `Speed Bonus: +${speedBonus}%`;
+        let h = '<table class="cost-table"><thead><tr><th>Tier</th>';
+        for(let i=1;i<=5;i++) h+=`<th>Lv ${i}</th>`;
+        h+='<th class="cost-total-col">Total</th></tr></thead><tbody>';
+        for(let t=1;t<=5;t++){
+            let tot=0; h+=`<tr><td><b>${toRoman(t)}</b></td>`;
+            tierTimes[t].forEach(b=>{ const f=b/(1+speedBonus/100); tot+=f; h+=`<td>${formatSmartTime(f)}</td>`; });
+            h+=`<td class="cost-total-col">${formatSmartTime(tot)}</td></tr>`;
+        }
+        c.innerHTML = h+'</tbody></table>'; document.getElementById('tableModal').style.display='block';
+    }
+
+    function showEqSellTable(cur, proj, page = 1) {
+        const c = document.getElementById('table-body');
+        document.getElementById('table-title').innerHTML = '<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:bottom"> Eq. Sell Price';
+document.getElementById('table-disclaimer-text').style.display = 'none';
+        document.getElementById('table-subtitle').innerText = `Bonus: +${cur}% ${cur !== proj ? ' ➜ +' + proj + '%' : ''}`;
+
+        const ranges = [
+            { label: "Lv 1-30", start: 1, end: 30 },
+            { label: "Lv 31-60", start: 31, end: 60 },
+            { label: "Lv 61-90", start: 61, end: 90 },
+            { label: "Lv 91-120", start: 91, end: 120 },
+            { label: "Lv 121-149", start: 121, end: 149 }
+        ];
+
+        let h = `<div class="pagination-bar">`;
+        ranges.forEach((r, i) => h += `<button class="page-btn ${i + 1 === page ? 'active' : ''}" onclick="showEqSellTable(${cur},${proj},${i + 1})">${r.label}</button>`);
+        h += `</div><div class="modal-grid-3">`;
+
+        const { start, end } = ranges[page - 1];
+        const icon = `<img src="icons/fm_gold.png" style="height:0.9em;vertical-align:middle">`;
+        const totalItems = (end - start) + 1;
+        const perCol = Math.ceil(totalItems / 3);
+
+        for (let col = 0; col < 3; col++) {
+            h += `<div><table class="mini-table">`;
+            const cs = start + (col * perCol);
+            const ce = Math.min(end, cs + perCol - 1);
+            if (cs <= end) {
+                for (let i = cs; i <= ce; i++) {
+                    const base = 20 * Math.pow(1.01, i - 1);
+                    const v1 = Math.round(base * (100 + cur) / 100);
+                    const v2 = Math.round(base * (100 + proj) / 100);
+                    h += `<tr class="mini-row"><td>Lv ${i}</td><td>${(cur === proj) ? v1 : v1 + ' ➜ <span style="color:#2ecc71">' + v2 + '</span>'} ${icon}</td></tr>`;
+                }
+            }
+            h += `</table></div>`;
+        }
+        h += `</div>`;
+        c.innerHTML = h;
+        document.getElementById('tableModal').style.display = 'block';
+    }
+
+    function showForgeTable(type, cur, proj, page) {
+        const c = document.getElementById('table-body'), isT = type==='timer';
+document.getElementById('table-disclaimer-text').style.display = 'block';
+        document.getElementById('table-title').innerText = isT ? 'Forge Upgrade Duration' : 'Forge Upgrade Cost';
+        document.getElementById('table-subtitle').innerText = isT ? `Speed: +${cur}% ➜ +${proj}%` : `Discount: -${cur}% ➜ -${proj}%`;
+        let h = `<div class="pagination-bar"><button class="page-btn ${page===1?'active':''}" onclick="showForgeTable('${type}',${cur},${proj},1)">Lv 1-19</button><button class="page-btn ${page===2?'active':''}" onclick="showForgeTable('${type}',${cur},${proj},2)">Lv 20-34</button></div>`;
+        h += `<div class="modal-grid-2"><div class="grid-header">Level</div><div class="grid-header">${isT?'Duration':'Cost'}</div>`;
+        const start = (page===1)?1:20, end = (page===1)?19:34, icon = `<img src="icons/fm_gold.png" style="height:0.9em;vertical-align:middle">`;
+        for(let i=start; i<=end; i++) {
+            if(!forgeLevelData[i]) continue;
+            const [cost, hours] = forgeLevelData[i], mins = hours*60;
+            let v1 = isT?formatSmartTime(mins/(1+cur/100)):formatForgeCost(Math.round(cost*(1-cur/100))), v2 = isT?formatSmartTime(mins/(1+proj/100)):formatForgeCost(Math.round(cost*(1-proj/100)));
+            h += `<div class="grid-cell">${i} ➜ ${i+1}</div><div class="grid-cell">${(v1===v2)?v1+(isT?'':icon):v1+' ➜ <span style="color:#2ecc71">'+v2+'</span>'+(isT?'':icon)}</div>`;
+        }
+        c.innerHTML = h+'</div>'; document.getElementById('tableModal').style.display='block';
+    }
+
+    function showFloatingLabel(nodeId) {
+        if(window.innerWidth > 768) return; 
+        const node = document.getElementById(nodeId), meta = getMeta(nodeId), tier = getTier(nodeId);
+        document.querySelectorAll('.floating-label').forEach(e => e.remove());
+        const lbl = document.createElement('div'); lbl.className = 'floating-label';
+        const tree = nodeId.split('_')[0], color = tree==='forge'?'#4facfe' : (tree==='spt'?'#9b59b6':'#e74c3c');
+        lbl.innerHTML = `<span style="color:${color}">${meta.n} ${toRoman(tier)}</span>`;
+        document.body.appendChild(lbl);
+        const rect = node.getBoundingClientRect();
+        lbl.style.left = (rect.left + rect.width/2) + 'px'; lbl.style.top = (rect.top - 15) + 'px';
+        setTimeout(() => { lbl.style.opacity = '0'; setTimeout(() => lbl.remove(), 500); }, 2000); 
+    }
+
+    function toggleExp(i) { expandedLogIndex = expandedLogIndex===i ? -1 : i; updateCalculations(); }
+    function delStep(i) {
+        if(!confirm(`Delete this step?`)) return;
+        const q = [...planQueue]; q.splice(i,1); let clean=false;
+        while(!clean) {
+            const sim = calcState(q);
+            if(sim.brokenSteps.length > 0) for(let j=sim.brokenSteps.length-1; j>=0; j--) q.splice(sim.brokenSteps[j], 1);
+            else clean = true;
+        }
+        pushHistory(); planQueue=q; expandedLogIndex=-1; updateCalculations();
+    }
+    function markDone(targetIdx, finishIso) {
+        pushHistory();
+        for(let i=0; i<=targetIdx; i++) {
+            const item = planQueue[i];
+            if(item.type==='node') { const cur = setupLevels[item.id]||0; setupLevels[item.id] = Math.min(getMeta(item.id).m, cur+1); }
+        }
+        planQueue.splice(0, targetIdx+1); let clean=false;
+        while(!clean) {
+            const sim = calcState(planQueue);
+            if(sim.brokenSteps.length > 0) for(let j=sim.brokenSteps.length-1; j>=0; j--) planQueue.splice(sim.brokenSteps[j], 1);
+            else clean=true;
+        }
+        const d = new Date(finishIso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        syncMainDate(d.toISOString().slice(0,16)); expandedLogIndex = -1; updateCalculations();
+    }
+    function addDelay(i) {
+        const m = prompt("Enter delay in MINUTES:");
+        if(m) { pushHistory(); planQueue.splice(i+1, 0, {type:'delay', mins:parseFloat(m)}); expandedLogIndex=-1; updateCalculations(); }
+    }
+    function activateInsert(idx) { insertModeIndex = idx+1; expandedLogIndex=-1; setMode('plan'); updateCalculations(); }
+    function clearPlan() { if(confirm("Clear Plan?")) { pushHistory(); planQueue=[]; updateCalculations(); } }
+    function resetCurrentTree() {
+        if(!confirm(`Reset the ${activeTreeKey.toUpperCase()} tree?`)) return;
+        pushHistory(); Object.keys(setupLevels).forEach(id => { if(id.startsWith(activeTreeKey + "_")) delete setupLevels[id]; });
+        planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
+        let clean = false; while(!clean) {
+            const sim = calcState(planQueue);
+            if(sim.brokenSteps.length > 0) for(let j=sim.brokenSteps.length-1; j>=0; j--) planQueue.splice(sim.brokenSteps[j], 1);
+            else clean = true;
+        }
+        updateCalculations();
+    }
+    function setMode(m) {
+        currentMode = m; if(m!=='plan') insertModeIndex=-1;
+        document.getElementById('btn-setup').className=`mode-btn setup ${m==='setup'?'active':''}`;
+        document.getElementById('btn-plan').className=`mode-btn plan ${m==='plan'?'active':''}`;
+        document.getElementById('btn-logs').className=`mode-btn logs ${m==='log'?'active':''}`;
+        if(window.innerWidth <= 768) setMobileView(m==='log' ? 'log' : 'planner');
+        updateCalculations();
+    }
+    function toggleHelp() { const el=document.getElementById('helpModal'); el.style.display=el.style.display==='block'?'none':'block'; }
+    window.onclick = (e) => {
+        if(e.target == document.getElementById('helpModal')) toggleHelp();
+        if(e.target == document.getElementById('tableModal')) document.getElementById('tableModal').style.display='none';
+        if(e.target == document.getElementById('calcModal')) document.getElementById('calcModal').style.display='none';
+    };
+    function handleClick(id, isRight) {
+        showFloatingLabel(id); pushHistory(); const meta = getMeta(id);
+        if(currentMode === 'setup') {
+            if(isRight) {
+                // If level is more than 0, decrease by 1. Otherwise, remove it.
+                if ((setupLevels[id] || 0) > 1) {
+                    setupLevels[id]--;
+                } else {
+                    delete setupLevels[id];
+                }
+            } else { 
+                setupLevels[id] = Math.min(meta.m, (setupLevels[id]||0)+1); 
+                if((setupLevels[id]||0)===1) autoUnlock(id); 
+            }
+            if(!setupLevels[id]) {
+                let changed = true; while(changed) {
+                    changed = false; Object.keys(setupLevels).forEach(k => { if(setupLevels[k]>0 && !isUnlocked(k, setupLevels)) { delete setupLevels[k]; changed=true; } });
+                }
+                const sim = calcState(); if(sim.brokenSteps.length>0) for(let i=sim.brokenSteps.length-1; i>=0; i--) planQueue.splice(sim.brokenSteps[i], 1);
+            }
+        } else {
+            if(isRight) {
+                let idx = -1; for(let i=planQueue.length-1; i>=0; i--) if(planQueue[i].id===id){ idx=i; break; }
+                if(idx > -1) {
+                    planQueue.splice(idx, 1); let clean=false; while(!clean) {
+                        const sim = calcState(planQueue); if(sim.brokenSteps.length>0) for(let j=sim.brokenSteps.length-1; j>=0; j--) planQueue.splice(sim.brokenSteps[j],1); else clean=true;
+                    }
+                }
+            } else {
+                const s = calcState(); if((s.levels[id]||0) < meta.m && isUnlocked(id, s.levels)) {
+                    if(insertModeIndex > -1) { planQueue.splice(insertModeIndex, 0, {type:'node', id}); insertModeIndex = -1; setMode('plan'); }
+                    else planQueue.push({type:'node', id});
+                }
+            }
+        }
+        updateCalculations();
+    }
+    function handleShiftClick(id) {
+        pushHistory(); setupLevels[id] = getMeta(id).m;
+        const ensure = (cid) => getParents(cid).forEach(pid => { if((setupLevels[pid]||0)===0) { setupLevels[pid]=1; ensure(pid); } });
+        ensure(id); updateCalculations();
+    }
+    function autoUnlock(id) { getParents(id).forEach(p => { if((setupLevels[p]||0)===0) { setupLevels[p]=1; autoUnlock(p); } }); }
+    function getMeta(id) { const p=id.split('_'); return TREES[p[0]].meta[p.slice(2).join('_')]; }
+    function getTier(id) { return parseInt(id.split('_T')[1]); }
+    function toRoman(n) { return ["","I","II","III","IV","V"][n]; }
+    function getParents(id) {
+        const p = id.split('_'), tree=p[0], tier=parseInt(p[1].substring(1)), local=p.slice(2).join('_'), meta = TREES[tree].meta[local], res = [];
+        meta.p.forEach(par => res.push(`${tree}_T${tier}_${par}`));
+        if(tier > 1) {
+            if(tree==='forge' && local==='timer') res.push(`forge_T${tier-1}_off_c`);
+            if(tree==='forge' && local==='disc') res.push(`forge_T${tier-1}_off_h`);
+            if(tree==='spt' && local==='timer') res.push(`spt_T${tier-1}_key_g`, `spt_T${tier-1}_key_r`);
+            if(tree==='power' && (local==='weapon_1' || local==='helmet_1')) res.push(`power_T${tier-1}_mount_chance`);
+        }
+        return res;
+    }
+    function isUnlocked(id, lvls) { const p = getParents(id); return p.length===0 || p.every(pr => (lvls[pr]||0) > 0); }
+    function downloadData() {
+    const cd = { 
+        world: document.getElementById('calc-world').value, 
+        stage: document.getElementById('calc-stage').value, 
+        forgeLv: document.getElementById('calc-forge-lv').value, 
+        hammers: document.getElementById('calc-hammers').value, 
+        target: document.getElementById('calc-target').value, 
+        calcStart: document.getElementById('calc-start-date').value 
+    };
+    const ed = {
+        queue: eggPlanQueue,
+        start: document.getElementById('egg-date-desktop').value
+    };
+    const d = {
+        setupLevels, 
+        planQueue, 
+        start: document.getElementById('start-date').value, 
+        calcData: cd,
+        eggData: ed
+    }, a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type:'application/json'})); 
+    a.download = 'Tech_Planner.json'; a.click();
+}
+    function uploadData(el) {
+    pushHistory(); const r = new FileReader(); r.onload = (e) => {
+        const d = JSON.parse(e.target.result); 
+        setupLevels = d.setupLevels; planQueue = d.planQueue; syncMainDate(d.start);
+        if(d.calcData) {
+            document.getElementById('calc-world').value = d.calcData.world; 
+            document.getElementById('calc-stage').value = d.calcData.stage;
+            document.getElementById('calc-forge-lv').value = d.calcData.forgeLv; 
+            document.getElementById('calc-hammers').value = d.calcData.hammers;
+            document.getElementById('calc-target').value = d.calcData.target; 
+            if(d.calcData.calcStart) syncCalcDate(d.calcData.calcStart);
+        }
+        if(d.eggData) {
+            eggPlanQueue = d.eggData.queue || [];
+            if(d.eggData.start) syncEggDate(d.eggData.start);
+        }
+        updateCalculations();
+        if(document.getElementById('eggModal').style.display === 'block') renderEggLog();
+    }; r.readAsText(el.files[0]);
+}
+    function drawLines() {
+        if (lineUpdateRequested) return; lineUpdateRequested = true;
+        requestAnimationFrame(() => {
+            const svg = document.getElementById('svg-layer'), canvas = document.getElementById('canvas');
+            if(!canvas) { lineUpdateRequested = false; return; }
+            svg.innerHTML = ''; 
+            
+            // --- FIX START: Calculate content height manually instead of using scrollHeight ---
+            const lastBlock = canvas.lastElementChild;
+            let contentHeight = 0;
+            if (lastBlock) {
+                 // The actual content height is the bottom position of the last element
+                 // This ignores the container's padding-bottom, preventing the feedback loop
+                 contentHeight = lastBlock.offsetTop + lastBlock.offsetHeight;
+            }
+            // Add a small buffer (e.g., 20px) to ensure lines don't get cut off exactly at the node edge
+            // but DO NOT add the full 150px padding here. Let CSS handle that.
+            svg.style.height = (contentHeight + 20) + "px";
+            // --- FIX END ---
+
+            const vLvls = currentMode==='setup' ? setupLevels : calcState().levels, offset = document.querySelector('.node') ? document.querySelector('.node').offsetWidth / 2 : 32;
+            document.querySelectorAll('.node').forEach(child => {
+                if(child.closest('.tree-container').style.display==='none') return;
+                getParents(child.id).forEach(pId => {
+                    const parent = document.getElementById(pId); if(!parent) return;
+                    const r1 = parent.getBoundingClientRect(), r2 = child.getBoundingClientRect(), c = canvas.getBoundingClientRect();
+                    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+                    line.setAttribute('x1', r1.left+offset-c.left); line.setAttribute('y1', r1.top+offset-c.top);
+                    line.setAttribute('x2', r2.left+offset-c.left); line.setAttribute('y2', r2.top+offset-c.top);
+                    line.setAttribute('class', `connector ${(vLvls[pId]>0)?'active-'+pId.split('_')[0]:''}`); svg.appendChild(line);
+                });
+            }); lineUpdateRequested = false;
+        });
+    }
+// --- EGG PLANNER LOGIC ---
+    let eggPlanQueue = [];
+    let eggHistoryStack = [];
+    let eggRedoStack = [];
+    let eggInsertIdx = -1;
+    let expandedEggIdx = -1;
+    
+    const EGG_DATA = {
+        common: { n: "Common", t: 30, id: "egg1", img: "icons/EggCommon.png", c: "common" },
+        rare: { n: "Rare", t: 120, id: "egg2", img: "icons/EggRare.png", c: "rare" },
+        epic: { n: "Epic", t: 240, id: "egg3", img: "icons/EggEpic.png", c: "epic" },
+        legendary: { n: "Legendary", t: 480, id: "egg4", img: "icons/EggLegendary.png", c: "legendary" },
+        ultimate: { n: "Ultimate", t: 960, id: "egg5", img: "icons/EggUltimate.png", c: "ultimate" },
+        mythic: { n: "Mythic", t: 1920, id: "egg6", img: "icons/EggMythic.png", c: "mythic" }
+    };
+
+    function openEggPlanner() {
+        populateEggDropdowns();
+        
+        // Check current stored value
+        const currentVal = document.getElementById('egg-date-desktop').value;
+        
+        // If empty, sync from main. If exists, refresh the dropdowns using the existing value.
+        if(!currentVal) {
+            syncEggDate(document.getElementById('start-date').value);
+        } else {
+            syncEggDate(currentVal);
+        }
+        
+        updateEggUndoRedo();
+        renderEggLog();
+        document.getElementById('eggModal').style.display = 'block';
+    }
+
+    // --- UNDO / REDO SYSTEM ---
+    function pushEggHistory() {
+        if(eggHistoryStack.length > 20) eggHistoryStack.shift();
+        eggHistoryStack.push(JSON.stringify({
+            q: eggPlanQueue, 
+            d: document.getElementById('egg-date-desktop').value
+        }));
+        eggRedoStack = []; // Clear redo on new action
+        updateEggUndoRedo();
+    }
+
+    function undoEgg() {
+        if(eggHistoryStack.length === 0) return;
+        // Save current state to Redo
+        eggRedoStack.push(JSON.stringify({
+            q: eggPlanQueue, 
+            d: document.getElementById('egg-date-desktop').value
+        }));
+        
+        const last = JSON.parse(eggHistoryStack.pop());
+        eggPlanQueue = last.q;
+        syncEggDate(last.d);
+        updateEggUndoRedo();
+    }
+
+    function redoEgg() {
+        if(eggRedoStack.length === 0) return;
+        // Save current state to History
+        eggHistoryStack.push(JSON.stringify({
+            q: eggPlanQueue, 
+            d: document.getElementById('egg-date-desktop').value
+        }));
+
+        const next = JSON.parse(eggRedoStack.pop());
+        eggPlanQueue = next.q;
+        syncEggDate(next.d);
+        updateEggUndoRedo();
+    }
+
+    function updateEggUndoRedo() {
+        document.getElementById('btn-egg-undo').disabled = eggHistoryStack.length === 0;
+        document.getElementById('btn-egg-undo').style.opacity = eggHistoryStack.length === 0 ? "0.3" : "1";
+        document.getElementById('btn-egg-redo').disabled = eggRedoStack.length === 0;
+        document.getElementById('btn-egg-redo').style.opacity = eggRedoStack.length === 0 ? "0.3" : "1";
+    }
+
+    function populateEggDropdowns() {
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const em = document.getElementById('em-month'); em.innerHTML=''; months.forEach((n,i)=> em.add(new Option(n, i+1)));
+        const ed = document.getElementById('em-day'); ed.innerHTML=''; for(let i=1;i<=31;i++) ed.add(new Option(i,i));
+        const eh = document.getElementById('em-hour'); eh.innerHTML=''; for(let i=0;i<24;i++) eh.add(new Option(i.toString().padStart(2,'0'), i));
+        const emin = document.getElementById('em-min'); emin.innerHTML=''; for(let i=0;i<60;i++) emin.add(new Option(i.toString().padStart(2,'0'), i));
+    }
+
+    function syncEggDate(val) {
+    if (!val) return; 
+    const date = new Date(val);
+    if (isNaN(date.getTime())) return; 
+
+    document.getElementById('egg-date-desktop').value = val;
+    document.getElementById('em-month').value = date.getMonth() + 1;
+    document.getElementById('em-day').value = date.getDate();
+    document.getElementById('em-hour').value = date.getHours();
+    document.getElementById('em-min').value = date.getMinutes();
+    
+    renderEggLog();
+}
+
+    function updateEggFromDropdowns() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = parseInt(document.getElementById(`em-month`).value)-1;
+        const d = parseInt(document.getElementById(`em-day`).value);
+        const h = parseInt(document.getElementById(`em-hour`).value);
+        const min = parseInt(document.getElementById(`em-min`).value);
+        const newDate = new Date(y, m, d, h, min);
+        if (newDate < now && (now - newDate) > 2592000000) newDate.setFullYear(y+1);
+        newDate.setMinutes(newDate.getMinutes() - newDate.getTimezoneOffset());
+        syncEggDate(newDate.toISOString().slice(0,16));
+    }
+
+    function getEggSpeed(techIdSuffix) {
+        let totalLvl = 0;
+        for(let t=1; t<=5; t++) {
+            totalLvl += (setupLevels[`spt_T${t}_${techIdSuffix}`] || 0);
+        }
+        return totalLvl; 
+    }
+function getEggSpeedAtTime(techIdSuffix, targetTimeMs) {
+    let totalLvl = 0;
+    // 1. Get current base levels from Setup
+    for(let t=1; t<=5; t++) {
+        totalLvl += (setupLevels[`spt_T${t}_${techIdSuffix}`] || 0);
+    }
+
+    // 2. Scan Main Tech Plan for completed upgrades before the egg starts
+    let mainStartTime = new Date(document.getElementById('start-date').value).getTime();
+    let techState = calcState(); 
+    
+    let runningTimeOffset = 0;
+    techState.history.forEach(h => {
+        let stepDuration = (h.type === 'delay' ? h.mins : h.added);
+        runningTimeOffset += stepDuration;
+        
+        if (h.id && h.id.endsWith(techIdSuffix)) {
+            let techFinishTime = mainStartTime + (runningTimeOffset * 60000);
+            // If tech finished exactly at or before egg start time, it counts!
+            if (techFinishTime <= targetTimeMs) {
+                totalLvl++;
+            }
+        }
+    });
+    return totalLvl;
+}
+    function addEggToQueue(type) {
+        pushEggHistory(); // SAVE HISTORY
+        const item = { type: 'egg', key: type };
+        if(eggInsertIdx > -1) {
+            eggPlanQueue.splice(eggInsertIdx, 0, item);
+            eggInsertIdx = -1;
+            document.getElementById('egg-selector-box').classList.remove('egg-insert-active');
+        } else {
+            eggPlanQueue.push(item);
+        }
+        renderEggLog();
+    }
+
+    function addEggDelay(idx) {
+        const m = prompt("Enter delay in MINUTES:");
+        if(m) { 
+            pushEggHistory(); // SAVE HISTORY
+            eggPlanQueue.splice(idx+1, 0, {type:'delay', mins:parseFloat(m)}); 
+            expandedEggIdx = -1; 
+            renderEggLog(); 
+        }
+    }
+
+    function markEggDone(idx, finishIso) {
+        pushEggHistory(); // SAVE HISTORY
+        eggPlanQueue.splice(0, idx+1);
+        const d = new Date(finishIso); 
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        syncEggDate(d.toISOString().slice(0,16));
+        expandedEggIdx = -1; 
+        renderEggLog();
+    }
+
+    function activateEggInsert(idx) {
+        eggInsertIdx = idx + 1;
+        expandedEggIdx = -1;
+        document.getElementById('egg-selector-box').classList.add('egg-insert-active');
+        renderEggLog();
+    }
+
+    function deleteEggStep(idx) {
+        pushEggHistory(); // SAVE HISTORY
+        eggPlanQueue.splice(idx, 1);
+        renderEggLog();
+    }
+
+    function clearEggPlan() {
+        if(confirm("Clear egg list?")) {
+            pushEggHistory(); // SAVE HISTORY
+            eggPlanQueue = [];
+            renderEggLog();
+        }
+    }
+
+    function toggleEggExp(i) {
+        expandedEggIdx = expandedEggIdx === i ? -1 : i;
+        renderEggLog();
+    }
+
+    function renderEggLog() {
+    const list = document.getElementById('egg-log-list');
+    list.innerHTML = ''; // Clear the old list
+    let curTime = new Date(document.getElementById('egg-date-desktop').value).getTime();
+    let totalQueueMins = 0;
+
+    // This loop adds each egg or delay to the visual list
+    eggPlanQueue.forEach((item, idx) => {
+        const div = document.createElement('div');
+        
+        if(item.type === 'delay') {
+            totalQueueMins += item.mins;
+            curTime += item.mins * 60000;
+            const finishDate = new Date(curTime);
+            const timeStr = finishDate.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}) + ', ' + finishDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            
+            div.className = `egg-row ${expandedEggIdx===idx?'expanded':''}`;
+            div.style.borderLeftColor = '#7f8c8d';
+            div.innerHTML = `
+                <div class="egg-row-header" onclick="toggleEggExp(${idx})">
+                    <div class="egg-info"><span style="font-size:1.5em">💤</span><span class="egg-name">DELAY</span></div>
+                    <div class="egg-details-right">
+                        <div class="egg-time-finish" style="color:#ccc">${timeStr}</div>
+                        <div class="egg-meta">Duration: ${item.mins}m</div>
+                    </div>
+                </div>
+                <div class="egg-ctrls">
+                    <button class="btn-ctrl" style="background:#c0392b" onclick="deleteEggStep(${idx})">🗑️</button>
+                </div>`;
+        } else {
+            const data = EGG_DATA[item.key];
+            const techLvl = getEggSpeedAtTime(data.id, curTime);
+            const speedMult = 1 + (techLvl * 0.1);
+            const finalMins = data.t / speedMult;
+            totalQueueMins += finalMins;
+            curTime += finalMins * 60000;
+            
+            const finishDate = new Date(curTime);
+            const timeStr = finishDate.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}) + ', ' + finishDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            
+            div.className = `egg-row ${data.c} ${expandedEggIdx===idx?'expanded':''}`;
+            div.innerHTML = `
+                <div class="egg-row-header" onclick="toggleEggExp(${idx})">
+                    <div class="egg-info"><img src="${data.img}"><span class="egg-name">${data.n}</span></div>
+                    <div class="egg-details-right">
+                        <div class="egg-time-finish">${timeStr}</div>
+                        <div class="egg-meta">⏱️ ${formatEggTime(finalMins)} | Speed +${Math.round(techLvl*10)}%</div>
+                    </div>
+                </div>
+                <div class="egg-ctrls">
+                    <button class="btn-ctrl" style="background:#c0392b" onclick="deleteEggStep(${idx})">🗑️ Delete</button>
+                    <button class="btn-ctrl" style="background:#2980b9" onclick="markEggDone(${idx}, '${finishDate.toISOString()}')">✅ Done</button>
+                    <button class="btn-ctrl" style="background:#27ae60" onclick="addEggDelay(${idx})">➕ Delay</button>
+                    <button class="btn-ctrl" style="background:#f39c12" onclick="activateEggInsert(${idx})">⤵️ Insert</button>
+                </div>`;
+        }
+        list.appendChild(div);
+    });
+
+    // Update the summary bar at the top with the calculated total
+    document.getElementById('egg-total-time-val').innerText = formatEggTime(totalQueueMins);
+}
+    init();
+</script>
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="toggleHelp()">&times;</span>
+        <h2>How to Use</h2>
+        <h3>1. Getting Started</h3>
+        <ul>
+            <li><b>🔧 Setup:</b> Input your current in-game tech levels.</li>
+            <li><b>📅 Plan:</b> Queue future tech upgrades. Clicking nodes here adds them to your future timeline.</li>
+            <li><b>📜 Logs:</b> View the planned schedule. Click any row in the log to edit it. (Mobile only)</li>
+<li><b><img src="icons/hammergold.png" style="height:1.2em; vertical-align:middle;">Calc:</b> Open the Forge Calculator to calculate hammer efficiency, gold gain, and forge upgrades.</li>
+<li><b><img src="icons/EggCommon.png" style="height:1.2em; vertical-align:middle;">Egg:</b> Open the Egg Planner to manage your hatching schedule.</li>
+
+        </ul>
+
+        <h3>2. Managing Your Plan (Logs)</h3>
+        <p>Click or tap any item in the Log List to reveal the Action Menu:</p>
+        <ul>
+            <li><b>🗑️ Delete:</b> Removes this specific step from the plan. Automatic repair will try to fix the queue if removing it breaks dependencies.</li>
+            <li><b>✅ Done:</b> Marks the upgrade as complete. This permanently adds it to your "Setup," removes it from the queue, and syncs the specific time to the "Start Date & Time."</li>
+            <li><b>➕ Delay:</b> Adds a waiting period (in minutes) after this step. Use this to account for delays due to sleep, work, or other reasons.</li>
+            <li><b>⤵️ Insert:</b> Activates Insert Mode. The next node you click in the Tree will be squeezed in immediately after this step, instead of at the very end of the queue.</li>
+        </ul>
+
+        <h3>3. Basic Controls</h3>
+        <ul>
+            <li><b>Left Click / Tap:</b> Level Up (+1).</li>
+            <li><b>Right Click / Long Press:</b> Level Down (-1) or Remove from Plan.</li>
+            <li><b>Shift + Click:</b>Max out the node instantly. (Setup mode + Desktop only)</li>
+        </ul>
+
+        <h3>4. Tools</h3>
+        <ul>
+            <li><b>💾 Save / 📂Load:</b> Backup your data to a JSON file.</li>
+            <li><b>📊 Summary:</b> View total stats from each tech nodes before and after your planned tech upgrades.</li>
+            <li><b>📱 Forge Calculator: </b>Calculate hammer efficiency, gold gain, and forge upgrades.</li>
+<li><b>🥚 Egg Planner:</b> Manage your egg hatching schedule. It automatically accounts for planned tech upgrades to give you accurate hatch times.</li>
+        </ul>
+
+        <div style="display: flex; justify-content: center; margin-top: 30px; padding-bottom: 10px;">
+            <img src="icons/AbyssDoraemon.png" alt="In-game Profile" style="max-width: 280px; height: auto; border-radius: 4px;">
+        </div>
+    </div>
+</div>
+</body>
+</html>
