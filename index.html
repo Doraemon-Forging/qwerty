@@ -1010,10 +1010,10 @@ const formatEggTime = (totalMins) => {
                     const p = l*2;
                     const r = 1 * (1 + p/100); 
                     const d = r * 1440;        
-                    if(l===0) return `Bonus +0% (1 <img src="icons/fm_hammer.png" class="stat-key-icon">/min | 1440 <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
+                    if(l===0) return `Bonus +0% (1 <img src="icons/fm_hammer.png" class="stat-key-icon">/m | 1440 <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
                     const rStr = r.toFixed(2);
                     const dStr = d.toFixed(1); 
-                    return `Bonus +${p}% (${rStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/min | ${dStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
+                    return `Bonus +${p}% (${rStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/m | ${dStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
                 }}
             }
         },
@@ -1609,7 +1609,7 @@ if(document.getElementById('eggModal').style.display === 'block') renderEggLog()
 
         // 3. Logic: Hammer Efficiency
         let h1 = '', effH1 = hIn/(1-curStats.free/100), effH2 = hIn/(1-projStats.free/100);
-        h1 += genLine('Effective Hammer', formatResourceValue(effH1,'hammer'), formatResourceValue(effH2,'hammer'), 'fm_hammer');
+        h1 += genLine('Effective Hammer', formatResourceValue(effH1,'hammer'), formatResourceValue(effH2,'hammer'), 'fm_hammer', 'The number of hammers after accounting for the Free Forge Chance tech. Formula: Eff. Hammer = Hammer / (1 - FreeForgeChance)');
         h1 += genLine('Gold', formatResourceValue(effH1*curStats.avgGold,'gold'), formatResourceValue(effH2*projStats.avgGold,'gold'), 'fm_gold');
         document.getElementById('calc-res-1').innerHTML = h1;
 
