@@ -597,26 +597,33 @@
             flex-direction: column; 
         }
         
-        .egg-row { display: flex; flex-direction: column; border-bottom: 1px solid #333; padding: 10px 10px; border-left: 4px solid transparent; background: #1e1e1e; position: relative; }
+        .egg-row { 
+    display: flex; 
+    flex-direction: column; 
+    border-bottom: 1px solid #333; 
+    padding: 6px 10px; /* Reduced vertical padding from 10px to 6px */
+    border-left: 4px solid transparent; 
+    background: #1e1e1e; 
+    position: relative; 
+    font-size: 0.85em; /* Matches the Tech Log font size */
+}
         .egg-row.common { border-left-color: #AE988C; }
         .egg-row.rare { border-left-color: #3498db; }
         .egg-row.epic { border-left-color: #2ecc71; }
         .egg-row.legendary { border-left-color: #f1c40f; }
         .egg-row.ultimate { border-left-color: #B25C5C; }
         .egg-row.mythic { border-left-color: #9b59b6; }
+       
+        .egg-row-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         
-        /* Flex container for the top row */
-        .egg-row-header { display: flex; justify-content: space-between; align-items: flex-start; cursor: pointer; }
-        
-        .egg-info { display: flex; align-items: center; gap: 12px; }
-        /* Fix for oval images: Auto width, fixed height */
-        .egg-info img { height: 40px; width: auto; object-fit: contain; }
+        .egg-info { display: flex; align-items: center; gap: 12px; }       
+        .egg-info img { height: 2.2rem; width: auto; object-fit: contain; }
         .egg-name { font-weight: normal; font-size: 0.85em; color: #bbb; }
         
         /* Right side container */
         .egg-details-right { text-align: right; }
-        .egg-time-finish { font-size: 1em; font-weight: bold; color: var(--accent-green); }
-        .egg-meta { font-size: 0.8em; color: #888; margin-top: 2px; }
+        .egg-time-finish { font-size: 1em; font-weight: 600; color: var(--accent-green); }
+        .egg-meta { font-size: 0.8em; color: #888; margin-top: 1px; }
         
         .egg-ctrls { display: none; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #444; justify-content: flex-end; }
         .egg-row.expanded .egg-ctrls { display: flex; }
@@ -2278,17 +2285,18 @@ function getEggSpeedAtTime(techIdSuffix, targetTimeMs) {
         list.appendChild(div);
     });
 const summaryBox = document.getElementById('egg-total-summary');
-    if (summaryBox) {
-        summaryBox.style.padding = '0'; 
-        summaryBox.innerHTML = `
-            <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border-right: 1px solid #333; padding: 10px; color: #ff9800; font-weight: bold;">
-                <span>⚔️</span> <span>${totalPoints.toLocaleString('en-US')}</span>
-            </div>
-            <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; color: #fff;">
-                <span>⏱️</span> <span>${formatEggTime(totalQueueMins)}</span>
-            </div>
-        `;
-    }
+   
+if (summaryBox) {
+    summaryBox.style.padding = '0'; 
+    summaryBox.innerHTML = `
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; border-right: 1px solid #333; padding: 10px; color: #fff; font-weight: bold;">
+            <span>⚔️</span> <span>${totalPoints.toLocaleString('en-US')}</span>
+        </div>
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; color: var(--accent-orange); font-weight: bold;">
+            <span>⏱️</span> <span>${formatEggTime(totalQueueMins)}</span>
+        </div>
+    `;
+}
 } 
 
 init(); 
