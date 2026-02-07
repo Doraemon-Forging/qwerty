@@ -477,7 +477,7 @@ body {
 .btn-table:hover { background: #555; color: #fff; }
 
 /* --- SIDEBAR --- */
-.sidebar { width: 420px; background: var(--panel-bg); border-left: 2px solid #333; display: flex; flex-direction: column; }
+.sidebar { width: 100%; background: var(--panel-bg); border-left: 2px solid #333; display: flex; flex-direction: column; font-size: 1em;}
 .sidebar-header { padding: 15px; background: #252525; font-weight: bold; color: #888; border-bottom: 1px solid #333; display: flex; flex-direction:column; gap:10px; }
 .sidebar-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 
@@ -519,11 +519,11 @@ body {
 }
 
 .log-anchor { 
-    background: #111; 
-    border: 1px solid #333; 
-    border-radius: 4px; 
-    padding: 10px; 
-    margin-bottom: 10px; 
+    background: transparent;       
+    border: none;                  
+    padding: 10px 0;              
+    margin-bottom: 0;              
+    border-bottom: 2px solid #333; 
 }
 
 .log-anchor .calc-row-input {
@@ -768,10 +768,15 @@ body {
 #btn-calc.active-tool { background: #f39c12; color: black; border-color: #e67e22; }
 #btn-egg.active-tool { background: #9b59b6; color: white; border-color: #8e44ad; }
 
+/* --- EGG PLANNER DATE FIX (Matches Logs Style) --- */
 #panel-calc #calc-start-date, 
 #panel-egg #egg-date-desktop {
-    width: 140px !important; 
-    font-size: 0.8em;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    letter-spacing: 0.5px !important;
+    width: 220px !important;      
+    font-size: 0.8em !important;  
+    height: 30px !important;      
+    padding: 0 5px !important;
 }
 
 #panel-stats .stats-container {
@@ -1196,7 +1201,11 @@ body {
 
 /* --- CONSISTENCY: PANEL DATE INPUTS --- */
 #start-date, #calc-start-date, #egg-date-desktop {
-    width: 200px !important; /* Forces all date inputs to the same width */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    letter-spacing: 0.5px;
+    width: 220px !important;      /* Shrink width */
+    font-size: 0.8em !important; /* Shrink font size significantly */
+    height: 30px !important;      /* Force a compact height */
 }
 
 /* ============================================================
@@ -1290,11 +1299,11 @@ body {
 .date-row-styled {
     display: flex;
     align-items: center;
-    background: #000;
-    border: 1px solid #222;
-    border-radius: 6px;
-    padding: 4px 12px;
+    background: transparent; 
+    border: none;            
+    padding: 0;              
     margin-bottom: 5px;
+    gap: 10px;               
 }
 
 .drs-label {
@@ -1395,4 +1404,10 @@ body {
     .ptb-icon-img {
         height: 1.6em; /* Slight bump for the header icons */
     }
+}
+
+#log-list {
+    border-top: 1px solid #333; /* The separator line */
+    padding-top: 10px;          /* Space between line and first item */
+    margin-top: 5px;            /* Space between Date box and line */
 }
