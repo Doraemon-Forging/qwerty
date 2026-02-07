@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tech Tree Planner</title>
+    <link rel="icon" type="image/png" href="icons/app-icon.png">
+    
+    <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body class="view-planner">
+
+    <input type="file" id="file-upload" style="display:none" onchange="uploadData(this)" accept=".json">
+
+    <div id="mobile-tree-nav" class="mobile-only tree-sticky-nav" style="display:none;">
+        <div class="tn-row-1">
+            <div class="tn-mode-group pill-style">
+                <button class="tn-mode-btn setup active" id="btn-setup-mobile-new" onclick="setMode('setup')">🔧 Setup</button>
+                <button class="tn-mode-btn plan" id="btn-plan-mobile-new" onclick="setMode('plan')">📅 Plan</button>
+            </div>
+            <button class="tn-action-btn reset-neutral" onclick="resetCurrentTree()">Reset</button>
+            <div class="tn-undo-group">
+                <button class="tn-action-btn" id="btn-undo-mobile-new" onclick="undo()" disabled>↩️</button>
+                <button class="tn-action-btn" id="btn-redo-mobile-new" onclick="redo()" disabled>↪️</button>
+            </div>
+        </div>
+        <div class="tn-row-2">
+            <button class="tn-tree-btn active" id="mtab-forge" onclick="selectTree('forge')"><img src="icons/tree_forge.png" class="nav-icon-mobile"> FORGE</button>
+            <button class="tn-tree-btn" id="mtab-spt" onclick="selectTree('spt')"><img src="icons/tree_SPT.png" class="nav-icon-mobile"> SPT</button>
+            <button class="tn-tree-btn" id="mtab-power" onclick="selectTree('power')"><img src="icons/tree_power.png" class="nav-icon-mobile"> POWER</button>
+        </div>
+    </div>
+
+    <div class="desktop-global-header desktop-only">
+        <div class="header-left">
+            <button class="btn-io" onclick="downloadData()">💾 <span>Save</span></button>
+            <button class="btn-io" onclick="document.getElementById('file-upload').click()">📂 <span>Load</span></button>
+            <button class="btn-io" onclick="toggleHelp()">❓ <span>How to Use</span></button>
+            <a href="https://github.com/Doraemon-Forging/TechPlanner" target="_blank" class="btn-io">🔗 <span>Github</span></a>
+        </div>
+
+        <div class="header-right">
+             <button class="mode-btn logs" id="btn-logs" onclick="setSidebarPanel('logs')">📜 LOGS</button>
+             <button class="mode-btn" id="btn-stats" onclick="setSidebarPanel('stats')">📊 STATS</button>
+             <button class="mode-btn" id="btn-calc" onclick="setSidebarPanel('calc')">🔨 CALC</button>
+             <button class="mode-btn" id="btn-egg" onclick="setSidebarPanel('egg')">🥚 EGG</button>
+        </div>
+    </div>
+
+    <div class="desktop-workspace">
+        
+        <div class="pane left-pane">
+            
+            <div class="d-header-row row-controls desktop-only">
+                <div class="btn-group-pill nav-group" style="flex:2">
+                    <button class="mode-btn active setup" id="btn-setup" onclick="setMode('setup')">🔧 SETUP</button>
+                    <button class="mode-btn plan" id="btn-plan" onclick="setMode('plan')">📅 PLAN</button>
+                </div>
+                <div class="action-cluster" style="flex:1; justify-content:flex-end;">
+     <button class="btn-io btn-reset-text" onclick="resetCurrentTree()" title="Reset Tree">Reset</button>
+     
+     <div class="btn-group-actions">
+        <button class="btn-io" id="btn-undo-desktop" onclick="undo()" disabled>↩️</button>
+        <button class="btn-io" id="btn-redo-desktop" onclick="redo()" disabled>↪️</button>
+     </div>
+</div>
+            </div>
+
+            <div class="d-header-row row-tabs desktop-only">
+                <div class="nav-tab active-forge" id="tab-forge" onclick="selectTree('forge')">
+                    <img src="icons/tree_forge.png" class="nav-icon"> FORGE
+                </div>
+                <div class="nav-tab" id="tab-spt" onclick="selectTree('spt')">
+                    <img src="icons/tree_SPT.png" class="nav-icon"> SPT
+                </div>
+                <div class="nav-tab" id="tab-power" onclick="selectTree('power')">
+                    <img src="icons/tree_power.png" class="nav-icon"> POWER
+                </div>
+            </div>
+
+            <div class="tree-container" id="tree-container">
+                <div class="tree-canvas" id="canvas">
+                    <svg class="connections-layer" id="svg-layer"></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="pane right-pane">
+            <div class="sidebar">
+                <div class="sidebar-scroll-wrapper">
+                    
+<div id="panel-logs" class="sidebar-panel">
+    <div class="panel-title-bar">
+        <div class="ptb-left"><span style="font-size:1.4em; margin-right:8px;">📜</span> LOGS</div>
+        <div class="ptb-right">
+            <button class="btn-io" onclick="clearPlan()">🗑️</button>
+            <button class="btn-io" id="btn-undo-log" onclick="undo()" disabled>↩️</button>
+            <button class="btn-io" id="btn-redo-log" onclick="redo()" disabled>↪️</button>
+        </div>
+    </div>
+
+    <div class="log-container">
+        <div class="stats-box-row">
+    <div class="sb-item type-res">
+        <span class="sb-value" style="color:#e74c3c" id="res-val-desktop">0</span>
+    </div>
+    <div class="sb-item type-time">
+        <span class="sb-value" style="color:#f39c12" id="time-val-desktop">0m</span>
+    </div>
+</div>
+
+        <div class="log-anchor" style="background:transparent; border:none; padding:0; margin-bottom: 20px;">
+            <div class="date-row-styled">
+                <label class="drs-label">Start:</label>
+                <input type="datetime-local" id="start-date" class="drs-input desktop-only" lang="en-GB" onchange="updateCalculations()">
+                
+                <div class="mobile-only date-dd-container">
+                    <select id="dm-month" class="dd-date" onchange="updateFromDropdowns('dm')"></select>
+                    <select id="dm-day" class="dd-date" onchange="updateFromDropdowns('dm')"></select>
+                    <div class="dd-time-group">
+                        <select id="dm-hour" class="dd-date" onchange="updateFromDropdowns('dm')"></select>
+                        <span class="dd-colon">:</span>
+                        <select id="dm-min" class="dd-date" onchange="updateFromDropdowns('dm')"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="log-list"></div>
+    </div>
+</div>
+
+                    <div id="panel-stats" class="sidebar-panel" style="display:none;">
+                        <div class="panel-title-bar">
+                            <div class="ptb-left"><span class="ptb-icon">📊</span> STATISTICS</div>
+                        </div>
+                        <div class="stats-container" id="stats-container"><div id="stats-content"></div></div>
+                    </div>
+
+                    <div id="panel-calc" class="sidebar-panel" style="display:none; padding:0;">
+                         <div class="panel-title-bar">
+                            <div class="ptb-left"><img src="icons/hammergold.png" class="ptb-icon-img"> FORGE CALCULATOR</div>
+                        </div>
+                        <div style="padding: 15px;">
+                            <div class="calc-wrapper"><div class="calc-row-input"><label>Hammer:</label><input type="text" id="calc-hammers" value="1,000" class="calc-input-tiny" oninput="updateCalculator()" onfocus="unformatInput(this)" onblur="formatInput(this)"></div><div id="calc-res-1" class="calc-result-box"></div></div>
+                            <div class="calc-wrapper"><div class="calc-row-input"><label>Target Gold:</label><input type="text" id="calc-target" value="1,000,000" class="calc-input-tiny" oninput="updateCalculator()" onfocus="unformatInput(this)" onblur="formatInput(this)"></div><div id="calc-res-2" class="calc-result-box"></div></div>
+                            <div class="calc-wrapper"><div class="calc-section-title" style="margin-top:0">Thief Dungeon</div><div class="calc-row-input"><label>Level:</label><div><select id="calc-world" class="calc-select-tiny" onchange="updateCalculator()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select><span>-</span><select id="calc-stage" class="calc-select-tiny" onchange="updateCalculator()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></div></div><div id="calc-res-3" class="calc-result-box"></div></div>
+                            <div class="calc-wrapper"><div class="calc-section-title">Daily Totals</div><div id="calc-res-4"></div></div>
+                            <div class="calc-wrapper">
+                                <div class="calc-section-title">Forge Upgrade</div>
+                                <div class="calc-row-input"><label>Current Forge Lv:</label><select id="calc-forge-lv" class="calc-select-tiny" onchange="updateCalculator()"></select></div>
+                                <div class="calc-row-input">
+                                    <label>Start:</label>
+                                    <input type="datetime-local" id="calc-start-date" class="calc-input-tiny desktop-only" lang="en-GB" onchange="syncCalcDate(this.value)">
+                                    <div class="mobile-only date-dd-container">
+                                        <select id="cm-month" class="dd-date" onchange="updateFromDropdowns('calc')"></select>
+                                        <select id="cm-day" class="dd-date" onchange="updateFromDropdowns('calc')"></select>
+                                        <div class="dd-time-group">
+                                            <select id="cm-hour" class="dd-date" onchange="updateFromDropdowns('calc')"></select>
+                                            <span class="dd-colon">:</span>
+                                            <select id="cm-min" class="dd-date" onchange="updateFromDropdowns('calc')"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="calc-res-5" class="calc-result-box"></div>
+                            </div>
+                        </div>
+                    </div>
+
+<div id="panel-egg" class="sidebar-panel" style="display:none;">
+    <div class="panel-title-bar">
+        <div class="ptb-left"><img src="icons/EggHatched.png" class="ptb-icon-img"> EGG PLANNER</div>
+        <div class="ptb-right">
+            <button class="btn-io" onclick="clearEggPlan()">🗑️</button>
+            <button class="btn-io" id="btn-undo-egg" onclick="undoEgg()" disabled>↩️</button>
+            <button class="btn-io" id="btn-redo-egg" onclick="redoEgg()" disabled>↪️</button>
+        </div>
+    </div>
+
+    <div class="log-container">
+        <div id="egg-total-summary"></div>
+
+        <div class="log-anchor" style="background:transparent; border:none; padding:0; margin-bottom: 20px;">
+            <div class="date-row-styled">
+                <label class="drs-label">Start:</label>
+                <input type="datetime-local" id="egg-date-desktop" class="drs-input desktop-only" lang="en-GB" onchange="syncEggDate(this.value)">
+                
+                <div class="mobile-only date-dd-container">
+                    <select id="em-month" class="dd-date" onchange="updateFromDropdowns('egg')"></select>
+                    <select id="em-day" class="dd-date" onchange="updateFromDropdowns('egg')"></select>
+                    <div class="dd-time-group">
+                        <select id="em-hour" class="dd-date" onchange="updateFromDropdowns('egg')"></select>
+                        <span class="dd-colon">:</span>
+                        <select id="em-min" class="dd-date" onchange="updateFromDropdowns('egg')"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="egg-instruction">
+            Choose which type of egg you want to hatch next:
+        </div>
+
+        <div class="egg-selector" id="egg-selector-box">
+            <button class="egg-btn" onclick="addEggToQueue('common')"><img src="icons/EggCommon.png"></button>
+            <button class="egg-btn" onclick="addEggToQueue('rare')"><img src="icons/EggRare.png"></button>
+            <button class="egg-btn" onclick="addEggToQueue('epic')"><img src="icons/EggEpic.png"></button>
+            <button class="egg-btn" onclick="addEggToQueue('legendary')"><img src="icons/EggLegendary.png"></button>
+            <button class="egg-btn" onclick="addEggToQueue('ultimate')"><img src="icons/EggUltimate.png"></button>
+            <button class="egg-btn" onclick="addEggToQueue('mythic')"><img src="icons/EggMythic.png"></button>
+        </div>
+
+        <div class="egg-log-container" id="egg-log-list"></div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav mobile-only">
+        <button class="b-nav-item active" id="b-nav-tree" onclick="setMainView('tree')"><span class="b-icon">🌳</span><span class="b-label">Tech Tree</span></button>
+        <button class="b-nav-item" id="b-nav-logs" onclick="setMainView('logs')"><span class="b-icon">📜</span><span class="b-label">Logs</span></button>
+        <button class="b-nav-item" id="b-nav-stats" onclick="setMainView('stats')"><span class="b-icon">📊</span><span class="b-label">Stats</span></button>
+        <button class="b-nav-item" id="b-nav-more" onclick="setMainView('more')"><span class="b-icon">⚙️</span><span class="b-label">More</span></button>
+    </div>
+    
+    <div id="view-more" class="more-view-container mobile-only" style="display:none;">
+        <div class="hub-section"><div class="hub-label">OTHER TOOLS</div><div class="hub-list"><button class="hub-card" onclick="setMainView('egg')"><img src="icons/EggHatched.png" class="hub-icon-img"><span class="hub-text">Egg Planner</span><span class="hub-arrow">›</span></button><button class="hub-card" onclick="setMainView('calc')"><img src="icons/hammergold.png" class="hub-icon-img"><span class="hub-text">Forge Calculator</span><span class="hub-arrow">›</span></button></div></div>
+         <div class="hub-section"><div class="hub-label">DATA MANAGEMENT</div><div class="hub-list"><button class="hub-card" onclick="downloadData()"><span class="hub-icon">💾</span><span class="hub-text">Save</span><span class="hub-arrow">⬇️</span></button><button class="hub-card" onclick="document.getElementById('file-upload').click()"><span class="hub-icon">📂</span><span class="hub-text">Load</span><span class="hub-arrow">⬆️</span></button></div></div>
+         <div class="hub-section"><div class="hub-label">ABOUT</div><div class="hub-list"><button class="hub-card" onclick="toggleHelp()"><span class="hub-icon">📖</span><span class="hub-text">How to Use</span><span class="hub-arrow">?</span></button></div></div>
+    </div>
+    
+    <div id="tableModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="document.getElementById('tableModal').style.display='none'">&times;</span><h2 id="table-title"></h2><h3 id="table-subtitle"></h3><p id="table-disclaimer-text" class="table-disclaimer" style="display:none">Values may differ slightly from the game but should be nearly identical.</p><div id="table-body"></div></div></div>
+    
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleHelp()">&times;</span>
+            <h2>How to Use</h2>
+            <h3>1. Getting Started</h3>
+            <ul>
+                <li><b>🔧 Setup:</b> Input your current in-game tech levels.</li>
+                <li><b>📅 Plan:</b> Queue future tech upgrades. Clicking nodes here adds them to your future timeline.</li>
+                <li><b>📜 Logs:</b> View the planned schedule. Click any row in the log to edit it.</li>
+            </ul>
+            <h3>2. Basic Controls</h3>
+            <ul>
+                <li><b>Left Click:</b> Level Up (+1).</li>
+                <li><b>Right Click:</b> Level Down (-1) or Remove from Plan.</li>
+                <li><b>Shift + Click:</b> Max out the node (Setup mode only).</li>
+            </ul>
+             <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <img src="icons/AbyssDoraemon.png" alt="In-game Profile" style="max-width: 280px; height: auto; border-radius: 4px;">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/tech-planner.js"></script>
+    <script src="js/tools.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
