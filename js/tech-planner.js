@@ -18,26 +18,19 @@ let scrollPositions = { forge: 0, spt: 0, power: 0, stats: 0 };
 // --- TREE NAVIGATION & RENDERING ---
 
 function switchTree(key) {
-    if (key === 'stats') return; // Prevent switching if called by mistake
-
-    // 1. Update Dropdown Label
+    if (key === 'stats') return; 
     const names = { forge: 'Forge', spt: 'SPT', power: 'Power' };
     const btn = document.getElementById('tree-select-label');
     if (btn) btn.innerHTML = `${names[key]} ▼`;
 
-    // 2. Save Scroll Position
     const treeCont = document.getElementById('tree-container');
     if (treeCont) scrollPositions[activeTreeKey] = treeCont.scrollTop;
 
-    // 3. Switch Context
     activeTreeKey = key;
-    
-    // 4. Update UI Tabs (Desktop)
     document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active-forge', 'active-spt', 'active-power'));
     const tab = document.querySelector(`#tab-${key}`);
     if (tab) tab.classList.add(TREES[key].colorClass);
 
-    // 4b. Update UI Tabs (Mobile Sticky Nav)
     ['forge', 'spt', 'power'].forEach(k => {
         const mBtn = document.getElementById(`mtab-${k}`);
         if(mBtn) {
@@ -46,13 +39,9 @@ function switchTree(key) {
         }
     });
 
-    // 5. Restore Scroll & Render
-    // Ensure Tree Container is always visible now
     treeCont.style.display = 'flex';
-    document.getElementById('stats-container').style.display = 'block'; // Ensure inner container is visible (outer panel handles hide/show)
-    
+    document.getElementById('stats-container').style.display = 'block'; 
     treeCont.scrollTop = scrollPositions[key] || 0;
-
     document.getElementById('canvas').className = `tree-canvas tree-${key}`;
     renderTree(key);
     setTimeout(drawLines, 0);
@@ -60,14 +49,11 @@ function switchTree(key) {
 
 function renderTree(key) {
     const canvas = document.getElementById('canvas');
-    // Remove existing nodes but keep the SVG layer and Reset button
     Array.from(canvas.children).forEach(c => {
         if (!c.classList.contains('connections-layer') && !c.classList.contains('tree-reset-btn')) c.remove();
     });
 
     const data = TREES[key];
-
-    // Build Tiers
     for (let t = 1; t <= 5; t++) {
         const block = document.createElement('div'); block.className = 'tier-block';
         const label = document.createElement('div'); label.className = 'tier-label'; label.innerText = `TIER ${toRoman(t)}`;
@@ -79,7 +65,6 @@ function renderTree(key) {
             const meta = data.meta[nDef.id];
             if (!meta) return;
 
-            // Create Row if needed
             if (!rows[nDef.r]) {
                 const rDiv = document.createElement('div');
                 rDiv.style = "display:flex;justify-content:center;margin-bottom:30px;width:100%";
@@ -87,15 +72,13 @@ function renderTree(key) {
                 rows[nDef.r] = rDiv;
             }
 
-            // Create Node
             const node = document.createElement('div');
             node.className = 'node';
             node.id = fullId;
             node.dataset.name = meta.n;
             node.title = `${meta.n} ${toRoman(t)}`;
-            if (nDef.c === 1) node.style.marginLeft = "120px"; // Offset logic
+            if (nDef.c === 1) node.style.marginLeft = "120px"; 
 
-            // Icon & Badges
             const iconPath = `icons/${key}_${nDef.id}.png`;
             const fallbackEmoji = key === 'forge' ? '🔨' : (key === 'spt' ? '🐾' : '⚔️');
             const speedBadge = meta.speed ? `<div class="node-speed-badge">⚡</div>` : '';
@@ -107,8 +90,6 @@ function renderTree(key) {
                 ${speedBadge}
                 <div class="node-level">0/${meta.m}</div>
             `;
-
-            // Listeners
             node.onclick = (e) => {
                 if (e.shiftKey && currentMode === 'setup') handleShiftClick(fullId);
                 else handleClick(fullId, false);
@@ -117,7 +98,6 @@ function renderTree(key) {
                 e.preventDefault();
                 handleClick(fullId, true);
             };
-
             rows[nDef.r].appendChild(node);
         });
         canvas.appendChild(block);
@@ -131,7 +111,6 @@ function calcState(customQueue) {
     const levels = { ...setupLevels };
     let totalMin = 0, history = [], speed = 0, totalPotions = 0, totalSellBonusCur = 0, currentDiscount = 0;
 
-    // 1. Calculate Initial State (Base levels)
     Object.keys(setupLevels).forEach(id => {
         const m = getMeta(id);
         if (m && m.n === "Eq. Sell Price") totalSellBonusCur += (setupLevels[id] * 2);
@@ -141,9 +120,8 @@ function calcState(customQueue) {
         if (m && m.speed) speed += m.speed * levels[id];
         if (m && m.isDiscount) currentDiscount += levels[id] * 2;
     });
-    if (speed > 1) speed = 1; // Cap initial speed at 100%
+    if (speed > 1) speed = 1; 
 
-    // 2. Process Queue
     const q = customQueue || planQueue;
     const brokenSteps = [];
 
@@ -152,22 +130,17 @@ function calcState(customQueue) {
             totalMin += item.mins;
             history.push({ type: 'delay', mins: item.mins, idx: i });
         } else {
-            // Check dependencies
             if (!isUnlocked(item.id, levels)) {
                 brokenSteps.push(i);
                 return;
             }
-
             const cur = levels[item.id] || 0;
             const m = getMeta(item.id);
-
-            // Cap level
             if (cur >= m.m) return;
 
             const tier = getTier(item.id);
             const timeBase = tierTimes[tier][cur];
             const finalTime = timeBase / (1 + speed);
-
             const potionBase = potionCosts[tier][cur];
             const finalPotion = Math.round(potionBase * (1 - (currentDiscount / 100)));
 
@@ -176,8 +149,6 @@ function calcState(customQueue) {
             levels[item.id] = cur + 1;
 
             const spStr = Math.round(speed * 100);
-
-            // Apply benefits for next steps
             if (m.speed) { speed += m.speed; if (speed > 1) speed = 1; }
             if (m.isDiscount) currentDiscount += 2;
 
@@ -189,7 +160,6 @@ function calcState(customQueue) {
         }
     });
 
-    // 3. Calculate Final Sell Bonus
     let totalSellBonusProj = 0;
     Object.keys(levels).forEach(id => {
         const m = getMeta(id);
@@ -201,67 +171,53 @@ function calcState(customQueue) {
 
 function updateCalculations() {
     const state = calcState();
-
-    // 1. Update Top Bar (Resources & Time)
     const sVal = document.getElementById('start-date').value;
     const start = sVal ? new Date(sVal) : new Date();
     const startTime = start.getTime();
 
-    // Prepare text values
     const potStr = state.totalPotions.toLocaleString('en-US');
     const timeStr = formatSmartTime(state.totalMin);
 
-    // Update Mobile IDs
     const resVal = document.getElementById('res-val');
     const timeVal = document.getElementById('time-val');
     if (resVal) resVal.innerText = potStr;
     if (timeVal) timeVal.innerText = timeStr;
 
-    // Update Desktop IDs (New)
     const resValDesk = document.getElementById('res-val-desktop');
     const timeValDesk = document.getElementById('time-val-desktop');
     if (resValDesk) resValDesk.innerText = potStr;
     if (timeValDesk) timeValDesk.innerText = timeStr;
 
-    // 3. Update Visual Node States (CSS Classes)
     const vLvls = currentMode === 'setup' ? setupLevels : state.levels;
     document.querySelectorAll('.node').forEach(el => {
         const lvl = vLvls[el.id] || 0;
         const m = getMeta(el.id);
         if (!m) return;
 
-        // Update Level Text
         const lvlLabel = el.querySelector('.node-level');
         if (lvlLabel) lvlLabel.innerText = `${lvl}/${m.m}`;
 
-        // Update Classes
         el.className = 'node';
         if (isUnlocked(el.id, vLvls)) el.classList.add('unlocked');
         if (setupLevels[el.id]) el.classList.add('active-setup');
         if (lvl > (setupLevels[el.id] || 0)) el.classList.add('active-plan');
         if (lvl >= m.m) el.classList.add('maxed');
-
-        // Opacity for locked nodes
         el.style.opacity = (!isUnlocked(el.id, vLvls) && lvl === 0) ? "0.3" : "1";
     });
 
-    // 4. Render Log List
     const list = document.getElementById('log-list');
     if (list) {
         list.innerHTML = '';
         let curTime = startTime;
-
         state.history.forEach(h => {
             const row = document.createElement('div');
             row.className = `log-row ${expandedLogIndex === h.idx ? 'expanded' : ''}`;
-
             let durMs = (h.type === 'delay' ? h.mins : h.added) * 60000;
             curTime += durMs;
 
             const finishDate = new Date(curTime);
             const finishTs = finishDate.getTime();
             const durStr = formatSmartTime(h.type === 'delay' ? h.mins : h.added);
-            // Force 'en-GB' locale to ensure 24-hour format with a colon (:)
             const finishDateStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
             let content = '';
             if (h.type === 'delay') {
@@ -269,9 +225,18 @@ function updateCalculations() {
             } else {
                 const tierNum = getTier(h.id);
                 const costHtml = `${h.cost.toLocaleString('en-US')} <img src="icons/red_potion.png" style="height:1em; vertical-align:middle">`;
+                
+                const parts = h.id.split('_');
+                const iconLocalId = parts.slice(2).join('_'); 
+                const iconPath = `icons/${parts[0]}_${iconLocalId}.png`;
+                const iconHtml = `<div class="log-node-preview desktop-only"><div class="lnp-tier">${toRoman(tierNum)}</div><img src="${iconPath}" class="lnp-img" onerror="this.style.display='none'"></div>`;
+
                 content = `
                     <div class="log-entry ${h.tree}" onclick="toggleExp(${h.idx})">
-                        <div style="color:#fff"><b>${h.name} ${toRoman(tierNum)}</b> <small>Lv ${h.lvl}</small></div>
+                        <div class="log-left-group">
+                            ${iconHtml}
+                            <div style="color:#fff"><b>${h.name} ${toRoman(tierNum)}</b> <small>Lv ${h.lvl}</small></div>
+                        </div>
                         <div style="text-align:right">
                             <div class="log-time">${finishDateStr}</div>
                             <div class="log-details">${costHtml} | ⏱️ ${durStr} | ${h.speedStr}</div>
@@ -279,25 +244,17 @@ function updateCalculations() {
                     </div>`;
             }
 
-            row.innerHTML = content + `
-                <div class="log-controls">
-                    <button class="btn-ctrl" style="background:#c0392b" onclick="delStep(${h.idx})">🗑️ Delete</button>
-                    <button class="btn-ctrl" style="background:#2980b9" onclick="markDone(${h.idx}, ${finishTs})">✅ Done</button>
-                    <button class="btn-ctrl" style="background:#27ae60" onclick="addDelay(${h.idx})">➕ Delay</button>
-                    <button class="btn-ctrl" style="background:#f39c12" onclick="activateInsert(${h.idx})">⤵️ Insert</button>
-                </div>`;
+            row.innerHTML = content + `<div class="log-controls"><button class="btn-ctrl" style="background:#c0392b" onclick="delStep(${h.idx})">🗑️ Delete</button><button class="btn-ctrl" style="background:#2980b9" onclick="markDone(${h.idx}, ${finishTs})">✅ Done</button><button class="btn-ctrl" style="background:#27ae60" onclick="addDelay(${h.idx})">➕ Delay</button><button class="btn-ctrl" style="background:#f39c12" onclick="activateInsert(${h.idx})">⤵️ Insert</button></div>`;
             list.appendChild(row);
         });
     }
 
     drawLines();
-
     const statsPanel = document.getElementById('panel-stats');
     if (statsPanel && statsPanel.style.display !== 'none') {
         renderStats();
     }
 
-    // Update Plan Button State (Desktop)
     const pBtn = document.getElementById('btn-plan');
     if (pBtn) {
         if (insertModeIndex > -1) {
@@ -311,51 +268,36 @@ function updateCalculations() {
 }
 
 // --- VISUALIZATION (LINES) ---
-
 function drawLines() {
     if (lineUpdateRequested) return;
     lineUpdateRequested = true;
-
     requestAnimationFrame(() => {
         const svg = document.getElementById('svg-layer');
         const canvas = document.getElementById('canvas');
-        if (!canvas || !svg) {
-            lineUpdateRequested = false;
-            return;
-        }
+        if (!canvas || !svg) { lineUpdateRequested = false; return; }
 
-        svg.innerHTML = ''; // Clear lines
-
-        // Calculate height
+        svg.innerHTML = ''; 
         const lastBlock = canvas.lastElementChild;
         let contentHeight = 0;
-        if (lastBlock) {
-            contentHeight = lastBlock.offsetTop + lastBlock.offsetHeight;
-        }
+        if (lastBlock) contentHeight = lastBlock.offsetTop + lastBlock.offsetHeight;
         svg.style.height = (contentHeight + 20) + "px";
 
-        // Determine which levels to use for coloring lines
         const vLvls = currentMode === 'setup' ? setupLevels : calcState().levels;
         const offset = document.querySelector('.node') ? document.querySelector('.node').offsetWidth / 2 : 32;
 
         document.querySelectorAll('.node').forEach(child => {
             if (child.closest('.tree-container').style.display === 'none') return;
-
             getParents(child.id).forEach(pId => {
                 const parent = document.getElementById(pId);
                 if (!parent) return;
-
                 const r1 = parent.getBoundingClientRect();
                 const r2 = child.getBoundingClientRect();
                 const c = canvas.getBoundingClientRect();
-
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', r1.left + offset - c.left);
                 line.setAttribute('y1', r1.top + offset - c.top);
                 line.setAttribute('x2', r2.left + offset - c.left);
                 line.setAttribute('y2', r2.top + offset - c.top);
-
-                // Color line if parent is unlocked/leveled
                 line.setAttribute('class', `connector ${(vLvls[pId] > 0) ? 'active-' + pId.split('_')[0] : ''}`);
                 svg.appendChild(line);
             });
@@ -368,24 +310,16 @@ function drawLines() {
 
 function handleClick(id, isRight) {
     showFloatingLabel(id);
-    pushHistory(); // Undo point
+    pushHistory(); 
     const meta = getMeta(id);
 
     if (currentMode === 'setup') {
         if (isRight) {
-            // Decrease level
-            if ((setupLevels[id] || 0) > 1) {
-                setupLevels[id]--;
-            } else {
-                delete setupLevels[id];
-            }
+            if ((setupLevels[id] || 0) > 1) { setupLevels[id]--; } else { delete setupLevels[id]; }
         } else {
-            // Increase level
             setupLevels[id] = Math.min(meta.m, (setupLevels[id] || 0) + 1);
             if ((setupLevels[id] || 0) === 1) autoUnlock(id);
         }
-
-        // Integrity Check: Remove nodes that lost their parents
         if (!setupLevels[id]) {
             let changed = true;
             while (changed) {
@@ -397,7 +331,6 @@ function handleClick(id, isRight) {
                     }
                 });
             }
-            // Remove planned steps dependent on removed setup nodes
             const sim = calcState();
             if (sim.brokenSteps.length > 0) {
                 for (let i = sim.brokenSteps.length - 1; i >= 0; i--) {
@@ -406,16 +339,13 @@ function handleClick(id, isRight) {
             }
         }
     } else {
-        // Plan Mode
         if (isRight) {
-            // Remove from queue (find last instance)
             let idx = -1;
             for (let i = planQueue.length - 1; i >= 0; i--) {
                 if (planQueue[i].id === id) { idx = i; break; }
             }
             if (idx > -1) {
                 planQueue.splice(idx, 1);
-                // Clean dependencies
                 let clean = false;
                 while (!clean) {
                     const sim = calcState(planQueue);
@@ -427,9 +357,13 @@ function handleClick(id, isRight) {
                 }
             }
         } else {
-            // Add to queue
-            const s = calcState();
-            if ((s.levels[id] || 0) < meta.m && isUnlocked(id, s.levels)) {
+            let checkState;
+            if (insertModeIndex > -1) {
+                checkState = calcState(planQueue.slice(0, insertModeIndex));
+            } else {
+                checkState = calcState();
+            }
+            if ((checkState.levels[id] || 0) < meta.m && isUnlocked(id, checkState.levels)) {
                 if (insertModeIndex > -1) {
                     planQueue.splice(insertModeIndex, 0, { type: 'node', id });
                     insertModeIndex = -1;
@@ -445,10 +379,7 @@ function handleClick(id, isRight) {
 
 function handleShiftClick(id) {
     pushHistory();
-    // Maximize this node in Setup
     setupLevels[id] = getMeta(id).m;
-
-    // Recursively unlock parents
     const ensure = (cid) => getParents(cid).forEach(pid => {
         if ((setupLevels[pid] || 0) === 0) {
             setupLevels[pid] = 1;
@@ -472,22 +403,16 @@ function showFloatingLabel(nodeId) {
     if (window.innerWidth > 768) return;
     const node = document.getElementById(nodeId), meta = getMeta(nodeId), tier = getTier(nodeId);
     document.querySelectorAll('.floating-label').forEach(e => e.remove());
-
     const lbl = document.createElement('div');
     lbl.className = 'floating-label';
     const tree = nodeId.split('_')[0];
     const color = tree === 'forge' ? '#4facfe' : (tree === 'spt' ? '#9b59b6' : '#e74c3c');
     lbl.innerHTML = `<span style="color:${color}">${meta.n} ${toRoman(tier)}</span>`;
-
     document.body.appendChild(lbl);
     const rect = node.getBoundingClientRect();
     lbl.style.left = (rect.left + rect.width / 2) + 'px';
     lbl.style.top = (rect.top - 15) + 'px';
-
-    setTimeout(() => {
-        lbl.style.opacity = '0';
-        setTimeout(() => lbl.remove(), 500);
-    }, 2000);
+    setTimeout(() => { lbl.style.opacity = '0'; setTimeout(() => lbl.remove(), 500); }, 2000);
 }
 
 // --- LOG & PLAN MANAGEMENT ---
@@ -495,23 +420,17 @@ function showFloatingLabel(nodeId) {
 function setMode(m) {
     currentMode = m;
     if (m !== 'plan') insertModeIndex = -1;
-
-    // Toggle Buttons (Desktop, Mobile Old, Mobile New)
     ['setup', 'plan'].forEach(mode => {
         const dBtn = document.getElementById(`btn-${mode}`);
         const mBtn = document.getElementById(`btn-${mode}-mobile`);
         const mBtnNew = document.getElementById(`btn-${mode}-mobile-new`);
-
         if (dBtn) dBtn.className = `mode-btn ${mode} ${m === mode ? 'active' : ''}`;
         if (mBtn) mBtn.className = `mode-btn ${mode} ${m === mode ? 'active' : ''}`;
         if (mBtnNew) mBtnNew.className = `tn-mode-btn ${mode} ${m === mode ? 'active' : ''}`;
     });
-
-    // Update Mobile Plan Button Text (Plan vs Insert)
     const planBtnNew = document.getElementById('btn-plan-mobile-new');
     if (planBtnNew) {
         if (insertModeIndex > -1) {
-            // Keep the emoji when changing text
             planBtnNew.innerText = "⤵️ Insert";
             planBtnNew.classList.add('insert');
         } else {
@@ -519,16 +438,8 @@ function setMode(m) {
             planBtnNew.classList.remove('insert');
         }
     }
-
-    // View switching logic (same as before)
-    if (m === 'log') {
-        if (typeof setSidebarPanel === 'function') setSidebarPanel('logs');
-    } else {
-        if (window.innerWidth <= 768) {
-            document.body.classList.remove('view-log', 'view-calc', 'view-egg');
-            document.body.classList.add('view-planner');
-        }
-    }
+    if (m === 'log') { if (typeof setSidebarPanel === 'function') setSidebarPanel('logs'); } 
+    else { if (window.innerWidth <= 768) { document.body.classList.remove('view-log', 'view-calc', 'view-egg'); document.body.classList.add('view-planner'); } }
     updateCalculations();
 }
 
@@ -557,7 +468,6 @@ function delStep(i) {
 function markDone(targetIdx, timestamp) {
     try {
         pushHistory();
-        // 1. Commit levels to setup
         for (let i = 0; i <= targetIdx; i++) {
             const item = planQueue[i];
             if (item.type === 'node') {
@@ -566,28 +476,19 @@ function markDone(targetIdx, timestamp) {
                 if (meta) setupLevels[item.id] = Math.min(meta.m, cur + 1);
             }
         }
-
-        // 2. Remove from queue
         planQueue.splice(0, targetIdx + 1);
-
-        // 3. Clean dependencies
         let clean = false;
         while (!clean) {
             const sim = calcState(planQueue);
             if (sim.brokenSteps.length > 0) {
-                for (let j = sim.brokenSteps.length - 1; j >= 0; j--) {
-                    planQueue.splice(sim.brokenSteps[j], 1);
-                }
+                for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1);
             } else clean = true;
         }
-
-        // 4. Sync Time
         const d = new Date(timestamp);
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
         const localIso = d.toISOString().slice(0, 16);
-
+        expandedLogIndex = -1; 
         if (typeof syncMainDate === 'function') syncMainDate(localIso);
-        expandedLogIndex = -1;
     } catch (e) {
         console.error("MarkDone Failed:", e);
         alert("Error marking done. See console.");
@@ -622,13 +523,10 @@ function clearPlan() {
 function resetCurrentTree() {
     if (!confirm(`Reset the ${activeTreeKey.toUpperCase()} tree?`)) return;
     pushHistory();
-    // Remove setup levels
     Object.keys(setupLevels).forEach(id => {
         if (id.startsWith(activeTreeKey + "_")) delete setupLevels[id];
     });
-    // Remove plan steps
     planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
-    // Cleanup
     let clean = false;
     while (!clean) {
         const sim = calcState(planQueue);
@@ -646,7 +544,6 @@ function renderStats() {
     container.innerHTML = '';
     const state = calcState();
 
-    // Calculate Isolated Stats (for Power Tree avg)
     let totalAvgCur = 0, totalAvgSellIso = 0;
     const slots = [];
     TREES.power.structure.forEach(s => { if (TREES.power.meta[s.id].isSlot) slots.push(s.id); });
@@ -660,7 +557,6 @@ function renderStats() {
     const globCur = totalAvgCur / slots.length;
     const globProj_SellIso = totalAvgSellIso / slots.length;
 
-    // Render Each Tree Section
     ['forge', 'spt', 'power'].forEach(key => {
         const treeData = TREES[key];
         let currentCount = 0;
@@ -671,7 +567,7 @@ function renderStats() {
         const group = document.createElement('div'); group.className = 'stats-group';
         const header = document.createElement('div'); header.className = `stats-header ${key}`;
         
-header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" class="nav-icon"> ${treeData.name.toUpperCase()} <span class="progress-badge">${currentCount}/${max} (${pct}%)</span>`;
+        header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" class="nav-icon"> <span>${treeData.name.toUpperCase()}</span> <span class="progress-badge">${currentCount}/${max} (${pct}%)</span>`;
         group.appendChild(header);
 
         let hasStats = false;
@@ -690,9 +586,9 @@ header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" cla
             let txtCur = meta.stat(curT);
             let txtProj = meta.stat(projT);
 
-            // Special Buttons (Tables)
+            // --- REPLACED BUTTON LOGIC FOR NEW MODALS ---
             if (key === 'forge' && ns.id === 'sell') {
-                txtCur += ` <span style="color:#aaa;font-size:0.9em">(Avg: ${formatResourceValue(globCur, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span> <button class="btn-table" onclick="showEqSellTable(${curT * 2},${projT * 2},4)">🔍</button>`;
+                txtCur += ` <span style="color:#aaa;font-size:0.9em">(Avg: ${formatResourceValue(globCur, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span> <button class="btn-table" onclick="showEqSellTable(${curT * 2},${projT * 2},1)">🔍</button>`;
                 txtProj += ` <span style="font-size:0.9em">(Avg: ${formatResourceValue(globProj_SellIso, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
             } else if (meta.isSlot) {
                 const sCur = getSlotStats(99 + curT * 2, state.totalSellBonusCur);
@@ -700,15 +596,15 @@ header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" cla
                 txtCur = `Max ${99 + curT * 2} <span style="color:#aaa;font-size:0.9em">(Range: ${sCur.range} | Avg: ${formatResourceValue(sCur.avg, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
                 txtProj = `Max ${99 + projT * 2} <span style="font-size:0.9em">(Range: ${sProj.range} | Avg: ${formatResourceValue(sProj.avg, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
             } else if (meta.isDiscount) {
-                txtCur += ` <button class="btn-table" onclick="showPotionTable(${curT * 2})">🔍</button>`;
-                if (projT > curT) txtProj += ` <button class="btn-table" onclick="showPotionTable(${projT * 2})">🔍</button>`;
+                txtCur += ` <button class="btn-table" onclick="showPotionTable(${curT * 2}, ${projT * 2})">🔍</button>`;
+                if (projT > curT) txtProj += ` <button class="btn-table" onclick="showPotionTable(${projT * 2}, ${projT * 2})">🔍</button>`;
             } else if (key === 'spt' && ns.id === 'timer') {
-                txtCur += ` <button class="btn-table" onclick="showTechTimerTable(${curT * 4})">🔍</button>`;
-                if (projT > curT) txtProj += ` <button class="btn-table" onclick="showTechTimerTable(${projT * 4})">🔍</button>`;
+                txtCur += ` <button class="btn-table" onclick="showTechTimerTable(${curT * 4}, ${projT * 4})">🔍</button>`;
+                if (projT > curT) txtProj += ` <button class="btn-table" onclick="showTechTimerTable(${projT * 4}, ${projT * 4})">🔍</button>`;
             } else if (key === 'forge' && ns.id === 'disc') {
-                txtCur += ` <button class="btn-table" onclick="showForgeTable('disc',${curT * 2},${projT * 2},2)">🔍</button>`;
+                txtCur += ` <button class="btn-table" onclick="showForgeTable('cost',${curT * 2},${projT * 2},1)">🔍</button>`;
             } else if (key === 'forge' && ns.id === 'timer') {
-                txtCur += ` <button class="btn-table" onclick="showForgeTable('timer',${curT * 4},${projT * 4},2)">🔍</button>`;
+                txtCur += ` <button class="btn-table" onclick="showForgeTable('timer',${curT * 4},${projT * 4},1)">🔍</button>`;
             }
 
             let finalHTML = txtCur;
@@ -720,136 +616,142 @@ header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" cla
         });
         if (hasStats) container.appendChild(group);
     });
-
 }
 
-// --- TABLE MODALS ---
+// --- TABLE MODALS (NEW - uses showTable from utils.js) ---
 
-function showPotionTable(discount) {
-    const c = document.getElementById('table-body');
-    document.getElementById('table-disclaimer-text').style.display = 'block';
-    document.getElementById('table-title').innerHTML = '<img src="icons/red_potion.png" style="height:1.2em;vertical-align:bottom"> Tech Upgrade Cost';
-    document.getElementById('table-subtitle').innerText = `Discount: -${discount}%`;
-
-    let h = '<table class="cost-table"><thead><tr><th>Level</th>';
-    for (let t = 1; t <= 5; t++) h += `<th>Tier ${toRoman(t)}</th>`;
-    h += '</tr></thead><tbody>';
-
+function showPotionTable(cur, proj) {
+    const discount = Math.max(cur, proj); 
+    const headers = ['Level', 'Tier I', 'Tier II', 'Tier III', 'Tier IV', 'Tier V'];
+    const rows = [];
+    
     for (let i = 0; i < 5; i++) {
-        h += `<tr><td><b>Lv ${i + 1}</b></td>`;
+        const row = [`<b>Lv ${i + 1}</b>`];
         for (let t = 1; t <= 5; t++) {
             const cost = Math.round(potionCosts[t][i] * (1 - discount / 100));
-            h += `<td>${cost.toLocaleString()}</td>`;
+            row.push(cost.toLocaleString());
         }
-        h += '</tr>';
+        rows.push(row);
     }
-    h += '<tr class="cost-total-col"><td><b>Total</b></td>';
+    
+    const totalRow = ['<b>Total</b>'];
     for (let t = 1; t <= 5; t++) {
         let tierTotal = 0;
         potionCosts[t].forEach(b => tierTotal += Math.round(b * (1 - discount / 100)));
-        h += `<td>${tierTotal.toLocaleString()}</td>`;
+        totalRow.push(`<b>${tierTotal.toLocaleString()}</b>`);
     }
-    h += '</tr></tbody></table>';
-    c.innerHTML = h;
-    document.getElementById('tableModal').style.display = 'block';
+    rows.push(totalRow);
+
+    showTable(
+        "Tech Upgrade Cost",
+        "icons/red_potion.png",
+        { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, 
+        headers,
+        rows
+    );
 }
 
-function showTechTimerTable(speedBonus) {
-    const c = document.getElementById('table-body');
-    document.getElementById('table-disclaimer-text').style.display = 'block';
-    document.getElementById('table-title').innerText = '⏱️ Tech Research Timer';
-    document.getElementById('table-subtitle').innerText = `Speed Bonus: +${speedBonus}%`;
-
-    let h = '<table class="cost-table"><thead><tr><th>Level</th>';
-    for (let t = 1; t <= 5; t++) h += `<th>Tier ${toRoman(t)}</th>`;
-    h += '</tr></thead><tbody>';
-
+function showTechTimerTable(cur, proj) {
+    const speedBonus = Math.max(cur, proj);
+    const headers = ['Level', 'Tier I', 'Tier II', 'Tier III', 'Tier IV', 'Tier V'];
+    const rows = [];
+    
     for (let i = 0; i < 5; i++) {
-        h += `<tr><td><b>Lv ${i + 1}</b></td>`;
+        const row = [`<b>Lv ${i + 1}</b>`];
         for (let t = 1; t <= 5; t++) {
             const time = tierTimes[t][i] / (1 + speedBonus / 100);
-            h += `<td>${formatSmartTime(time)}</td>`;
+            row.push(formatSmartTime(time));
         }
-        h += '</tr>';
+        rows.push(row);
     }
-    h += '<tr class="cost-total-col"><td><b>Total</b></td>';
+    
+    const totalRow = ['<b>Total</b>'];
     for (let t = 1; t <= 5; t++) {
         let tierTotal = 0;
         tierTimes[t].forEach(b => tierTotal += b / (1 + speedBonus / 100));
-        h += `<td>${formatSmartTime(tierTotal)}</td>`;
+        totalRow.push(`<b>${formatSmartTime(tierTotal)}</b>`);
     }
-    h += '</tr></tbody></table>';
-    c.innerHTML = h;
-    document.getElementById('tableModal').style.display = 'block';
+    rows.push(totalRow);
+
+    showTable(
+        "Tech Research Timer",
+        "icons/tree_spt.png",
+        { label: "Speed Bonus", before: `+${cur}%`, after: `+${proj}%` },
+        headers,
+        rows
+    );
 }
 
 function showEqSellTable(cur, proj, page = 1) {
-    const c = document.getElementById('table-body');
-    document.getElementById('table-title').innerHTML = '<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:bottom"> Eq. Sell Price';
-    document.getElementById('table-disclaimer-text').style.display = 'none';
-    document.getElementById('table-subtitle').innerText = `Bonus: +${cur}% ${cur !== proj ? ' ➜ +' + proj + '%' : ''}`;
+    // If the pagination button calls this with page arg
+    const headers = ["Level", "Sell Price"];
+    const rows = [];
+    const icon = `<img src="icons/fm_gold.png" style="height:1em;vertical-align:middle">`;
 
-    const ranges = [
-        { label: "Lv 1-30", start: 1, end: 30 },
-        { label: "Lv 31-60", start: 31, end: 60 },
-        { label: "Lv 61-90", start: 61, end: 90 },
-        { label: "Lv 91-120", start: 91, end: 120 },
-        { label: "Lv 121-149", start: 121, end: 149 }
-    ];
-
-    let h = `<div class="pagination-bar">`;
-    ranges.forEach((r, i) => h += `<button class="page-btn ${i + 1 === page ? 'active' : ''}" onclick="showEqSellTable(${cur},${proj},${i + 1})">${r.label}</button>`);
-    h += `</div><div class="modal-grid-3">`;
-
-    const { start, end } = ranges[page - 1];
-    const icon = `<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:middle">`;
-    const totalItems = (end - start) + 1;
-    const colCount = window.innerWidth <= 768 ? 2 : 3;
-    const perCol = Math.ceil(totalItems / colCount);
-
-    for (let col = 0; col < colCount; col++) {
-        h += `<div><table class="mini-table">`;
-        const cs = start + (col * perCol);
-        const ce = Math.min(end, cs + perCol - 1);
-        if (cs <= end) {
-            for (let i = cs; i <= ce; i++) {
-                const base = 20 * Math.pow(1.01, i - 1);
-                const v1 = Math.round(base * (100 + cur) / 100);
-                const v2 = Math.round(base * (100 + proj) / 100);
-                h += `<tr class="mini-row"><td>Lv ${i}</td><td>${(cur === proj) ? v1 : v1 + ' ➜ <span style="color:#2ecc71">' + v2 + '</span>'} ${icon}</td></tr>`;
-            }
+    // Generate all 149 rows
+    for (let i = 1; i <= 149; i++) {
+        const base = 20 * Math.pow(1.01, i - 1);
+        const v1 = Math.round(base * (100 + cur) / 100);
+        const v2 = Math.round(base * (100 + proj) / 100);
+        
+        let valStr = `${formatResourceValue(v1, 'gold')} ${icon}`;
+        if (v1 !== v2) {
+            valStr += ` ➜ <span style="color:#2ecc71; font-weight:bold">${formatResourceValue(v2, 'gold')}</span>`;
         }
-        h += `</table></div>`;
+        rows.push([`<b>Lv ${i}</b>`, valStr]);
     }
-    h += `</div>`;
-    c.innerHTML = h;
-    document.getElementById('tableModal').style.display = 'block';
+
+    showTable(
+        "Eq. Sell Price",
+        "icons/fm_gold.png",
+        { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` },
+        headers,
+        rows
+    );
 }
 
-function showForgeTable(type, cur, proj, page) {
-    const c = document.getElementById('table-body'), isT = type === 'timer';
-    document.getElementById('table-disclaimer-text').style.display = 'block';
-    document.getElementById('table-title').innerText = isT ? 'Forge Upgrade Duration' : 'Forge Upgrade Cost';
-    document.getElementById('table-subtitle').innerText = isT ? `Speed: +${cur}% ➜ +${proj}%` : `Discount: -${cur}% ➜ -${proj}%`;
-    let h = `<div class="pagination-bar"><button class="page-btn ${page === 1 ? 'active' : ''}" onclick="showForgeTable('${type}',${cur},${proj},1)">Lv 1-19</button><button class="page-btn ${page === 2 ? 'active' : ''}" onclick="showForgeTable('${type}',${cur},${proj},2)">Lv 20-34</button></div>`;
-    h += `<div class="modal-grid-2"><div class="grid-header">Level</div><div class="grid-header">${isT ? 'Duration' : 'Cost'}</div>`;
-    const start = (page === 1) ? 1 : 20, end = (page === 1) ? 19 : 34, icon = `<img src="icons/fm_gold.png" style="height:1.2em;vertical-align:middle">`;
-    for (let i = start; i <= end; i++) {
+function showForgeTable(type, cur, proj, page = 1) {
+    const isT = type === 'timer';
+    const title = isT ? "Forge Upgrade Duration" : "Forge Upgrade Cost";
+    const headers = ["Level", isT ? "Duration" : "Cost"];
+    const rows = [];
+    const icon = `<img src="icons/fm_gold.png" style="height:1em;vertical-align:middle">`;
+
+    for (let i = 1; i <= 34; i++) {
         if (!forgeLevelData[i]) continue;
-        const [cost, hours] = forgeLevelData[i], mins = hours * 60;
-        let v1 = isT ? formatSmartTime(mins / (1 + cur / 100)) : formatForgeCost(Math.round(cost * (1 - cur / 100)));
-        let v2 = isT ? formatSmartTime(mins / (1 + proj / 100)) : formatForgeCost(Math.round(cost * (1 - proj / 100)));
-        h += `<div class="grid-cell">${i} ➜ ${i + 1}</div><div class="grid-cell">${(v1 === v2) ? v1 + (isT ? '' : ' ' + icon) : v1 + ' ➜ <span style="color:#2ecc71">' + v2 + '</span>' + (isT ? '' : ' ' + icon)}</div>`;
+        const [cost, hours] = forgeLevelData[i];
+        
+        let v1, v2;
+        if (isT) {
+             const mins = hours * 60;
+             v1 = formatSmartTime(mins / (1 + cur / 100));
+             v2 = formatSmartTime(mins / (1 + proj / 100));
+        } else {
+             v1 = formatForgeCost(Math.round(cost * (1 - cur / 100)));
+             v2 = formatForgeCost(Math.round(cost * (1 - proj / 100)));
+        }
+
+        let cellContent = v1 + (isT ? '' : ` ${icon}`);
+        if (v1 !== v2) {
+            cellContent += ` ➜ <span style="color:#2ecc71; font-weight:bold">${v2}</span>`;
+        }
+        rows.push([`${i} ➜ ${i + 1}`, cellContent]);
     }
-    c.innerHTML = h + '</div>'; document.getElementById('tableModal').style.display = 'block';
+
+    showTable(
+        title,
+        isT ? "icons/tree_forge.png" : "icons/hammer_gold.png",
+        isT ? { label: "Speed", before: `+${cur}%`, after: `+${proj}%` } 
+            : { label: "Discount", before: `-${cur}%`, after: `-${proj}%` },
+        headers,
+        rows
+    );
 }
 
 // --- UNDO / REDO ---
 
 function pushHistory() {
     if (historyStack.length > 50) historyStack.shift();
-    // Depends on captureFullState which is likely in main.js, 
-    // but if strict separation is needed, ensure it is available.
     if (typeof captureFullState === 'function') {
         historyStack.push(JSON.stringify(captureFullState()));
         redoStack = [];
@@ -864,19 +766,10 @@ function undo() {
 
     redoStack.push(JSON.stringify(captureFullState()));
     const stateToLoad = JSON.parse(historyStack.pop());
-
-    // --- SEPARATION LOGIC ---
-    // If egg data exists currently, inject it into the state we are loading.
-    // This prevents the Global/Tech Undo from overwriting the Egg Planner.
     if (typeof eggPlanQueue !== 'undefined') {
         const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null;
-        stateToLoad.eggData = {
-            queue: eggPlanQueue, // Keep current queue
-            start: currentEggStart // Keep current start time
-        };
+        stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart };
     }
-    // ------------------------
-
     loadState(stateToLoad);
     updateUndoRedoBtns();
     if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
@@ -888,45 +781,28 @@ function redo() {
 
     historyStack.push(JSON.stringify(captureFullState()));
     const stateToLoad = JSON.parse(redoStack.pop());
-
-    // --- SEPARATION LOGIC ---
     if (typeof eggPlanQueue !== 'undefined') {
         const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null;
-        stateToLoad.eggData = {
-            queue: eggPlanQueue,
-            start: currentEggStart
-        };
+        stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart };
     }
-    // ------------------------
-
     loadState(stateToLoad);
     updateUndoRedoBtns();
     if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
 function updateUndoRedoBtns() {
-    // 1. Determine State
-    // Check if stacks exist and have items
     const hasHistory = (typeof historyStack !== 'undefined' && historyStack.length > 0);
     const hasRedo = (typeof redoStack !== 'undefined' && redoStack.length > 0);
-
-    // 2. Define All Target IDs (Desktop, Logs, Old Mobile, NEW Mobile)
-    // We added 'btn-undo-mobile-new' and 'btn-redo-mobile-new' to this list
     const undoIds = ['btn-undo-desktop', 'btn-undo-log', 'btn-undo', 'btn-undo-mobile-new'];
     const redoIds = ['btn-redo-desktop', 'btn-redo-log', 'btn-redo', 'btn-redo-mobile-new'];
-
-    // 3. Helper to update a button
     const updateBtn = (id, isActive) => {
         const el = document.getElementById(id);
         if (el) {
             el.disabled = !isActive;
-            // Force styles just in case CSS rules are missing
             el.style.opacity = !isActive ? "0.3" : "1"; 
             el.style.pointerEvents = !isActive ? "none" : "auto";
         }
     };
-
-    // 4. Execute updates
     undoIds.forEach(id => updateBtn(id, hasHistory));
     redoIds.forEach(id => updateBtn(id, hasRedo));
 }

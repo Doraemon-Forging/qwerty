@@ -1,12 +1,10 @@
 /**
  * UTILS.JS
  * Generic helper functions for Formatting, UI, and Date handling.
- * Logic-agnostic helpers used across the application.
  */
 
 // --- FORMATTING HELPERS ---
 
-// Convert number to Roman Numeral (1 -> I, 4 -> IV, etc.)
 function toRoman(num) {
     const roman = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
     let str = '';
@@ -18,21 +16,17 @@ function toRoman(num) {
     return str;
 }
 
-// Smart Time Formatting (e.g., "5m 30s", "2h 15m", "3d 4h")
 function formatSmartTime(totalMins) {
-    // Precision logic for less than 60 minutes
     if (totalMins < 60) {
         const mFloor = Math.floor(totalMins);
         const s = Math.round((totalMins - mFloor) * 60);
-        
-        if (s === 60) return `${mFloor + 1}m`; // Roll over if 59s -> 60s
+        if (s === 60) return `${mFloor + 1}m`;
         if (mFloor === 0 && s > 0) return `${s}s`;
         if (mFloor === 0 && s === 0) return `0m`;
         return s > 0 ? `${mFloor}m ${s}s` : `${mFloor}m`;
     }
-    
     const m = Math.round(totalMins);
-    if (m < 60) return `${m}m`; // Safety catch
+    if (m < 60) return `${m}m`;
     let h = Math.floor(m / 60), minLeft = m % 60;
     if (h < 24) return minLeft > 0 ? `${h}h ${minLeft}m` : `${h}h`;
     const d = Math.floor(h / 24), hLeft = h % 24;
@@ -40,32 +34,19 @@ function formatSmartTime(totalMins) {
     return res;
 }
 
-// Format Numbers with K/M suffixes (e.g., 1.5k, 2.30m)
 function formatResourceValue(val, type) {
-    // Hammer: Always full number with US commas (e.g. 1,728)
-    if (type === 'hammer') {
-        return Math.round(val).toLocaleString('en-US'); 
-    }
-    
-    // Gold/Generic: 
-    // < 1000: Use decimals with dot (e.g. 950.5)
+    if (type === 'hammer') return Math.round(val).toLocaleString('en-US');
     if (val < 1000) return val.toLocaleString('en-US', {maximumFractionDigits: 1});
-    
-    // 1k - 1m: Use 'k' with dot decimal (e.g. 150.5k)
     if (val < 1000000) return (val / 1000).toFixed(1) + 'k';
-    
-    // > 1m: Use 'm' with dot decimal (e.g. 1.50m)
     return (val / 1000000).toFixed(2) + 'm';
 }
 
-// Special formatting for Thief Gold (Calc tool)
 function formatThiefGold(val) {
     if (val < 1000) return Math.floor(val).toLocaleString('en-US');
     if (val < 1000000) return (Math.floor(val / 100) / 10).toFixed(1) + 'k';
     return (Math.floor(val / 10000) / 100).toFixed(2) + 'm';
 }
 
-// Special formatting for Forge Costs
 function formatForgeCost(val) {
     if(val < 1000) return val.toLocaleString('en-US');
     if(val < 10000) return (val/1000).toFixed(2) + 'k';
@@ -75,13 +56,11 @@ function formatForgeCost(val) {
 
 // --- INPUT HELPERS ---
 
-// Restrict input to numbers and one decimal point
 function cleanInput(el) {
     el.value = el.value.replace(/[^0-9.]/g, '');
     if ((el.value.match(/\./g) || []).length > 1) el.value = el.value.replace(/\.+$/, "");
 }
 
-// Format input on blur (1000 -> 1,000)
 function formatInput(el) {
     if(!el.value) return;
     const raw = el.value.replace(/,/g, '');
@@ -89,7 +68,6 @@ function formatInput(el) {
     if(!isNaN(val)) el.value = val.toLocaleString('en-US');
 }
 
-// Unformat input on focus (1,000 -> 1000)
 function unformatInput(el) {
     if(!el.value) return;
     el.value = el.value.replace(/,/g, '');
@@ -97,7 +75,6 @@ function unformatInput(el) {
 
 // --- UI HELPERS ---
 
-// Toggle Dropdown Menu Visibility
 function toggleDropdown(id) {
     const all = document.querySelectorAll('.dropdown-content');
     all.forEach(d => {
@@ -107,24 +84,16 @@ function toggleDropdown(id) {
     if(el) el.classList.toggle('show');
 }
 
-// Populate Date/Time Dropdowns (Month, Day, Hour, Min)
 function populateDateDropdowns() {
-    // Array of prefixes for different date pickers (dm=Desktop Main, cm=Calc, em=Egg)
     const prefixes = ['dm', 'cm', 'em'];
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
     prefixes.forEach(prefix => {
         const m = document.getElementById(`${prefix}-month`);
         const d = document.getElementById(`${prefix}-day`);
         const h = document.getElementById(`${prefix}-hour`);
         const min = document.getElementById(`${prefix}-min`);
-
-        // Skip if elements don't exist (e.g. if partial HTML)
         if (!m || !d || !h || !min) return;
-
-        // Clear existing to prevent duplicates if called twice
         m.innerHTML = ''; d.innerHTML = ''; h.innerHTML = ''; min.innerHTML = '';
-
         months.forEach((n,i)=> m.add(new Option(n, i+1)));
         for(let i=1;i<=31;i++) d.add(new Option(i,i));
         for(let i=0;i<24;i++) h.add(new Option(i.toString().padStart(2,'0'), i));
@@ -134,10 +103,8 @@ function populateDateDropdowns() {
 
 // --- DATE SYNCHRONIZATION HELPERS ---
 
-// Triggered when a Dropdown (Day/Month/etc) changes
-// 'source' indicates which picker triggered it ('main', 'calc', 'egg')
 function updateFromDropdowns(source) {
-    let prefix = 'dm'; // default main
+    let prefix = 'dm'; 
     if (source === 'calc') prefix = 'cm';
     if (source === 'egg') prefix = 'em';
 
@@ -158,20 +125,16 @@ function updateFromDropdowns(source) {
 
     const newDate = new Date(y, m, d, h, min);
 
-    // If date is in the past by more than 30 days, assume user means next year
     if (newDate < now && (now - newDate) > 2592000000) newDate.setFullYear(y+1);
     
-    // Adjust for timezone to keep local time string correct
     newDate.setMinutes(newDate.getMinutes() - newDate.getTimezoneOffset());
     const iso = newDate.toISOString().slice(0,16);
 
-    // Sync to specific inputs based on source
     if(source === 'calc') syncCalcDate(iso); 
     else if(source === 'egg') syncEggDate(iso);
     else syncMainDate(iso);
 }
 
-// Sync Main Plan Date
 function syncMainDate(val, shouldSave = true) {
     if (!val) return;
     const date = new Date(val);
@@ -186,12 +149,10 @@ function syncMainDate(val, shouldSave = true) {
     setVal('dm-hour', date.getHours());
     setVal('dm-min', date.getMinutes());
     
-    // Check if dependent functions exist (Safe inter-module calls)
     if (typeof updateCalculations === 'function') updateCalculations();
     if (shouldSave && typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
-// Sync Calculator Date
 function syncCalcDate(val, shouldSave = true) {
     if (!val) return;
     const date = new Date(val);
@@ -210,7 +171,6 @@ function syncCalcDate(val, shouldSave = true) {
     if (shouldSave && typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
-// Sync Egg Planner Date
 function syncEggDate(val, shouldSave = true) {
     if (!val) return; 
     const date = new Date(val);
@@ -227,4 +187,105 @@ function syncEggDate(val, shouldSave = true) {
     
     if (typeof renderEggLog === 'function') renderEggLog();
     if (shouldSave && typeof saveToLocalStorage === 'function') saveToLocalStorage();
+}
+
+// --- TABLE MODAL BUILDER (NEW) ---
+function showTable(title, iconSrc, statData, headers, rows) {
+    const modal = document.getElementById('tableModal');
+    const content = modal.querySelector('.modal-content');
+    
+    // 1. Build Layout (Matches css/modal.css)
+    content.innerHTML = `
+        <button class="close-btn-corner" onclick="document.getElementById('tableModal').style.display='none'">&times;</button>
+        <div class="modal-header-fixed">
+            <div class="modal-title-row">
+                <img src="${iconSrc || 'icons/app-icon.png'}" class="modal-node-icon" onerror="this.style.display='none'">
+                <h2 class="modal-title-text">${title}</h2>
+            </div>
+            <div class="modal-sub-row" id="modal-stat-display"></div>
+            <div class="modal-tabs-row" id="modal-tabs" style="display:none"></div>
+        </div>
+        <div class="modal-body-scroll">
+            <table class="clean-table">
+                <thead><tr id="modal-thead"></tr></thead>
+                <tbody id="modal-tbody"></tbody>
+            </table>
+        </div>
+        <div class="modal-footer-fixed">
+            Values may differ slightly from the game but should be nearly identical.
+        </div>
+    `;
+
+    // 2. Inject Stat Data (WITH CONDITIONAL LOGIC)
+    const statBox = document.getElementById('modal-stat-display');
+    if (statData && typeof statData === 'object') {
+        if (statData.before === statData.after) {
+            // NO CHANGE: Show single value, no arrow
+            statBox.innerHTML = `
+                ${statData.label}: 
+                <span class="stat-val-white">${statData.before}</span>
+            `;
+        } else {
+            // CHANGE: Show Arrow and Green Value
+            statBox.innerHTML = `
+                ${statData.label}: 
+                <span class="stat-val-white">${statData.before}</span> 
+                <span class="stat-arrow">➜</span> 
+                <span class="stat-val-green">${statData.after}</span>
+            `;
+        }
+    } else if (statData) {
+        statBox.innerHTML = statData;
+    }
+
+    // 3. Headers
+    const thead = document.getElementById('modal-thead');
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.innerHTML = h;
+        thead.appendChild(th);
+    });
+
+    // 4. Render Rows (Pagination logic)
+    const tbody = document.getElementById('modal-tbody');
+    const tabBox = document.getElementById('modal-tabs');
+    const CHUNK = 30;
+
+    const renderRows = (start, end) => {
+        tbody.innerHTML = '';
+        for (let i = start; i < end; i++) {
+            if (!rows[i]) break;
+            const tr = document.createElement('tr');
+            const cells = Array.isArray(rows[i]) ? rows[i] : Object.values(rows[i]);
+            cells.forEach(c => {
+                const td = document.createElement('td');
+                td.innerHTML = c;
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        }
+    };
+
+    if (rows.length > 50) {
+        tabBox.style.display = 'flex';
+        const pages = Math.ceil(rows.length / CHUNK);
+        for (let i = 0; i < pages; i++) {
+            const btn = document.createElement('button');
+            const start = i * CHUNK;
+            const end = Math.min((i + 1) * CHUNK, rows.length);
+            btn.textContent = `${start + 1}-${end}`;
+            btn.className = 'tab-pill';
+            btn.onclick = function() {
+                document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderRows(start, end);
+            };
+            tabBox.appendChild(btn);
+            if (i === 0) btn.click();
+        }
+    } else {
+        renderRows(0, rows.length);
+    }
+
+    modal.style.display = 'block';
 }

@@ -105,7 +105,7 @@ function setMobileView(view) {
 // 5. Sidebar Panel Switcher
 function setSidebarPanel(panelName) {
     // A. Hide all panels
-    const panels = ['logs', 'calc', 'egg', 'stats'];
+    const panels = ['logs', 'calc', 'egg', 'stats', 'daily'];
     panels.forEach(p => {
         const el = document.getElementById('panel-' + p);
         if (el) el.style.display = 'none';
@@ -168,6 +168,9 @@ function setSidebarPanel(panelName) {
         }
         if (val) safeSyncDropdowns(val, 'em');
         if (typeof renderEggLog === 'function') renderEggLog();
+    }
+    if (panelName === 'daily') {
+        if (typeof updateDaily === 'function') updateDaily();
     }
 }
 

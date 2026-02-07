@@ -57,11 +57,20 @@ function updateCalculator() {
     const targetEl = document.getElementById('calc-target');
     if (!hammerEl || !targetEl) return;
 
+    // 1. Parse Inputs
     const hIn = parseFloat(hammerEl.value.replace(/,/g, '')) || 0;
     const gTarget = parseFloat(targetEl.value.replace(/,/g, '')) || 0;
-    const world = parseInt(document.getElementById('calc-world').value) || 1;
-    const stage = parseInt(document.getElementById('calc-stage').value) || 1;
     const fLv = parseInt(document.getElementById('calc-forge-lv').value) || 1;
+
+    // --- RESTORED: Input Formatting (Add commas back) ---
+    // Only format if the user isn't currently typing a decimal or empty string
+    if (document.activeElement !== hammerEl || !hammerEl.value.endsWith('.')) {
+         if(hIn > 0) hammerEl.value = hIn.toLocaleString('en-US');
+    }
+    if (document.activeElement !== targetEl || !targetEl.value.endsWith('.')) {
+         if(gTarget > 0) targetEl.value = gTarget.toLocaleString('en-US');
+    }
+    // -----------------------------------------------------
 
     const curStats = getTechBonuses(setupLevels);
     const projStats = getTechBonuses(calcState().levels);
@@ -79,12 +88,14 @@ function updateCalculator() {
             </div>`;
     };
 
+    // 2. Render RES-1 (Effective Hammer & Gold Value)
     let effH1 = hIn / (1 - curStats.free / 100);
     let effH2 = hIn / (1 - projStats.free / 100);
     let h1 = genLine('Effective Hammer', formatResourceValue(effH1, 'hammer'), formatResourceValue(effH2, 'hammer'), 'fm_hammer');
     h1 += genLine('Gold', formatResourceValue(effH1 * curStats.avgGold, 'gold'), formatResourceValue(effH2 * projStats.avgGold, 'gold'), 'fm_gold');
     const res1 = document.getElementById('calc-res-1'); if (res1) res1.innerHTML = h1;
 
+    // 3. Render RES-2 (Hammer Needed)
     const res2 = document.getElementById('calc-res-2');
     if (res2) res2.innerHTML = genLine('Hammer Needed', 
         formatResourceValue(gTarget / curStats.avgGold * (1 - curStats.free / 100), 'hammer'), 
@@ -92,40 +103,13 @@ function updateCalculator() {
         'fm_hammer'
     );
 
-    const stepIndex = (world - 1) * 10 + (stage - 1);
-    const baseGold = 4000 + (stepIndex * 180);
-    const baseHammer = 60 + (stepIndex * 4);
-    const dungG1 = Math.round(baseGold * (1 + curStats.cBonus / 100));
-    const dungG2 = Math.round(baseGold * (1 + projStats.cBonus / 100));
-    const dungH1 = Math.round(baseHammer * (1 + curStats.hBonus / 100));
-    const dungH2 = Math.round(baseHammer * (1 + projStats.hBonus / 100));
+    // --- REMOVED: Thief Dungeon (res3) & Daily Totals (res4) ---
 
-    let h3 = genLine('Thief Gold', formatThiefGold(dungG1), formatThiefGold(dungG2), 'fm_gold');
-    h3 += genLine('Thief Hammer', dungH1, dungH2, 'fm_hammer');
-    const res3 = document.getElementById('calc-res-3'); if (res3) res3.innerHTML = h3;
-
-    const offG1 = 86400 * (1 + curStats.offC / 100), offG2 = 86400 * (1 + projStats.offC / 100);
-    const offH1 = 1440 * (1 + curStats.offH / 100), offH2 = 1440 * (1 + projStats.offH / 100);
-    const boxStyle = "background: #151515; border-radius: 6px; border: 1px solid #333; padding: 8px;";
-
-    let block1 = genLine('Offline Gold', formatResourceValue(offG1, 'gold'), formatResourceValue(offG2, 'gold'), 'fm_gold');
-    block1 += genLine('Offline Hammer', formatResourceValue(offH1, 'hammer'), formatResourceValue(offH2, 'hammer'), 'fm_hammer');
-    block1 += genLine('Thief Gold (2x)', formatResourceValue(dungG1 * 2, 'gold'), formatResourceValue(dungG2 * 2, 'gold'), 'fm_gold');
-    block1 += genLine('Thief Hammer (2x)', dungH1 * 2, dungH2 * 2, 'fm_hammer');
-
-    const hammerVal1 = (offH1 + dungH1 * 2) / (1 - curStats.free / 100) * curStats.avgGold;
-    const hammerVal2 = (offH2 + dungH2 * 2) / (1 - projStats.free / 100) * projStats.avgGold;
-    const total1 = (offG1 + dungG1 * 2) + hammerVal1;
-    const total2 = (offG2 + dungG2 * 2) + hammerVal2;
-
-    let block2 = genLine('Daily Hammer Value', formatResourceValue(hammerVal1, 'gold'), formatResourceValue(hammerVal2, 'gold'), 'fm_gold');
-    block2 += genLine('Total Daily Value', formatResourceValue(total1, 'gold'), formatResourceValue(total2, 'gold'), 'fm_gold');
-
-    const res4 = document.getElementById('calc-res-4'); if (res4) res4.innerHTML = `<div style="${boxStyle} margin-bottom: 10px;">${block1}</div><div style="${boxStyle}">${block2}</div>`;
-
+    // 4. Render RES-5 (Forge Upgrade)
     if (forgeLevelData[fLv]) {
         const baseMins = forgeLevelData[fLv][1] * 60;
         const f1 = baseMins / (1 + curStats.speed / 100);
+        
         const sDateVal = document.getElementById('calc-start-date').value;
         const mainStartTime = sDateVal ? new Date(sDateVal).getTime() : Date.now();
         let speedBonusAtStart = curStats.speed;
@@ -160,6 +144,7 @@ function updateCalculator() {
         h5 += genLine('Cost', formatResourceValue(Math.round(cRaw * (1 - curStats.forgeDisc / 100)), 'gold'), formatResourceValue(Math.round(cRaw * (1 - projStats.forgeDisc / 100)), 'gold'), 'fm_gold');
         const res5 = document.getElementById('calc-res-5'); if (res5) res5.innerHTML = h5;
     }
+
     if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
