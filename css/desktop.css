@@ -1118,7 +1118,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--accent-blue); /* The requested Blue Color */
+    color: #eeeeee;
     font-weight: bold;
     font-size: 1.1em;
     text-transform: uppercase;
@@ -1350,3 +1350,49 @@ body {
     filter: drop-shadow(0 0 5px rgba(0,0,0,0.5)); 
 }
 .egg-btn:hover img { transform: scale(1.15); filter: drop-shadow(0 0 8px #9b59b6); }
+
+/* =========================================
+   SCALE UP SIDEBAR (20% BIGGER) 
+   ========================================= */
+@media (min-width: 769px) {
+    
+    /* 1. Scale the Sidebar Width 
+       (Optional: slight increase to fit the bigger text) */
+    .sidebar {
+        width: 100%;
+    }
+
+    /* 2. Scale Base Fonts for all Panels 
+       This automatically scales Titles, Emojis, and em-based Icons */
+    #panel-logs,
+    #panel-stats,
+    #panel-calc,
+    #panel-egg {
+        font-size: 120%; 
+    }
+
+    /* 3. Scale Fixed-Pixel Elements 
+       (These don't scale automatically, so we force them) */
+
+    /* The square icon boxes in Statistics */
+    .stat-icon-box {
+        width: 48px;  /* 40px + 20% */
+        height: 48px; /* 40px + 20% */
+    }
+
+    /* Calculator Inputs (Widen them so bigger numbers fit) */
+    .calc-input-tiny {
+        width: 120px; /* 100px + 20% */
+        font-size: 1em; /* Ensure input text scales too */
+    }
+
+    /* Egg Planner Images (Defined in rem, so we bump them manually) */
+    .egg-info img {
+        height: 2.6rem; /* 2.2rem + 20% */
+    }
+    
+    /* Fix alignment for the bigger Title Bar icons */
+    .ptb-icon-img {
+        height: 1.6em; /* Slight bump for the header icons */
+    }
+}
