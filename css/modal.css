@@ -25,7 +25,7 @@
     
     /* --- NEW POSITIONING: TOP OF SCREEN --- */
     position: absolute;
-    top: 60px; /* Distance from top (Address bar area) */
+    top: 20px; /* Distance from top (Address bar area) */
     left: 50%;
     transform: translateX(-50%); /* Only center horizontally */
     
