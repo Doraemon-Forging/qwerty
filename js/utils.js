@@ -271,12 +271,12 @@ function showTable(title, iconSrc, statData, headers, rows) {
     };
 
     if (rows.length > 50) {
-        tabBox.style.display = 'flex';
-        const pages = Math.ceil(rows.length / CHUNK);
-        for (let i = 0; i < pages; i++) {
-            const btn = document.createElement('button');
-            const start = i * CHUNK;
-            const end = Math.min((i + 1) * CHUNK, rows.length);
+    tabBox.style.display = 'flex';
+    const pages = Math.ceil(rows.length / CHUNK);
+    for (let i = 0; i < pages; i++) {
+        const btn = document.createElement('button');
+        const start = i * CHUNK;
+        const end = Math.min((i + 1) * CHUNK, rows.length);
             btn.textContent = `${start + 1}-${end}`;
             btn.className = 'tab-pill';
             btn.onclick = function() {

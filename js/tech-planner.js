@@ -686,12 +686,28 @@ function showTechTimerTable(cur, proj) {
     );
 }
 
+/* REPLACE THESE TWO FUNCTIONS IN JS/TECH-PLANNER.JS */
+
 function showEqSellTable(cur, proj, page = 1) {
+    const c = document.getElementById('table-body');
+    // Using SHORT labels for mobile fit
+    const ranges = [
+        { label: "1-30", start: 1, end: 30 },
+        { label: "31-60", start: 31, end: 60 },
+        { label: "61-90", start: 61, end: 90 },
+        { label: "91-120", start: 91, end: 120 },
+        { label: "121-149", start: 121, end: 149 }
+    ];
+
     const headers = ["Level", "Sell Price"];
     const rows = [];
     const icon = `<img src="icons/fm_gold.png" style="height:1em;vertical-align:middle">`;
-
-    for (let i = 1; i <= 149; i++) {
+    
+    // Determine range
+    const r = ranges[page - 1];
+    
+    // Generate just this page of rows
+    for (let i = r.start; i <= r.end; i++) {
         const base = 20 * Math.pow(1.01, i - 1);
         const v1 = Math.round(base * (100 + cur) / 100);
         const v2 = Math.round(base * (100 + proj) / 100);
@@ -703,20 +719,37 @@ function showEqSellTable(cur, proj, page = 1) {
         rows.push([`<b>Lv ${i}</b>`, valStr]);
     }
 
+    // Custom Builder Call because we need custom button behavior (Active Page)
+    // We reuse showTable but we need to trick it into showing our specific buttons
+    // Actually, showTable handles pagination automatically for big arrays.
+    // Let's pass the FULL array and let showTable handle the "1-30", "31-60" splitting automatically?
+    // YES. showTable does that. We just need to give it all 149 rows.
+    
+    const allRows = [];
+    for (let i = 1; i <= 149; i++) {
+        const base = 20 * Math.pow(1.01, i - 1);
+        const v1 = Math.round(base * (100 + cur) / 100);
+        const v2 = Math.round(base * (100 + proj) / 100);
+        
+        let valStr = `${formatResourceValue(v1, 'gold')} ${icon}`;
+        if (v1 !== v2) {
+            valStr += ` ➜ <span style="color:#2ecc71; font-weight:bold">${formatResourceValue(v2, 'gold')}</span>`;
+        }
+        allRows.push([`<b>Lv ${i}</b>`, valStr]);
+    }
+
     showTable(
-        "Item Sell Price",     // UPDATED TITLE
-        "icons/forge_sell.png", 
+        "Item Sell Price",
+        "icons/forge_sell.png",
         { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` },
         headers,
-        rows
+        allRows 
     );
 }
 
 function showForgeTable(type, cur, proj, page = 1) {
     const isT = type === 'timer';
-    
-    // UPDATED TITLES & ICONS
-    const title = isT ? "Forge Upgrade Time" : "Forge Upgrade Cost";
+    const title = isT ? "Forge Upgrade Time" : "Forge Upgrade Cost"; // Correct Title
     const iconSrc = isT ? "icons/forge_timer.png" : "icons/forge_disc.png";
     
     const headers = ["Level", isT ? "Duration" : "Cost"];
