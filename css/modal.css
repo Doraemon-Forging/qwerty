@@ -13,16 +13,15 @@
     backdrop-filter: blur(2px); 
 }
 
-/* 2. Modal Container - MOBILE FIX APPLIED */
+/* 2. Modal Container */
 .modal-content {
     background-color: #181818;
     border: 1px solid #444;
     border-radius: 12px;
     
-    /* --- FLEXIBLE WIDTH FIX --- */
-    width: 95%;          /* Occupy 95% of screen on mobile */
-    max-width: 600px;    /* Stop growing at 600px on desktop */
-    /* -------------------------- */
+    /* Responsive Width */
+    width: 95%;          
+    max-width: 600px;    
     
     height: 80vh; 
     max-height: 800px;
@@ -39,7 +38,7 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
-/* 3. Header Section */
+/* 3. Header Section - NEW LAYOUT */
 .modal-header-fixed {
     padding: 20px 25px 10px 25px;
     background: #181818;
@@ -48,17 +47,27 @@
     border-bottom: none; 
 }
 
-.modal-title-row {
+/* This container holds Icon (Left) and Text Group (Right) */
+.modal-header-flex {
     display: flex;
-    align-items: center;
+    align-items: center; /* Center vertically */
     gap: 15px;
-    margin-bottom: 5px;
+    margin-bottom: 15px; /* Space before tabs/body */
+    padding-right: 30px; /* Space for close button */
 }
 
 .modal-node-icon {
-    width: 38px;
-    height: 38px;
+    width: 52px;  /* Larger size to span 2 rows of text */
+    height: 52px;
     object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* Wraps the Title and the Stats to stack them vertically next to the icon */
+.modal-text-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .modal-title-text {
@@ -67,17 +76,18 @@
     font-size: 1.4em;
     font-weight: bold;
     text-transform: uppercase;
-    line-height: 1.2; /* Fix for multi-line titles */
+    line-height: 1.1; 
 }
 
-/* 4. Sub-Header (Stat Change) */
+/* 4. Sub-Header (Stat Change) - UPDATED */
 .modal-sub-row {
-    margin-left: 53px; 
-    font-size: 1em;
+    margin: 0; /* Reset margins */
+    margin-top: 4px;
+    font-size: 0.95em;
     font-weight: 500;
     color: #aaa;
-    margin-bottom: 15px;
 }
+
 .stat-val-white { color: #e0e0e0; font-weight: bold; }
 .stat-arrow { color: #666; margin: 0 8px; font-size: 0.9em; }
 .stat-val-green { color: #2ecc71; font-weight: bold; }
@@ -90,6 +100,7 @@
     flex-wrap: wrap;
     background: #181818;
     flex-shrink: 0;
+    margin-top: -5px; /* Pull closer to header */
 }
 
 .tab-pill {
@@ -117,8 +128,6 @@
     padding: 0;
     background: #121212;
     position: relative;
-    
-    /* Smooth scrolling on iOS */
     -webkit-overflow-scrolling: touch; 
 }
 
@@ -161,7 +170,7 @@
 .close-btn-corner {
     position: absolute;
     top: 15px;
-    right: 20px;
+    right: 15px;
     font-size: 28px;
     color: #555;
     background: transparent;
@@ -175,21 +184,16 @@
 /* --- MOBILE SPECIFIC TWEAKS --- */
 @media (max-width: 768px) {
     .modal-content {
-        height: 90vh; /* Taller on mobile */
+        height: 90vh; 
         max-height: none;
     }
     .modal-header-fixed {
-        padding: 15px 15px 10px 15px; /* Less padding */
-    }
-    .modal-sub-row {
-        margin-left: 0; /* Remove indent on small screens */
-        margin-top: 5px;
-        font-size: 0.9em;
-    }
-    .modal-title-text {
-        font-size: 1.1em; /* Smaller title */
+        padding: 15px;
     }
     .modal-node-icon {
-        width: 30px; height: 30px; /* Smaller icon */
+        width: 42px; height: 42px; /* Slightly smaller on mobile */
+    }
+    .modal-title-text {
+        font-size: 1.2em; 
     }
 }

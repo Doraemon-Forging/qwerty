@@ -620,6 +620,10 @@ function renderStats() {
 
 // --- TABLE MODALS (NEW - uses showTable from utils.js) ---
 
+/* js/tech-planner.js (Partial update - Replace the Modal Launchers section) */
+
+// --- TABLE MODALS (NEW - uses showTable from utils.js) ---
+
 function showPotionTable(cur, proj) {
     const discount = Math.max(cur, proj); 
     const headers = ['Level', 'Tier I', 'Tier II', 'Tier III', 'Tier IV', 'Tier V'];
@@ -643,8 +647,8 @@ function showPotionTable(cur, proj) {
     rows.push(totalRow);
 
     showTable(
-        "Tech Upgrade Cost",
-        "icons/red_potion.png",
+        "Tech Research Cost",  // UPDATED TITLE
+        "icons/spt_disc.png",  
         { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, 
         headers,
         rows
@@ -674,8 +678,8 @@ function showTechTimerTable(cur, proj) {
     rows.push(totalRow);
 
     showTable(
-        "Tech Research Timer",
-        "icons/tree_spt.png",
+        "Tech Research Time",  
+        "icons/spt_timer.png", 
         { label: "Speed Bonus", before: `+${cur}%`, after: `+${proj}%` },
         headers,
         rows
@@ -683,12 +687,10 @@ function showTechTimerTable(cur, proj) {
 }
 
 function showEqSellTable(cur, proj, page = 1) {
-    // If the pagination button calls this with page arg
     const headers = ["Level", "Sell Price"];
     const rows = [];
     const icon = `<img src="icons/fm_gold.png" style="height:1em;vertical-align:middle">`;
 
-    // Generate all 149 rows
     for (let i = 1; i <= 149; i++) {
         const base = 20 * Math.pow(1.01, i - 1);
         const v1 = Math.round(base * (100 + cur) / 100);
@@ -702,8 +704,8 @@ function showEqSellTable(cur, proj, page = 1) {
     }
 
     showTable(
-        "Eq. Sell Price",
-        "icons/fm_gold.png",
+        "Item Sell Price",     // UPDATED TITLE
+        "icons/forge_sell.png", 
         { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` },
         headers,
         rows
@@ -712,7 +714,11 @@ function showEqSellTable(cur, proj, page = 1) {
 
 function showForgeTable(type, cur, proj, page = 1) {
     const isT = type === 'timer';
-    const title = isT ? "Forge Upgrade Duration" : "Forge Upgrade Cost";
+    
+    // UPDATED TITLES & ICONS
+    const title = isT ? "Forge Upgrade Time" : "Forge Upgrade Cost";
+    const iconSrc = isT ? "icons/forge_timer.png" : "icons/forge_disc.png";
+    
     const headers = ["Level", isT ? "Duration" : "Cost"];
     const rows = [];
     const icon = `<img src="icons/fm_gold.png" style="height:1em;vertical-align:middle">`;
@@ -740,7 +746,7 @@ function showForgeTable(type, cur, proj, page = 1) {
 
     showTable(
         title,
-        isT ? "icons/tree_forge.png" : "icons/hammer_gold.png",
+        iconSrc,
         isT ? { label: "Speed", before: `+${cur}%`, after: `+${proj}%` } 
             : { label: "Discount", before: `-${cur}%`, after: `-${proj}%` },
         headers,

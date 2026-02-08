@@ -194,17 +194,21 @@ function showTable(title, iconSrc, statData, headers, rows) {
     const modal = document.getElementById('tableModal');
     const content = modal.querySelector('.modal-content');
     
-    // 1. Build Layout (Matches css/modal.css)
+    // 1. Build Layout (Matches css/modal.css NEW Flex Layout)
     content.innerHTML = `
         <button class="close-btn-corner" onclick="document.getElementById('tableModal').style.display='none'">&times;</button>
+        
         <div class="modal-header-fixed">
-            <div class="modal-title-row">
+            <div class="modal-header-flex">
                 <img src="${iconSrc || 'icons/app-icon.png'}" class="modal-node-icon" onerror="this.style.display='none'">
-                <h2 class="modal-title-text">${title}</h2>
+                <div class="modal-text-group">
+                    <h2 class="modal-title-text">${title}</h2>
+                    <div id="modal-stat-display" class="modal-sub-row"></div>
+                </div>
             </div>
-            <div class="modal-sub-row" id="modal-stat-display"></div>
             <div class="modal-tabs-row" id="modal-tabs" style="display:none"></div>
         </div>
+
         <div class="modal-body-scroll">
             <table class="clean-table">
                 <thead><tr id="modal-thead"></tr></thead>
@@ -216,7 +220,7 @@ function showTable(title, iconSrc, statData, headers, rows) {
         </div>
     `;
 
-    // 2. Inject Stat Data (WITH CONDITIONAL LOGIC)
+    // 2. Inject Stat Data
     const statBox = document.getElementById('modal-stat-display');
     if (statData && typeof statData === 'object') {
         if (statData.before === statData.after) {
