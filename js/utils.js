@@ -189,26 +189,23 @@ function syncEggDate(val, shouldSave = true) {
     if (shouldSave && typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
-// --- TABLE MODAL BUILDER (NEW) ---
-// --- TABLE MODAL BUILDER (UPDATED FOR GAMIFIED UI) ---
+// --- TABLE MODAL BUILDER (POLISHED) ---
 function showTable(title, iconSrc, statData, headers, rows) {
     const modal = document.getElementById('tableModal');
     const content = modal.querySelector('.modal-content');
 
     // 1. Prepare Stat HTML (The Subtitle)
     let statHTML = '';
-    
-    // Check if statData exists and build the string
     if (statData) {
         if (typeof statData === 'object' && statData.label) {
-            // If there is no change (before == after), just show one number
+            // Check if values are the same
             if (statData.before == statData.after) {
                  statHTML = `
                     <div class="modal-sub-row">
-                        <span class="stat-val-old" style="color:#555">${statData.label}: ${statData.before}</span>
+                        <span class="stat-val-old">${statData.label} ${statData.before}</span>
                     </div>`;
             } else {
-                // If there is a change, show the arrow and green text
+                // Change: Black text for old, Green for new
                 statHTML = `
                     <div class="modal-sub-row">
                         <span class="stat-val-old">${statData.label} ${statData.before}</span>
@@ -217,15 +214,14 @@ function showTable(title, iconSrc, statData, headers, rows) {
                     </div>`;
             }
         } else {
-            // Fallback for simple text
-            statHTML = `<div class="modal-sub-row">${statData}</div>`;
+            statHTML = `<div class="modal-sub-row"><span class="stat-val-old">${statData}</span></div>`;
         }
     }
 
-    // 2. Prepare Table Headers
+    // 2. Prepare Headers
     const thHTML = headers.map(h => `<th>${h}</th>`).join('');
 
-    // 3. Build the Core Structure (Title, Stats, Table, Close Button)
+    // 3. Build Layout
     content.innerHTML = `
         <div class="modal-header-fixed">
             <h2 class="modal-title-text">${title}</h2>
@@ -238,81 +234,67 @@ function showTable(title, iconSrc, statData, headers, rows) {
                 <thead>
                     <tr>${thHTML}</tr>
                 </thead>
-                <tbody id="modal-tbody">
-                    <!-- Rows will be injected here via JS below -->
-                </tbody>
+                <tbody id="modal-tbody"></tbody>
             </table>
         </div>
 
-        <!-- The Floating Close Button (Big X) -->
+        <!-- Floating Close Button (Pure Image) -->
         <button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'">
-            <span></span>
         </button>
     `;
 
-    // 4. Logic to handle the rows (and split into pages if there are too many)
+    // 4. Render Logic (Chunks)
     const tbody = document.getElementById('modal-tbody');
     const tabContainer = document.getElementById('modal-tabs-container');
-    const CHUNK_SIZE = 50; // How many rows per page
+    const CHUNK_SIZE = 50;
     
-    // Helper function to draw specific rows
     const renderChunk = (start, end) => {
-        tbody.innerHTML = ''; // Clear current rows
-        
+        tbody.innerHTML = ''; 
         for (let i = start; i < end; i++) {
-            if (!rows[i]) break; // Stop if no more data
-            
+            if (!rows[i]) break;
             const rowData = rows[i];
             const tr = document.createElement('tr');
             
-            // Check if row is an Array [1, 2] or Object {a:1, b:2}
+            // Handle Array or Object rows
             const cells = Array.isArray(rowData) ? rowData : Object.values(rowData);
             
-            cells.forEach((cellContent) => {
+            cells.forEach((cellContent, index) => {
                 const td = document.createElement('td');
-                td.innerHTML = cellContent;
+                // Detect if content has "->" inside (like "3m -> 2m") to colorize the right side green
+                if (typeof cellContent === 'string' && cellContent.includes('➜')) {
+                    const parts = cellContent.split('➜');
+                    td.innerHTML = `${parts[0]} <span style="color:#000">➜</span> <span class="val-green">${parts[1]}</span>`;
+                } else if (typeof cellContent === 'string' && cellContent.includes('→')) {
+                    const parts = cellContent.split('→');
+                    td.innerHTML = `${parts[0]} <span style="color:#000">➜</span> <span class="val-green">${parts[1]}</span>`;
+                } else {
+                    td.innerHTML = cellContent;
+                }
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
         }
     };
 
-    // If we have a lot of rows, create buttons to switch pages
     if (rows.length > CHUNK_SIZE) {
         const pageCount = Math.ceil(rows.length / CHUNK_SIZE);
-        
         for (let i = 0; i < pageCount; i++) {
             const btn = document.createElement('button');
             const start = i * CHUNK_SIZE;
             const end = Math.min((i + 1) * CHUNK_SIZE, rows.length);
-            
-            // Text on button (e.g., "1-50")
             btn.innerText = `${start + 1}-${end}`;
-            
-            // Style the small tab buttons
             btn.className = 'tab-pill'; 
-            // Note: styling is handled by CSS class .tab-pill, 
-            // but we add click logic here:
-
             btn.onclick = () => {
-                // Remove 'active' class from all buttons
                 Array.from(tabContainer.children).forEach(b => b.classList.remove('active'));
-                // Add 'active' class to this button
                 btn.classList.add('active');
-                // Draw the rows
                 renderChunk(start, end);
             };
-
             tabContainer.appendChild(btn);
-            
-            // Click the first button automatically so data shows up immediately
             if (i === 0) btn.click();
         }
     } else {
-        // If not too many rows, just show them all at once
         renderChunk(0, rows.length);
     }
 
-    // 5. Finally, make the modal visible
     modal.style.display = 'block';
 }
