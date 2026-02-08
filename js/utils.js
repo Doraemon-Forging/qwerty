@@ -190,106 +190,129 @@ function syncEggDate(val, shouldSave = true) {
 }
 
 // --- TABLE MODAL BUILDER (NEW) ---
+// --- TABLE MODAL BUILDER (UPDATED FOR GAMIFIED UI) ---
 function showTable(title, iconSrc, statData, headers, rows) {
     const modal = document.getElementById('tableModal');
     const content = modal.querySelector('.modal-content');
+
+    // 1. Prepare Stat HTML (The Subtitle)
+    let statHTML = '';
     
-    // 1. Build Layout (Matches css/modal.css NEW Flex Layout)
+    // Check if statData exists and build the string
+    if (statData) {
+        if (typeof statData === 'object' && statData.label) {
+            // If there is no change (before == after), just show one number
+            if (statData.before == statData.after) {
+                 statHTML = `
+                    <div class="modal-sub-row">
+                        <span class="stat-val-old" style="color:#555">${statData.label}: ${statData.before}</span>
+                    </div>`;
+            } else {
+                // If there is a change, show the arrow and green text
+                statHTML = `
+                    <div class="modal-sub-row">
+                        <span class="stat-val-old">${statData.label} ${statData.before}</span>
+                        <span class="stat-arrow">➜</span>
+                        <span class="stat-val-new">${statData.after}</span>
+                    </div>`;
+            }
+        } else {
+            // Fallback for simple text
+            statHTML = `<div class="modal-sub-row">${statData}</div>`;
+        }
+    }
+
+    // 2. Prepare Table Headers
+    const thHTML = headers.map(h => `<th>${h}</th>`).join('');
+
+    // 3. Build the Core Structure (Title, Stats, Table, Close Button)
     content.innerHTML = `
-        <button class="close-btn-corner" onclick="document.getElementById('tableModal').style.display='none'">&times;</button>
-        
         <div class="modal-header-fixed">
-            <div class="modal-header-flex">
-                <img src="${iconSrc || 'icons/app-icon.png'}" class="modal-node-icon" onerror="this.style.display='none'">
-                <div class="modal-text-group">
-                    <h2 class="modal-title-text">${title}</h2>
-                    <div id="modal-stat-display" class="modal-sub-row"></div>
-                </div>
-            </div>
-            <div class="modal-tabs-row" id="modal-tabs" style="display:none"></div>
+            <h2 class="modal-title-text">${title}</h2>
+            ${statHTML}
+            <div id="modal-tabs-container" style="display:flex; justify-content:center; gap:5px; margin-top:8px; flex-wrap:wrap;"></div>
         </div>
 
         <div class="modal-body-scroll">
             <table class="clean-table">
-                <thead><tr id="modal-thead"></tr></thead>
-                <tbody id="modal-tbody"></tbody>
+                <thead>
+                    <tr>${thHTML}</tr>
+                </thead>
+                <tbody id="modal-tbody">
+                    <!-- Rows will be injected here via JS below -->
+                </tbody>
             </table>
         </div>
-        <div class="modal-footer-fixed">
-            Values may differ slightly from the game.
-        </div>
+
+        <!-- The Floating Close Button (Big X) -->
+        <button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'">
+            <span></span>
+        </button>
     `;
 
-    // 2. Inject Stat Data
-    const statBox = document.getElementById('modal-stat-display');
-    if (statData && typeof statData === 'object') {
-        if (statData.before === statData.after) {
-            // NO CHANGE: Show single value, no arrow
-            statBox.innerHTML = `
-                ${statData.label}: 
-                <span class="stat-val-white">${statData.before}</span>
-            `;
-        } else {
-            // CHANGE: Show Arrow and Green Value
-            statBox.innerHTML = `
-                ${statData.label}: 
-                <span class="stat-val-white">${statData.before}</span> 
-                <span class="stat-arrow">➜</span> 
-                <span class="stat-val-green">${statData.after}</span>
-            `;
-        }
-    } else if (statData) {
-        statBox.innerHTML = statData;
-    }
-
-    // 3. Headers
-    const thead = document.getElementById('modal-thead');
-    headers.forEach(h => {
-        const th = document.createElement('th');
-        th.innerHTML = h;
-        thead.appendChild(th);
-    });
-
-    // 4. Render Rows (Pagination logic)
+    // 4. Logic to handle the rows (and split into pages if there are too many)
     const tbody = document.getElementById('modal-tbody');
-    const tabBox = document.getElementById('modal-tabs');
-    const CHUNK = 30;
-
-    const renderRows = (start, end) => {
-        tbody.innerHTML = '';
+    const tabContainer = document.getElementById('modal-tabs-container');
+    const CHUNK_SIZE = 50; // How many rows per page
+    
+    // Helper function to draw specific rows
+    const renderChunk = (start, end) => {
+        tbody.innerHTML = ''; // Clear current rows
+        
         for (let i = start; i < end; i++) {
-            if (!rows[i]) break;
+            if (!rows[i]) break; // Stop if no more data
+            
+            const rowData = rows[i];
             const tr = document.createElement('tr');
-            const cells = Array.isArray(rows[i]) ? rows[i] : Object.values(rows[i]);
-            cells.forEach(c => {
+            
+            // Check if row is an Array [1, 2] or Object {a:1, b:2}
+            const cells = Array.isArray(rowData) ? rowData : Object.values(rowData);
+            
+            cells.forEach((cellContent) => {
                 const td = document.createElement('td');
-                td.innerHTML = c;
+                td.innerHTML = cellContent;
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);
         }
     };
 
-    if (rows.length > 50) {
-    tabBox.style.display = 'flex';
-    const pages = Math.ceil(rows.length / CHUNK);
-    for (let i = 0; i < pages; i++) {
-        const btn = document.createElement('button');
-        const start = i * CHUNK;
-        const end = Math.min((i + 1) * CHUNK, rows.length);
-            btn.textContent = `${start + 1}-${end}`;
-            btn.className = 'tab-pill';
-            btn.onclick = function() {
-                document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                renderRows(start, end);
+    // If we have a lot of rows, create buttons to switch pages
+    if (rows.length > CHUNK_SIZE) {
+        const pageCount = Math.ceil(rows.length / CHUNK_SIZE);
+        
+        for (let i = 0; i < pageCount; i++) {
+            const btn = document.createElement('button');
+            const start = i * CHUNK_SIZE;
+            const end = Math.min((i + 1) * CHUNK_SIZE, rows.length);
+            
+            // Text on button (e.g., "1-50")
+            btn.innerText = `${start + 1}-${end}`;
+            
+            // Style the small tab buttons
+            btn.className = 'tab-pill'; 
+            // Note: styling is handled by CSS class .tab-pill, 
+            // but we add click logic here:
+
+            btn.onclick = () => {
+                // Remove 'active' class from all buttons
+                Array.from(tabContainer.children).forEach(b => b.classList.remove('active'));
+                // Add 'active' class to this button
+                btn.classList.add('active');
+                // Draw the rows
+                renderChunk(start, end);
             };
-            tabBox.appendChild(btn);
+
+            tabContainer.appendChild(btn);
+            
+            // Click the first button automatically so data shows up immediately
             if (i === 0) btn.click();
         }
     } else {
-        renderRows(0, rows.length);
+        // If not too many rows, just show them all at once
+        renderChunk(0, rows.length);
     }
 
+    // 5. Finally, make the modal visible
     modal.style.display = 'block';
 }

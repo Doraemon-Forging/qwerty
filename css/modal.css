@@ -1,222 +1,196 @@
 /* css/modal.css */
 
-/* 1. The Background Overlay */
+/* 1. Background Overlay */
 .modal {
-    display: none; 
-    position: fixed; 
-    z-index: 10001; 
-    left: 0; 
-    top: 0; 
-    width: 100%; 
-    height: 100%; 
-    background-color: rgba(0,0,0,0.85); 
-    backdrop-filter: blur(2px); 
+    display: none;
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    font-family: 'Fredoka One', 'Fredoka', cursive; /* The Cartoon Font */
 }
 
-/* 2. Modal Container */
+/* 2. Modal Container - The "Game Card" */
 .modal-content {
-    background-color: #181818;
-    border: 1px solid #444;
-    border-radius: 12px;
+    background-color: #E6E8ED; /* Light grey gaming background */
+    border: 3px solid #000;     /* Thick cartoon border */
+    border-radius: 20px;
     
-    /* Responsive Width */
-    width: 96%;          
-    max-width: 600px;    
+    /* Responsive Dimensions */
+    width: 90%;
+    max-width: 500px; /* Narrower to look like a mobile game card */
     
-    /* --- DESKTOP POSITION --- */
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     
     height: auto;
-    max-height: 85vh;
+    max-height: 80vh; /* Leave room for the button at bottom */
     
     display: flex;
-    flex-direction: column; 
-    overflow: hidden;
-    padding: 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    flex-direction: column;
+    overflow: visible; /* CRITICAL: Allows button to hang outside */
+    box-shadow: 0 10px 0px rgba(0,0,0,0.3); /* "3D" shadow effect */
 }
 
 /* 3. Header Section */
 .modal-header-fixed {
-    padding: 15px 20px 5px 20px;
-    background: #181818;
+    background: #FFF; /* Or a specific brand color like #3498db */
+    padding: 20px 10px 10px 10px;
+    border-radius: 18px 18px 0 0;
+    text-align: center;
     flex-shrink: 0;
-    z-index: 10;
-    border-bottom: none; 
+    border-bottom: 2px solid #ccc;
 }
 
-.modal-header-flex {
-    display: flex;
-    align-items: center; 
-    gap: 15px;
-    margin-bottom: 5px; 
-    padding-right: 30px; 
-}
-
-.modal-node-icon {
-    width: 48px;  
-    height: 48px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.modal-text-group {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
+/* Title Styling */
 .modal-title-text {
     margin: 0;
-    color: #fff !important; 
-    font-size: 1.3em;
-    font-weight: bold;
+    color: #333;
+    font-size: 1.8em;
     text-transform: uppercase;
-    line-height: 1.1; 
+    text-shadow: 2px 2px 0px #eee;
+    letter-spacing: 1px;
+    line-height: 1;
 }
 
-/* 4. Sub-Header (Stat Change) */
+/* Subtitle / Stats Row (The "Speed +52%" part) */
 .modal-sub-row {
-    margin: 0; 
-    margin-top: 2px;
-    font-size: 0.9em;
-    font-weight: 500;
-    color: #aaa;
-}
-
-.stat-val-white { color: #e0e0e0; font-weight: bold; }
-.stat-arrow { color: #666; margin: 0 8px; font-size: 0.9em; }
-.stat-val-green { color: #2ecc71; font-weight: bold; }
-
-/* 5. Pill Tabs */
-.modal-tabs-row {
-    padding: 5px 20px 10px 20px;
+    margin-top: 8px;
+    font-size: 1em;
+    color: #666;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 8px;
-    flex-wrap: wrap; /* Default wrap for desktop */
-    background: #181818;
-    flex-shrink: 0;
-    margin-top: 5px;
 }
 
-.tab-pill {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: #888;
-    padding: 5px 14px;
-    border-radius: 16px;
-    font-size: 0.8em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+.stat-val-old { color: #7f8c8d; }
+.stat-arrow { color: #333; font-size: 1.2em; }
+.stat-val-new { color: #27ae60; font-weight: 800; font-size: 1.1em; }
 
-.tab-pill:hover { background: #333; color: #fff; }
-.tab-pill.active {
-    background: #3498db; 
-    color: #fff;
-    border-color: #3498db;
-}
-
-/* 6. Scrollable Body */
+/* 4. Scrollable Body */
 .modal-body-scroll {
     flex: 1;
     overflow-y: auto;
-    padding: 0;
-    background: #121212;
-    position: relative;
-    -webkit-overflow-scrolling: touch; 
+    padding: 10px 15px 40px 15px; /* Extra bottom padding for button */
+    background: #E6E8ED;
+    border-radius: 0 0 18px 18px;
+    
+    /* Hide Scrollbar but keep functionality */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+}
+.modal-body-scroll::-webkit-scrollbar { 
+    display: none; 
 }
 
-/* 7. Clean Table */
-.clean-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+/* 5. The "Cards" (Table Styling) */
+.clean-table {
+    width: 100%;
+    border-collapse: separate; /* Essential for card look */
+    border-spacing: 0 12px;    /* Space between cards */
+}
+
+/* Table Headers - Small Labels */
 .clean-table th {
-    background: #1f1f1f;
-    color: #3498db;
-    padding: 10px 15px; 
-    text-align: left;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-family: 'Fredoka', sans-serif;
     font-size: 0.75em;
-    position: sticky;
-    top: 0;
-    z-index: 5;
+    color: #888;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0 5px;
+    font-weight: 600;
+    border: none;
+}
+
+/* Table Rows - The White Cards */
+.clean-table tbody tr {
+    background-color: #ffffff;
+    box-shadow: 0 4px 0 #d1d1d1; /* 3D effect for cards */
+    transition: transform 0.1s;
+}
+
+.clean-table tbody tr:hover {
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+/* Table Cells */
+.clean-table td {
+    padding: 15px 10px;
+    color: #333;
+    text-align: center;
+    border-top: 2px solid #333;
     border-bottom: 2px solid #333;
 }
-.clean-table td {
-    padding: 8px 15px;
-    color: #ddd;
-    border-bottom: 1px solid #222;
-    border-left: none; border-right: none;
-}
-.clean-table tbody tr:nth-child(even) { background-color: #1a1a1a; } 
-.clean-table tbody tr:hover { background-color: #252525; }
 
-/* 8. Sticky Footer */
-.modal-footer-fixed {
-    background: #181818;
-    border-top: 1px solid #333;
-    padding: 8px 0;
-    text-align: center;
-    color: #666;
-    font-size: 0.75em;
-    font-style: italic;
-    flex-shrink: 0;
+/* Rounded Corners for the Row-Card */
+.clean-table td:first-child {
+    border-left: 2px solid #333;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    font-weight: bold;
+    color: #e67e22; /* Orange text for "Level" or similar */
 }
 
-.close-btn-corner {
+.clean-table td:last-child {
+    border-right: 2px solid #333;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+/* 6. The Floating Close Button (Big X) */
+.btn-close-floating {
     position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    color: #555;
-    background: transparent;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 50%); /* Moves it down 50% of its height */
+    
+    width: 70px;
+    height: 70px;
+    
+    background-image: url('../icons/button_close.png'); /* Ensure this file exists! */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: transparent;
+    
     border: none;
     cursor: pointer;
-    line-height: 1;
     z-index: 50;
+    
+    /* Fallback if image missing: Red Circle */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    transition: transform 0.1s;
 }
-.close-btn-corner:hover { color: #fff; }
 
-/* --- MOBILE SPECIFIC TWEAKS --- */
-@media (max-width: 768px) {
-    /* 1. Gap Fix: Move close to top */
-    .modal-content {
-        top: 15px; /* Very close to address bar */
-        transform: translateX(-50%); /* Only center horizontal */
-        max-height: calc(100vh - 30px);
-        width: 98%; /* Full width */
-    }
+.btn-close-floating:active {
+    transform: translate(-50%, 55%) scale(0.95); /* Press effect */
+}
 
-    /* 2. Header Adjustments */
-    .modal-header-fixed {
-        padding: 10px 12px 0 12px;
-    }
-    .modal-node-icon {
-        width: 40px; height: 40px; 
-    }
-    .modal-title-text {
-        font-size: 1.1em; 
-    }
-    .modal-header-flex {
-        margin-bottom: 5px;
-    }
-
-    /* 3. TABS FIX: Rectangle, 1 Row, Equal Width */
-    .modal-tabs-row {
-        gap: 4px; /* Small gap */
-        padding: 5px 5px 8px 5px; /* Tight padding */
-        flex-wrap: nowrap; /* Force 1 row */
-    }
-    .tab-pill {
-        flex: 1; /* Grow to fill space equally */
-        text-align: center;
-        padding: 6px 2px; /* Minimal side padding */
-        border-radius: 6px; /* Rectangle with rounded corners */
-        font-size: 0.75em; /* Slightly smaller text */
-        white-space: nowrap;
-    }
+/* Fallback X styling if image fails to load */
+.btn-close-floating span {
+    font-size: 0; /* Hide text if image loads */
+}
+.btn-close-floating:not([style*="button_close.png"]) {
+    background-color: #e74c3c;
+    border: 3px solid #000;
+    border-radius: 50%;
+    box-shadow: 0 4px 0 #c0392b;
+}
+.btn-close-floating:not([style*="button_close.png"])::after {
+    content: "X";
+    font-size: 30px;
+    color: white;
+    font-family: 'Fredoka One', cursive;
 }
