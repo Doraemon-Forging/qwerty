@@ -13,7 +13,7 @@
     backdrop-filter: blur(2px); 
 }
 
-/* 2. Modal Container */
+/* 2. Modal Container - POSITION FIX */
 .modal-content {
     background-color: #181818;
     border: 1px solid #444;
@@ -23,13 +23,15 @@
     width: 95%;          
     max-width: 600px;    
     
-    height: 80vh; 
-    max-height: 800px;
-    
+    /* --- NEW POSITIONING: TOP OF SCREEN --- */
     position: absolute;
-    top: 50%;
+    top: 60px; /* Distance from top (Address bar area) */
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%); /* Only center horizontally */
+    
+    /* Height Logic */
+    height: auto;
+    max-height: calc(100vh - 100px); /* Leave some space at bottom */
     
     display: flex;
     flex-direction: column; 
@@ -38,32 +40,30 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
-/* 3. Header Section - NEW LAYOUT */
+/* 3. Header Section */
 .modal-header-fixed {
-    padding: 20px 25px 10px 25px;
+    padding: 15px 20px 5px 20px; /* Reduced Padding */
     background: #181818;
     flex-shrink: 0;
     z-index: 10;
     border-bottom: none; 
 }
 
-/* This container holds Icon (Left) and Text Group (Right) */
 .modal-header-flex {
     display: flex;
-    align-items: center; /* Center vertically */
+    align-items: center; 
     gap: 15px;
-    margin-bottom: 15px; /* Space before tabs/body */
-    padding-right: 30px; /* Space for close button */
+    margin-bottom: 5px; /* Reduced Gap between Icon and Table Headers */
+    padding-right: 30px; 
 }
 
 .modal-node-icon {
-    width: 52px;  /* Larger size to span 2 rows of text */
-    height: 52px;
+    width: 48px;  
+    height: 48px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-/* Wraps the Title and the Stats to stack them vertically next to the icon */
 .modal-text-group {
     display: flex;
     flex-direction: column;
@@ -73,17 +73,17 @@
 .modal-title-text {
     margin: 0;
     color: #fff !important; 
-    font-size: 1.4em;
+    font-size: 1.3em;
     font-weight: bold;
     text-transform: uppercase;
     line-height: 1.1; 
 }
 
-/* 4. Sub-Header (Stat Change) - UPDATED */
+/* 4. Sub-Header (Stat Change) */
 .modal-sub-row {
-    margin: 0; /* Reset margins */
-    margin-top: 4px;
-    font-size: 0.95em;
+    margin: 0; 
+    margin-top: 2px;
+    font-size: 0.9em;
     font-weight: 500;
     color: #aaa;
 }
@@ -92,28 +92,41 @@
 .stat-arrow { color: #666; margin: 0 8px; font-size: 0.9em; }
 .stat-val-green { color: #2ecc71; font-weight: bold; }
 
-/* 5. Pill Tabs (Range Selector) */
+/* 5. Pill Tabs - SWIPEABLE ROW FIX */
 .modal-tabs-row {
-    padding: 0 25px 10px 25px;
+    padding: 5px 20px 10px 20px;
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
+    
+    /* --- SCROLL LOGIC --- */
+    flex-wrap: nowrap;       /* Force single line */
+    overflow-x: auto;        /* Allow horizontal scroll */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+    scrollbar-width: none;   /* Hide scrollbar Firefox */
+    
     background: #181818;
     flex-shrink: 0;
-    margin-top: -5px; /* Pull closer to header */
+    margin-top: 5px;
 }
+/* Hide scrollbar Chrome/Safari */
+.modal-tabs-row::-webkit-scrollbar { display: none; }
 
 .tab-pill {
     background: #2a2a2a;
     border: 1px solid #444;
     color: #888;
-    padding: 5px 14px;
+    padding: 6px 16px;
     border-radius: 16px;
     font-size: 0.8em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
+    
+    /* Stop shrinking */
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
+
 .tab-pill:hover { background: #333; color: #fff; }
 .tab-pill.active {
     background: #3498db; 
@@ -136,18 +149,18 @@
 .clean-table th {
     background: #1f1f1f;
     color: #3498db;
-    padding: 12px 15px;
+    padding: 10px 15px; /* Tighter vertical padding */
     text-align: left;
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 0.8em;
+    font-size: 0.75em;
     position: sticky;
     top: 0;
     z-index: 5;
     border-bottom: 2px solid #333;
 }
 .clean-table td {
-    padding: 10px 15px;
+    padding: 8px 15px; /* Tighter vertical padding */
     color: #ddd;
     border-bottom: 1px solid #222;
     border-left: none; border-right: none;
@@ -169,7 +182,7 @@
 
 .close-btn-corner {
     position: absolute;
-    top: 15px;
+    top: 10px;
     right: 15px;
     font-size: 28px;
     color: #555;
@@ -184,16 +197,17 @@
 /* --- MOBILE SPECIFIC TWEAKS --- */
 @media (max-width: 768px) {
     .modal-content {
-        height: 90vh; 
-        max-height: none;
+        /* On mobile, move it slightly higher or keep uniform */
+        top: 50px; 
+        max-height: calc(100vh - 70px);
     }
     .modal-header-fixed {
         padding: 15px;
     }
     .modal-node-icon {
-        width: 42px; height: 42px; /* Slightly smaller on mobile */
+        width: 40px; height: 40px; 
     }
     .modal-title-text {
-        font-size: 1.2em; 
+        font-size: 1.1em; 
     }
 }
