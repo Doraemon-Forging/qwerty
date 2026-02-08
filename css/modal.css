@@ -13,25 +13,24 @@
     backdrop-filter: blur(2px); 
 }
 
-/* 2. Modal Container - POSITION FIX */
+/* 2. Modal Container */
 .modal-content {
     background-color: #181818;
     border: 1px solid #444;
     border-radius: 12px;
     
     /* Responsive Width */
-    width: 95%;          
+    width: 96%;          
     max-width: 600px;    
     
-    /* --- NEW POSITIONING: TOP OF SCREEN --- */
+    /* --- DESKTOP POSITION --- */
     position: absolute;
-    top: 20px; /* Distance from top (Address bar area) */
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%); /* Only center horizontally */
+    transform: translate(-50%, -50%);
     
-    /* Height Logic */
     height: auto;
-    max-height: calc(100vh - 100px); /* Leave some space at bottom */
+    max-height: 85vh;
     
     display: flex;
     flex-direction: column; 
@@ -42,7 +41,7 @@
 
 /* 3. Header Section */
 .modal-header-fixed {
-    padding: 15px 20px 5px 20px; /* Reduced Padding */
+    padding: 15px 20px 5px 20px;
     background: #181818;
     flex-shrink: 0;
     z-index: 10;
@@ -53,7 +52,7 @@
     display: flex;
     align-items: center; 
     gap: 15px;
-    margin-bottom: 5px; /* Reduced Gap between Icon and Table Headers */
+    margin-bottom: 5px; 
     padding-right: 30px; 
 }
 
@@ -92,39 +91,27 @@
 .stat-arrow { color: #666; margin: 0 8px; font-size: 0.9em; }
 .stat-val-green { color: #2ecc71; font-weight: bold; }
 
-/* 5. Pill Tabs - SWIPEABLE ROW FIX */
+/* 5. Pill Tabs */
 .modal-tabs-row {
     padding: 5px 20px 10px 20px;
     display: flex;
     gap: 8px;
-    
-    /* --- SCROLL LOGIC --- */
-    flex-wrap: nowrap;       /* Force single line */
-    overflow-x: auto;        /* Allow horizontal scroll */
-    -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
-    scrollbar-width: none;   /* Hide scrollbar Firefox */
-    
+    flex-wrap: wrap; /* Default wrap for desktop */
     background: #181818;
     flex-shrink: 0;
     margin-top: 5px;
 }
-/* Hide scrollbar Chrome/Safari */
-.modal-tabs-row::-webkit-scrollbar { display: none; }
 
 .tab-pill {
     background: #2a2a2a;
     border: 1px solid #444;
     color: #888;
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 16px;
     font-size: 0.8em;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
-    
-    /* Stop shrinking */
-    flex: 0 0 auto;
-    white-space: nowrap;
 }
 
 .tab-pill:hover { background: #333; color: #fff; }
@@ -149,7 +136,7 @@
 .clean-table th {
     background: #1f1f1f;
     color: #3498db;
-    padding: 10px 15px; /* Tighter vertical padding */
+    padding: 10px 15px; 
     text-align: left;
     font-weight: bold;
     text-transform: uppercase;
@@ -160,7 +147,7 @@
     border-bottom: 2px solid #333;
 }
 .clean-table td {
-    padding: 8px 15px; /* Tighter vertical padding */
+    padding: 8px 15px;
     color: #ddd;
     border-bottom: 1px solid #222;
     border-left: none; border-right: none;
@@ -196,18 +183,40 @@
 
 /* --- MOBILE SPECIFIC TWEAKS --- */
 @media (max-width: 768px) {
+    /* 1. Gap Fix: Move close to top */
     .modal-content {
-        /* On mobile, move it slightly higher or keep uniform */
-        top: 50px; 
-        max-height: calc(100vh - 70px);
+        top: 15px; /* Very close to address bar */
+        transform: translateX(-50%); /* Only center horizontal */
+        max-height: calc(100vh - 30px);
+        width: 98%; /* Full width */
     }
+
+    /* 2. Header Adjustments */
     .modal-header-fixed {
-        padding: 15px;
+        padding: 10px 12px 0 12px;
     }
     .modal-node-icon {
         width: 40px; height: 40px; 
     }
     .modal-title-text {
         font-size: 1.1em; 
+    }
+    .modal-header-flex {
+        margin-bottom: 5px;
+    }
+
+    /* 3. TABS FIX: Rectangle, 1 Row, Equal Width */
+    .modal-tabs-row {
+        gap: 4px; /* Small gap */
+        padding: 5px 5px 8px 5px; /* Tight padding */
+        flex-wrap: nowrap; /* Force 1 row */
+    }
+    .tab-pill {
+        flex: 1; /* Grow to fill space equally */
+        text-align: center;
+        padding: 6px 2px; /* Minimal side padding */
+        border-radius: 6px; /* Rectangle with rounded corners */
+        font-size: 0.75em; /* Slightly smaller text */
+        white-space: nowrap;
     }
 }
