@@ -686,8 +686,6 @@ function showTechTimerTable(cur, proj) {
     );
 }
 
-/* REPLACE THESE TWO FUNCTIONS IN JS/TECH-PLANNER.JS */
-
 function showEqSellTable(cur, proj, page = 1) {
     const c = document.getElementById('table-body');
     // Using SHORT labels for mobile fit
@@ -735,7 +733,7 @@ function showEqSellTable(cur, proj, page = 1) {
         if (v1 !== v2) {
             valStr += ` ➜ <span style="color:#2ecc71; font-weight:bold">${formatResourceValue(v2, 'gold')}</span>`;
         }
-        allRows.push([`<b>Lv ${i}</b>`, valStr]);
+        allRows.push([`<b>${i}</b>`, valStr]);
     }
 
     showTable(

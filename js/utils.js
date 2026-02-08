@@ -216,7 +216,7 @@ function showTable(title, iconSrc, statData, headers, rows) {
             </table>
         </div>
         <div class="modal-footer-fixed">
-            Values may differ slightly from the game but should be nearly identical.
+            Values may differ slightly from the game.
         </div>
     `;
 
