@@ -1,0 +1,405 @@
+/* css/modal.css */
+
+/* =========================================
+   1. GLOBAL MODAL SETTINGS
+   ========================================= */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+/* =========================================
+   2. MODAL CONTAINER
+   ========================================= */
+.modal-content {
+    background-color: #FFFFFF; 
+    border: 3px solid #000;
+    border-radius: 20px;
+    width: 480px; 
+    
+    position: absolute;
+    top: 50px; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    height: auto;         
+    max-height: 85vh;
+    
+    display: flex;        
+    flex-direction: column;
+    overflow: visible;    
+    
+    box-shadow: 0 10px 0px rgba(0,0,0,0.3);
+}
+
+/* =========================================
+   3. HEADER SECTION
+   ========================================= */
+.modal-header-fixed {
+    flex-shrink: 0; 
+    background: transparent; 
+    padding: 15px 10px 5px 10px;
+    border-radius: 18px 18px 0 0;
+    text-align: center;
+}
+
+.modal-title-text {
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: 1px;
+    font-family: 'Fredoka One' !important;
+    color: #fff !important;         
+    text-shadow: none; 
+    font-size: 1.5rem;       
+    -webkit-text-stroke: 3px #000; 
+    paint-order: stroke fill;       
+}
+
+.modal-sub-row {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-val-old, .stat-val-new, .val-green, .stat-arrow {
+    text-shadow: none;
+}
+
+.stat-val-new, .val-green { color: #00ff00 !important; }
+.stat-val-old, .stat-arrow { color: #fff; }
+
+.modal-sub-row .stat-val-old, 
+.modal-sub-row .stat-val-new,
+.modal-sub-row .val-green, 
+.modal-sub-row  {
+    font-size: 1.1rem;
+    -webkit-text-stroke: 3px #000;
+}
+.stat-arrow {
+    font-size: 1.1rem;
+    -webkit-text-stroke: 3px #000;
+}
+
+/* =========================================
+   4. SCROLL AREA
+   ========================================= */
+.modal-body-scroll {
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 0 5px; 
+    background: transparent;
+}
+
+.modal-body-scroll::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+.modal-body-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-body-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* =========================================
+   5. TABLE STYLING (Fixed Layout & Spine Grid)
+   ========================================= */
+.clean-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px; 
+}
+
+/* --- COLUMN 1: LEVEL --- */
+.clean-table th:first-child,
+.clean-table td:first-child {
+    width: 15%;            
+    min-width: 50px;
+    max-width: 70px;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-left: 1px solid #ececec;
+}
+
+/* --- COLUMN 2: VALUE --- */
+.clean-table th:last-child,
+.clean-table td:last-child {
+    width: 85%;            
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    border-right: 1px solid #ececec;
+}
+
+.clean-table th {
+    text-transform: none;
+    text-align: center;
+    padding: 0 5px;
+    letter-spacing: 0.5px;
+    color: #000;                    
+    -webkit-text-stroke: 0px #000;
+    font-size: 0.7rem;      
+    font-weight: bold;       
+}
+
+.clean-table tbody tr { background-color: transparent; }
+
+/* --- CONSOLIDATED TABLE CELL STYLES --- */
+.clean-table td {
+    background-color: #ececec;
+    padding: 6px 2px; 
+    text-align: center;
+    border-top: 1px solid #ececec; 
+    border-bottom: 1px solid #ececec;
+    border-left: none;
+    border-right: none;
+    
+    font-size: 0.9em; 
+    text-shadow: none;
+    font-weight: bold;
+    line-height: 1.2; 
+    vertical-align: middle;
+
+    /* FIX 1: Set text to WHITE so the black outline shows clearly */
+    color: #fff; 
+}
+
+/* --- SPINE GRID LAYOUT --- */
+.spine-grid {
+    display: grid;
+    /* Left | Arrow | Right */
+    grid-template-columns: 1fr 24px 1fr; 
+    align-items: center;
+    width: 100%;
+}
+
+.spine-left {
+    display: flex;
+    justify-content: flex-end; 
+    align-items: center;
+    gap: 4px;
+    padding-right: 2px;
+    
+    /* Inherits white from td */
+    color: #fff; 
+}
+
+.spine-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spine-right {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: center;
+    gap: 4px;
+    padding-left: 2px;
+}
+
+/* --- TEXT COLORS & ICONS --- */
+
+.val-green { 
+    color: #00ff00 !important; 
+    font-size: 1.1em; 
+    -webkit-text-stroke: 2.5px #000; 
+    font-weight: 900;
+}
+
+/* Note: "val-white" is no longer needed in CSS as we just use the default td color */
+
+.stat-arrow-table { 
+    display: inline-block; 
+    color: #fff; 
+    font-size: 1.1rem; 
+    margin: 0; 
+    -webkit-text-stroke: 2.5px #000; 
+    font-weight: 900;
+    vertical-align: middle;
+    transform: translateY(-2px); 
+}
+
+.icon-gold-inline {
+    height: 1.1em;
+    width: auto;
+    display: block; 
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
+/* =========================================
+   6. FOOTER & CLOSE BUTTON
+   ========================================= */
+.modal-footer {
+    flex-shrink: 0;
+    background-color: #FFFFFF;
+    border-radius: 0 0 17px 17px; 
+    padding: 10px 15px 25px 15px;
+    text-align: center;
+    position: relative;
+    border-top: 1px solid #eee;
+    z-index: 10;
+}
+
+.modal-disclaimer {
+    color: #000000;
+    font-size: 0.7rem; 
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-shadow: none;
+    -webkit-text-stroke: 0;
+}
+
+.btn-close-floating {
+    position: absolute;
+    bottom: -24px; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 48px;
+    background-image: url('../icons/button_close.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 100;
+    outline: none;
+}
+.btn-close-floating span { display: none; }
+
+/* --- INFO BUTTON (White 'i' on Black Circle) --- */
+.btn-info {
+    /* Layout - Force dimensions so it can't be squished/stretched */
+    display: inline-block !important;
+    width: 20px !important;
+    height: 20px !important;
+    line-height: 18px !important; /* Adjusted for perfect vertical center */
+    text-align: center;
+    padding: 0 !important;
+    margin-left: 8px;
+    
+    /* Appearance */
+    background-color: #000;
+    color: #fff;
+    border: 1.5px solid #000;
+    border-radius: 50% !important;
+    
+    /* Typography */
+    font-family: 'Fredoka One', sans-serif !important; 
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px !important;
+    
+    /* Interaction */
+    cursor: pointer;
+    vertical-align: middle;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    
+    /* Reset Defaults */
+    outline: none;
+    -webkit-text-stroke: 0; 
+    appearance: none; /* Prevents native mobile button styling */
+}
+
+.btn-info:hover {
+    background-color: #333;
+    border-color: #333;
+    transform: scale(1.1);
+}
+
+/* =========================================
+   7. MOBILE ADJUSTMENTS
+   ========================================= */
+@media (max-width: 768px) {
+    .modal-content {
+        top: 15px !important; 
+        width: 95% !important; 
+        max-height: 80vh !important; 
+        height: auto !important;
+    }
+
+    .modal-title-text { 
+        font-size: 1.2em; 
+        -webkit-text-stroke: 3px #000; 
+    }
+    
+    .modal-sub-row .stat-val-old, 
+    .modal-sub-row .stat-val-new, 
+    .modal-sub-row .val-green, 
+    .modal-sub-row .stat-arrow {
+        font-size: 0.9em; 
+        -webkit-text-stroke: 2px #000; 
+    }
+
+    /* --- TABLE FIXES --- */
+    .clean-table td { 
+        font-size: 0.85em; 
+        padding: 6px 1px; 
+        -webkit-text-stroke: 1.5px #000; 
+        color: #fff;
+        
+        /* FIX: FORCE ONE ROW (23 -> 24) */
+        white-space: nowrap; 
+    }
+    
+    .clean-table .val-green { 
+        font-size: 1em; 
+        -webkit-text-stroke: 1.5px #000; 
+    }
+    .stat-arrow-table { 
+        font-size: 1em;
+        -webkit-text-stroke: 1.5px #000; 
+    }
+
+    /* --- TAB BUTTONS CONTAINER --- */
+    #modal-tabs-container {
+        height: auto !important; 
+        min-height: 0 !important;
+        
+        /* FIX: Remove vertical padding so buttons fill the space completely */
+        padding: 0 2px !important; 
+        
+        /* Layout */
+        display: flex;
+        overflow-x: visible; 
+        overflow-y: visible;
+        justify-content: center;
+        flex-wrap: nowrap; 
+        gap: 2px;
+        border-radius: 8px; /* Smooth corners for the container */
+    }
+    
+    /* --- TAB BUTTONS --- */
+    #modal-tabs-container .seg-btn {
+        flex: 1; 
+        width: auto;
+        min-width: auto;
+        
+        /* FIX: Make buttons TALLER and pull them outside the container */
+        padding: 0 !important; 
+        min-height: 42px !important; /* Taller touch target */
+        margin: -4px 0 !important;   /* Pulls button edges outside the container */
+        z-index: 2;                  /* Sit above the container */
+        
+        /* Font sizing */
+        font-size: 0.65em; 
+        
+        /* Centering */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        border-radius: 6px; /* Slightly rounder buttons */
+    }
+}
