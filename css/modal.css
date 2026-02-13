@@ -44,9 +44,10 @@
    ========================================= */
 .modal-header-fixed {
     flex-shrink: 0; 
-    background: transparent; 
-    padding: 15px 10px 5px 10px;
-    border-radius: 18px 18px 0 0;
+    background-color: #ffffff; /* CHANGED: Deep blue-gray background */
+    border-bottom: 3px solid #000000; /* ADDED: Thick black line to separate from table */
+    padding: 15px 10px 10px 10px; /* Adjusted bottom padding slightly */
+    border-radius: 16px 16px 0 0; /* CHANGED: Matches the outer border radius */
     text-align: center;
 }
 
@@ -62,12 +63,14 @@
     paint-order: stroke fill;       
 }
 
+/* Update this existing block to ensure the container aligns centers properly */
 .modal-sub-row {
     margin-top: 5px;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; /* Vertical center */
     gap: 8px;
+    line-height: 1; /* Reset line height to prevent font offsets */
 }
 
 .stat-val-old, .stat-val-new, .val-green, .stat-arrow {
@@ -81,14 +84,24 @@
 .modal-sub-row .stat-val-new,
 .modal-sub-row .val-green, 
 .modal-sub-row  {
-    font-size: 1.1rem;
-    -webkit-text-stroke: 3px #000;
+    margin-bottom: 4px; display: flex; align-items: center; 
+    font-size: 1rem; color: #ffffff; 
+    font-family: 'Fredoka One', sans-serif;
+    font-weight: 300;
+    -webkit-text-stroke: 2.5px #000000;
+    letter-spacing: 0.5px;
+    paint-order: stroke fill;
 }
+/* Update or Replace this block for the Arrow specifically */
 .stat-arrow {
     font-size: 1.1rem;
     -webkit-text-stroke: 3px #000;
+    color: #fff;
+    /* FIX: Manually adjust vertical position */
+    transform: translateY(-2px); 
+    display: inline-block;
+    line-height: 1;
 }
-
 /* =========================================
    4. SCROLL AREA
    ========================================= */
@@ -112,12 +125,13 @@
 }
 
 /* =========================================
-   5. TABLE STYLING (Fixed Layout & Spine Grid)
+   5. TABLE STYLING
    ========================================= */
 .clean-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 4px; 
+    /* CHANGED: Increased gap from 4px to 8px */
+    border-spacing: 0 8px; 
 }
 
 /* --- COLUMN 1: LEVEL --- */
@@ -163,68 +177,50 @@
     border-left: none;
     border-right: none;
     
-    font-size: 0.9em; 
-    text-shadow: none;
-    font-weight: bold;
-    line-height: 1.2; 
-    vertical-align: middle;
-
-    /* FIX 1: Set text to WHITE so the black outline shows clearly */
-    color: #fff; 
-}
-
-/* --- SPINE GRID LAYOUT --- */
-.spine-grid {
-    display: grid;
-    /* Left | Arrow | Right */
-    grid-template-columns: 1fr 24px 1fr; 
-    align-items: center;
-    width: 100%;
-}
-
-.spine-left {
-    display: flex;
-    justify-content: flex-end; 
-    align-items: center;
-    gap: 4px;
-    padding-right: 2px;
+    font-family: 'Fredoka', sans-serif !important; 
+    font-size: 1rem;      
+    font-weight: 650;   
     
-    /* Inherits white from td */
-    color: #fff; 
+    color: #000000 !important;            /* Pure Black */
+    -webkit-text-stroke: 0px transparent !important; /* No Stroke */
+    text-shadow: none;
+
+    white-space: nowrap; 
 }
 
-.spine-center {
-    display: flex;
+/* FIX: Ensure content wrapped in divs (Single Values) is also Black/No Stroke */
+.clean-table td div {
+    color: #000000 !important;
+    font-family: 'Fredoka', sans-serif !important;
+    -webkit-text-stroke: 0px transparent !important;
+display: flex; 
     justify-content: center;
     align-items: center;
-}
-
-.spine-right {
-    display: flex;
-    justify-content: flex-start; 
-    align-items: center;
+    font-size: 1rem !important;
+    font-weight: 650 !important;
     gap: 4px;
-    padding-left: 2px;
 }
 
-/* --- TEXT COLORS & ICONS --- */
+/* --- COLORS & ICONS --- */
 
+/* "After" Value: Green, No Stroke (Matches Stats .stat-new) */
 .val-green { 
-    color: #00ff00 !important; 
-    font-size: 1.1em; 
-    -webkit-text-stroke: 2.5px #000; 
-    font-weight: 900;
+    color: #0ba00b !important; /* Stats Green */
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1rem !important; /* Match new table font size */         
+    -webkit-text-stroke: 0px transparent !important; 
+    font-weight: 650 !important;
 }
 
-/* Note: "val-white" is no longer needed in CSS as we just use the default td color */
-
+/* Arrow: White + Thick Black Stroke */
 .stat-arrow-table { 
     display: inline-block; 
-    color: #fff; 
-    font-size: 1.1rem; 
+    color: #ffffff !important;             
+    font-size: 1.0rem; 
     margin: 0; 
-    -webkit-text-stroke: 2.5px #000; 
-    font-weight: 900;
+    -webkit-text-stroke: 3px #000000 !important; /* Thick Stroke for Arrow only */
+    paint-order: stroke fill;
+    font-weight: 900 !important;
     vertical-align: middle;
     transform: translateY(-2px); 
 }
@@ -237,16 +233,47 @@
 }
 
 /* =========================================
+   SPINE GRID - EXACT CENTER ALIGNMENT
+   ========================================= */
+.clean-table td .spine-grid {
+    display: grid !important;
+    /* 1fr (left), 20px (arrow), 1fr (right) guarantees the arrow is dead center */
+    grid-template-columns: 1fr 20px 1fr; 
+    align-items: center;
+    width: 100%;
+    gap: 4px;
+}
+
+.clean-table td .spine-left {
+    display: flex !important;
+    justify-content: flex-end !important; /* Pushes text flush against the arrow */
+    align-items: center;
+    gap: 4px;
+}
+
+.clean-table td .spine-center {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+}
+
+.clean-table td .spine-right {
+    display: flex !important;
+    justify-content: flex-start !important; /* Pushes text outward from the arrow */
+    align-items: center;
+    gap: 4px;
+}
+/* =========================================
    6. FOOTER & CLOSE BUTTON
    ========================================= */
 .modal-footer {
     flex-shrink: 0;
-    background-color: #FFFFFF;
-    border-radius: 0 0 17px 17px; 
+    background-color: #ffffff; /* CHANGED: Match header color */
+    border-top: 3px solid #000000; /* ADDED: Thick black line to separate from table */
+    border-radius: 0 0 16px 16px; 
     padding: 10px 15px 25px 15px;
     text-align: center;
     position: relative;
-    border-top: 1px solid #eee;
     z-index: 10;
 }
 
@@ -257,6 +284,7 @@
     margin: 0;
     text-shadow: none;
     -webkit-text-stroke: 0;
+    font-weight: 500;
 }
 
 .btn-close-floating {
@@ -278,38 +306,29 @@
 }
 .btn-close-floating span { display: none; }
 
-/* --- INFO BUTTON (White 'i' on Black Circle) --- */
+/* --- INFO BUTTON - REVERTED TO CIRCULAR 'i' --- */
 .btn-info {
-    /* Layout - Force dimensions so it can't be squished/stretched */
     display: inline-block !important;
     width: 20px !important;
     height: 20px !important;
-    line-height: 18px !important; /* Adjusted for perfect vertical center */
+    line-height: 18px !important; 
     text-align: center;
     padding: 0 !important;
     margin-left: 8px;
-    
-    /* Appearance */
     background-color: #000;
     color: #fff;
     border: 1.5px solid #000;
     border-radius: 50% !important;
-    
-    /* Typography */
     font-family: 'Fredoka One', sans-serif !important; 
     font-style: normal;
     font-weight: normal;
     font-size: 12px !important;
-    
-    /* Interaction */
     cursor: pointer;
     vertical-align: middle;
     transition: transform 0.2s ease, background-color 0.2s ease;
-    
-    /* Reset Defaults */
     outline: none;
     -webkit-text-stroke: 0; 
-    appearance: none; /* Prevents native mobile button styling */
+    appearance: none; 
 }
 
 .btn-info:hover {
@@ -319,7 +338,96 @@
 }
 
 /* =========================================
-   7. MOBILE ADJUSTMENTS
+   7. MODAL TABS STYLING (THE 'SETUP/PLAN' LOOK)
+   ========================================= */
+/* This container holds the Tier I/II/III or Level Range buttons */
+#modal-tabs-container {
+    background-color: #34495e; 
+    border: 1.5px solid #000000; 
+    border-radius: 12px;
+    display: flex;
+    align-items: center; 
+    width: 95%; 
+    max-width: 450px;
+    margin: 15px auto; 
+    padding: 0;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    height: 32px; 
+    box-shadow: none; 
+    overflow: visible !important;
+    gap: 0; /* IMPORTANT: No gap so borders merge */
+}
+
+/* Style the buttons inside */
+#modal-tabs-container button, 
+#modal-tabs-container .seg-btn {
+    flex: 1; 
+    height: 100%;
+    position: relative; 
+    background: transparent;
+    border: none;
+    border-right: 1.5px solid #000000; 
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Fredoka One', 'Fredoka', sans-serif;
+    font-size: 0.9rem; 
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    -webkit-text-stroke: 2px #000000; 
+    paint-order: stroke fill;
+    text-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1; /* Standard Layer */
+    transition: transform 0.1s ease;
+    border-radius: 0; /* No inner rounding */
+}
+
+#modal-tabs-container button:first-child, 
+#modal-tabs-container .seg-btn:first-child {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+#modal-tabs-container button:last-child, 
+#modal-tabs-container .seg-btn:last-child {
+    border-right: none; 
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Active State - Blue Pop-out */
+#modal-tabs-container button.active,
+#modal-tabs-container .seg-btn.active {
+    z-index: 50 !important; /* Force ON TOP of neighbors */
+    border-right-color: transparent; 
+    color: #ffffff;
+    font-size: 1.05rem; 
+    overflow: visible;
+    border-radius: 10px; /* Fully rounded when popping out */
+}
+
+#modal-tabs-container button.active::before,
+#modal-tabs-container .seg-btn.active::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 106%;  /* Slight overlap */
+    height: 120%; /* Reasonable height (was 140%) */
+    background: #00b0ff;
+    border: 2px solid #000000;
+    border-radius: 10px;
+    box-shadow: inset 0 -6px 0 0 #005680, 0 4px 6px rgba(0,0,0,0.3);
+    z-index: -1; 
+}
+
+/* =========================================
+   8. MOBILE ADJUSTMENTS
    ========================================= */
 @media (max-width: 768px) {
     .modal-content {
@@ -329,77 +437,65 @@
         height: auto !important;
     }
 
-    .modal-title-text { 
-        font-size: 1.2em; 
-        -webkit-text-stroke: 3px #000; 
-    }
-    
-    .modal-sub-row .stat-val-old, 
-    .modal-sub-row .stat-val-new, 
-    .modal-sub-row .val-green, 
-    .modal-sub-row .stat-arrow {
-        font-size: 0.9em; 
-        -webkit-text-stroke: 2px #000; 
-    }
-
-    /* --- TABLE FIXES --- */
-    .clean-table td { 
-        font-size: 0.85em; 
-        padding: 6px 1px; 
-        -webkit-text-stroke: 1.5px #000; 
-        color: #fff;
-        
-        /* FIX: FORCE ONE ROW (23 -> 24) */
-        white-space: nowrap; 
-    }
-    
-    .clean-table .val-green { 
-        font-size: 1em; 
-        -webkit-text-stroke: 1.5px #000; 
-    }
-    .stat-arrow-table { 
-        font-size: 1em;
-        -webkit-text-stroke: 1.5px #000; 
-    }
-
-    /* --- TAB BUTTONS CONTAINER --- */
+    /* Override any previous mobile gaps/margins */
     #modal-tabs-container {
-        height: auto !important; 
+        height: 38px !important; 
         min-height: 0 !important;
-        
-        /* FIX: Remove vertical padding so buttons fill the space completely */
-        padding: 0 2px !important; 
-        
-        /* Layout */
+        padding: 0 !important;
         display: flex;
         overflow-x: visible; 
         overflow-y: visible;
         justify-content: center;
         flex-wrap: nowrap; 
-        gap: 2px;
-        border-radius: 8px; /* Smooth corners for the container */
+        gap: 0 !important; 
+        border-radius: 10px; 
     }
     
-    /* --- TAB BUTTONS --- */
+    #modal-tabs-container button,
     #modal-tabs-container .seg-btn {
         flex: 1; 
         width: auto;
         min-width: auto;
-        
-        /* FIX: Make buttons TALLER and pull them outside the container */
         padding: 0 !important; 
-        min-height: 42px !important; /* Taller touch target */
-        margin: -4px 0 !important;   /* Pulls button edges outside the container */
-        z-index: 2;                  /* Sit above the container */
-        
-        /* Font sizing */
-        font-size: 0.65em; 
-        
-        /* Centering */
+        min-height: 38px !important; 
+        margin: 0 !important;   
+        z-index: 1;                  
+        font-size: 0.7em; 
         display: flex;
         align-items: center;
         justify-content: center;
-        
-        border-radius: 6px; /* Slightly rounder buttons */
+        border-radius: 0; /* Square sides */
+    }
+
+    #modal-tabs-container button:first-child,
+    #modal-tabs-container .seg-btn:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+
+    #modal-tabs-container button:last-child,
+    #modal-tabs-container .seg-btn:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    /* Force active button on top */
+    #modal-tabs-container button.active,
+    #modal-tabs-container .seg-btn.active {
+        z-index: 100 !important;
+        border-radius: 8px !important;
+    }
+    .clean-table td {
+        font-size: 0.85rem !important;
+    }
+    .clean-table td div {
+        font-size: 0.85rem !important;
+    }
+    .val-green {
+        font-size: 0.85rem !important;
+    }
+    .stat-arrow-table {
+        font-size: 0.9rem !important; /* Slightly smaller arrow to match */
     }
 }
+

@@ -1,3 +1,5 @@
+/* css/desktop2.css */
+
 /* ==========================================================================
    SECTION 5: RIGHT COLUMN - LOGS TAB (CONSOLIDATED MASTER STYLE)
    ========================================================================== */
@@ -50,6 +52,7 @@
    ========================================= */
 .stats-box-row {
     background-color: #EBEBEB;
+    border: 2px solid #000000;
     border-radius: 12px;
     display: flex;
     justify-content: center;
@@ -73,8 +76,8 @@
 .sb-item.type-time::before { background-image: url('../icons/icon_time.png'); }
 
 .sb-value {
-    color: #ffffff !important; font-family: 'Fredoka One', 'Fredoka', sans-serif; font-size: 1rem; font-weight: 700;
-    -webkit-text-stroke: 3px #000000; paint-order: stroke fill; background: none !important; border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
+    color: #ffffff !important; font-family: 'Fredoka', 'Fredoka', sans-serif; font-size: 1.05rem; font-weight: 650;
+    -webkit-text-stroke: 2.5px #000000; paint-order: stroke fill; background: none !important; border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
 }
 
 /* =========================================
@@ -84,13 +87,44 @@
     display: flex; align-items: center; justify-content: space-between; margin: 0 15px 10px 15px; height: 40px;
 }
 
-.drs-label {
-    color: #ffffff; font-family: 'Fredoka One', 'Fredoka', sans-serif; font-size: 1rem; font-weight: 900; -webkit-text-stroke: 3px #000000; paint-order: stroke fill; margin-right: 0; 
+.drs-label, .war-setup-row label {
+    color: #ffffff; 
+    font-family: 'Fredoka', sans-serif; 
+    font-size: 1rem; 
+    font-weight: 800; 
+    -webkit-text-stroke: 3px #000000; 
+    paint-order: stroke fill; 
+    margin-right: 5px; 
 }
-#start-date {
-    font-family: 'Fredoka One', 'Fredoka', sans-serif; font-size: 0.9rem; font-weight: normal; background-color: #34495e; color: #ffffff; border: 3px solid #000000; border-radius: 8px; padding: 5px 10px; outline: none; -webkit-text-stroke: 3px #000000; paint-order: stroke fill; height: 34px; box-sizing: border-box; cursor: pointer;
+#start-date, #egg-date-desktop {
+    /* Font & Text */
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #000000 !important;
+    -webkit-text-stroke: 0px transparent !important;
+    
+    /* Box Styling (White with Black Border) */
+    background-color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    border-radius: 8px !important;
+    padding: 4px 8px !important;
+    height: 34px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    
+    outline: none;
+    box-sizing: border-box;
+    cursor: pointer;
 }
-#start-date::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
+#start-date::-webkit-calendar-picker-indicator, 
+#egg-date-desktop::-webkit-calendar-picker-indicator { 
+    filter: none !important; 
+    cursor: pointer; 
+    opacity: 0.6;
+}
+
+/* White Rectangle Box with 2px Black Outline for Eggs */
 
 /* =========================================
    D. LOG CARDS (UPDATED)
@@ -127,7 +161,6 @@
 
 /* 2. THE IMAGE (80% Size) */
 .lnp-img { 
-    /* UPDATED: 80% as requested */
     width: 80%; height: 80%; 
     object-fit: contain; 
     z-index: 5; 
@@ -173,20 +206,13 @@
 .log-name { 
     color: #ffffff; 
     font-family: 'Fredoka One', 'Fredoka', sans-serif; 
-    
-    /* === TWEAK THIS NUMBER FOR WIDTH === */
     max-width: 140px; 
-    
-    /* Ensures the 30px gap even if name is long */
     margin-right: 30px;
-
     font-size: 1rem; 
     font-weight: 500; 
     -webkit-text-stroke: 2.5px #000000; 
     paint-order: stroke fill; 
     line-height: 1.2; 
-    
-    /* Ensure text wraps properly if it gets too long */
     word-wrap: break-word;
     text-align: left;
 }
@@ -198,9 +224,9 @@
     font-weight: 300; 
     -webkit-text-stroke: 2.5px #000000; 
     paint-order: stroke fill; 
-    color: #33ff00; 
-    margin-bottom: 4px; 
-    
+    color: #39FF14; 
+    margin-bottom: 4px;
+    margin-left: 5px; 
 }
 
 .log-details { display: flex; justify-content: flex-start; align-items: center; gap: 0px; }
@@ -219,126 +245,434 @@
 .log-entry.delay .log-node-preview { box-shadow: inset 0 0 0 2px #000000, 0 2px 4px rgba(0,0,0,0.1); }
 .war-setup-row { display: flex; align-items: center; justify-content: space-between; margin: 0 15px 10px 15px; height: 40px; }
 .war-select-group { display: flex; gap: 5px; }
-.war-select { font-family: 'Fredoka One', 'Fredoka', sans-serif; font-size: 0.9rem; background-color: #34495e; color: #ffffff; border: 3px solid #000000; border-radius: 8px; padding: 4px 4px; outline: none; cursor: pointer; -webkit-text-stroke: 3px #000000; paint-order: stroke fill; }
+.war-select { 
+    /* Font & Text */
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important; 
+    color: #000000 !important;
+    -webkit-text-stroke: 0px transparent !important;
+    background-color: #ffffff !important;
+    border: 2px solid #000000 !important;
+    border-radius: 6px !important;
+    padding: 0 2px !important; 
+    text-align: center;
+    outline: none; 
+    cursor: pointer; 
+    height: 32px !important;
+}
 .log-row.war-active { background-color: #00a2ff !important;}
 .log-row.war-active:hover { background-color: #0091e6 !important; }
 .log-row.war-active.delay { opacity: 0.8; }
 
 
 /* ==========================================================================
-   SECTION 6: RIGHT COLUMN - STATS TAB (FIXED VISIBILITY)
+   SECTION 6: RIGHT COLUMN - STATS TAB (FINAL FIXED LAYOUT)
    ========================================================================== */
 #panel-stats {
     padding-top: 0 !important;
     height: 100%;
     width: 100%;
-    /* Ensure flex parent for the container */
     display: flex;
     flex-direction: column;
 }
 
 .stats-container {
-    /* CRITICAL FIX: Changed from 'display: none' to 'block' */
     display: block !important; 
-    
     flex: 1;
-    overflow-y: visible; /* Scroll handled by sidebar-scroll-wrapper */
+    overflow-y: visible;
     padding: 20px 0;
     background: transparent;
     width: 100%;
 }
 
+/* 1. BIG WRAPPER */
 .stats-group {
-    margin-bottom: 20px;
     background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #dfe6e9;
-    overflow: hidden;
-    max-width: 900px;
-    margin-left: 15px; /* Add margin to align with Logs layout */
-    margin-right: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 3px solid #000000;
+    border-radius: 20px;
+    margin: 0 15px 30px 15px;
+    overflow: hidden; 
+    padding-bottom: 15px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
 }
 
+/* 2. THE HEADER */
 .stats-header {
-    display: grid !important;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    padding: 10px 15px;
-    border-bottom: 1px solid #dfe6e9;
+    display: flex !important;
+    flex-direction: row !important;
     align-items: center;
-    gap: 2px 15px;
-    font-size: 0.9em;
-    font-weight: bold;
+    justify-content: space-between; 
+    flex-wrap: wrap;              
+    gap: 10px; 
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-bottom: 3px solid #000000;
+    min-height: 60px;
+    box-sizing: border-box;
+    overflow: visible !important; 
+}
+
+/* Header Background Colors */
+.stats-header.forge { background-color: #5eff8b !important; }
+.stats-header.spt   { background-color: #fcfe5d !important; }
+.stats-header.power { background-color: #ff5d5e !important; }
+
+/* 3. LEFT SIDE: Icon & Title Wrapper */
+.header-left {
+    display: flex;
+    align-items: center;
+    flex: 1; 
+    min-width: 0; 
+    overflow: visible !important; 
+}
+
+.header-icon-circle {
+    width: 55px !important;
+    height: 55px !important;
+    background-color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 50%;
+    box-shadow: 0 0px 0 rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 18px; 
+    flex-shrink: 0;
+}
+
+.stats-header img.nav-icon {
+    width: 75% !important;
+    height: 75% !important;
+    object-fit: contain;
+}
+
+.stats-header .header-title-text {
+    font-family: 'Fredoka One', sans-serif;
+    font-size: 1.3rem !important; 
     line-height: 1.1;
+    color: #ffffff !important;
+    -webkit-text-stroke: 3.5px #000000;
+    paint-order: stroke fill;
+    filter: drop-shadow(0px 0px 0px rgba(0,0,0,0.1));
+    white-space: normal !important; 
+    overflow: visible !important; 
+    text-overflow: clip; 
+    display: block;
+    padding-left: 2px; 
 }
 
-.stats-header.forge { background: #e3f2fd; color: var(--accent-blue); }
-.stats-header.spt { background: #f3e5f5; color: var(--accent-purple); }
-.stats-header.power { background: #ffebee; color: var(--accent-red); }
-
-.stats-header .progress-badge {
-    grid-column: 2; grid-row: 2;
-    justify-self: start; align-self: start;
-    text-align: left;
-    margin: 0 !important; padding: 0 !important;
-    background: transparent !important;
-    color: #555 !important;
-    font-size: 1em !important;
-    font-weight: normal !important;
+/* 4. RIGHT SIDE: Progress Sidecar */
+.header-right {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-end; 
+    justify-content: center;
+    flex-shrink: 0; 
+    text-align: right;
+    align-self: flex-start; 
+    margin-top: 5px;
 }
 
+.stat-count-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem !important; 
+    font-weight: 650;
+    color: #ffffff;
+    -webkit-text-stroke: 2.5px #000000;
+    paint-order: stroke fill;
+    margin-top: 5px; 
+    white-space: nowrap;
+}
+
+.stat-pct-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem !important; 
+    font-weight: 650;
+    color: #ffffff;
+    -webkit-text-stroke: 2.5px #000000;
+    paint-order: stroke fill;
+    white-space: nowrap;
+}
+
+/* 5. INNER ROWS (Cards) */
 .stats-row {
     display: flex; align-items: center;
-    padding: 8px 10px;
-    border-bottom: 1px solid #f1f1f1;
-    transition: 0.2s;
+    margin: 0 15px 10px 15px; 
+    background-color: #e2e2e2 ; 
+    border-radius: 12px;
+    padding: 10px 15px;
+    border: none !important; 
+    box-shadow: 0 0px 0 rgba(0,0,0,0.15);
 }
-.stats-row:last-child { border-bottom: none; }
-.stats-row:hover { background: #f9f9f9; }
+.stats-row.forge { background-color: #e8fdf0; }
+.stats-row.spt { background-color: #fffdec; }
+.stats-row.power { background-color: #fff1f1; }
 
+.stats-row:hover {
+    transform: scale(1.01);
+    filter: brightness(0.98);
+}
+.stats-row:last-child { margin-bottom: 0; }
+
+/* 6. INNER ICONS */
 .stat-icon-box {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     background: #ffffff;
-    border: 1px solid #bdc3c7;
-    border-radius: 6px;
+    border-radius: 50% !important;
+    border: 2px solid #000000;
     display: flex; justify-content: center; align-items: center;
     margin-right: 15px; flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.stat-icon-img { 
+    width: 80% !important; 
+    height: 80% !important; 
+    object-fit: contain; 
 }
 
-.stat-icon-img { width: 80%; height: 80%; object-fit: contain; }
-.stat-info { flex: 1; }
-.stat-name { font-weight: bold; margin-bottom: 2px; display: flex; align-items: center; font-size: 0.85em; }
-.stat-value { font-size: 0.75em; }
-.stat-arrow { color: #ffffff; margin: 0 8px; -webkit-text-stroke: 2.5px #000;}
-.stat-new { color: var(--accent-green);}
-.stat-key-icon { height: 1.2em; vertical-align: middle; margin-bottom: 2px; }
+/* 7. TEXT STYLING */
+.stat-info { flex: 1; min-width: 0; }
 
-.btn-table { background: #ecf0f1; border: 1px solid #bdc3c7; color: #7f8c8d; border-radius: 4px; padding: 1px 6px; font-size: 0.75em; margin-left: 8px; cursor: pointer; vertical-align: middle; }
-.btn-table:hover { background: #bdc3c7; color: #fff; }
+.stat-name { 
+    margin-bottom: 4px; display: flex; align-items: center; 
+    font-size: 1rem; color: #ffffff; 
+    font-family: 'Fredoka One', sans-serif;
+    font-weight: 300;
+    -webkit-text-stroke: 3px #000000;
+    letter-spacing: 0.5px;
+    paint-order: stroke fill;
+}
+
+.stat-value { 
+    font-size: 1rem; 
+    color: #000000; 
+    -webkit-text-stroke: 0px #000000;
+    font-family: 'Fredoka', sans-serif; 
+    line-height: 1.3; 
+}
+
+.stat-arrow { color: #333; margin: 0 8px; font-weight: bold;}
+/* ==========================================================
+   VERTICAL ALIGNMENT FIX: STATS AND MODALS ARROWS
+   ========================================================== */
+.stat-arrow, 
+.stat-arrow-table {
+    display: inline-block !important; /* Allows us to move it independently */
+    vertical-align: middle !important; 
+    
+    /* THE MAGIC NUDGE: Lifts it off the baseline mathematically */
+    transform: translateY(-1.5px) !important; 
+    
+    line-height: 1 !important; /* Stops inherited line heights from dragging it down */
+}
+
+/* Optional: Add a little breathing room for the table arrows specifically */
+.stat-arrow-table {
+    margin: 0 6px;
+}
+.stat-new { color: #198754;  font-size: 1rem; }
+.stat-key-icon { height: 1.2em !important; width: auto !important; vertical-align: middle; margin-bottom: 2px; }
+
+.btn-table { 
+    background: #ffffff; border: 2px solid #000; color: #333; border-radius: 6px; 
+    padding: 2px 8px; font-size: 0.75em; font-weight: bold; margin-left: 8px; 
+    cursor: pointer; vertical-align: middle; box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+}
+.btn-table:active { transform: translateY(1px); box-shadow: none; }
 
 /* ==========================================================================
    SECTION 7: RIGHT COLUMN - CALCULATOR TAB
    ========================================================================== */
 #panel-calc { padding-top: 0 !important; }
-.calc-wrapper { margin-bottom: 12px; }
-.calc-row-input { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.9em; }
-.calc-row-input label { color: #7f8c8d; }
-.calc-input-tiny { width: 100px; background: #ffffff; border: 1px solid #bdc3c7; color: #333; padding: 3px; border-radius: 4px; text-align: right; }
-.calc-select-tiny { width: 45px; background: #ffffff; border: 1px solid #bdc3c7; color: #333; padding: 3px; border-radius: 4px; text-align: center; }
-#calc-start-date { width: 220px !important; letter-spacing: 0.5px !important; font-size: 0.8em !important; height: 30px !important; padding: 0 5px !important; }
 
-.calc-result-box { background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #bdc3c7; margin-top: 5px; }
-.calc-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid #f1f1f1; font-size: 0.9em; }
-.calc-line:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
-.calc-label { color: #333; font-weight: normal; display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
-.calc-val-group { display: flex; align-items: center; gap: 8px; font-size: 1.1em; }
-.calc-val-before { color: #95a5a6; }
-.calc-arrow { color: #333; font-size: 1em; }
-.calc-val-after { color: var(--accent-green); font-weight: bold; }
-.calc-icon { height: 1.2em; vertical-align: middle; }
-.calc-section-title { color: #333; font-weight: bold; margin-top: 15px; margin-bottom: 5px; font-size: 0.9em; border-bottom: 1px solid #dfe6e9; }
-.info-tooltip { cursor: pointer; color: #7f8c8d; font-size: 0.9em; }
+.calc-container {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 1. THE MAIN TOOL CARD */
+.calc-tool-card {
+    background: #ffffff;
+    border: 3px solid #000000;
+    border-radius: 16px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+}
+
+/* 2. INPUT WRAPPERS */
+.calc-card-input-area {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+/* Transparent Row Container for inputs */
+.calc-row-input {
+    background-color: transparent;
+    border: none;
+    padding: 5px 0;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 3. OUTPUT ROW STYLING (Gray Box) */
+.calc-line {
+    background-color: #e4e4e4; 
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Remove margin from the last item */
+.calc-row-input:last-child, 
+.calc-line:last-child, 
+.calc-tool-card > :last-child {
+    margin-bottom: 0;
+}
+
+/* 4. TYPOGRAPHY & FONT OVERRIDES (Defaults) */
+.calc-row-input label,
+.calc-input-chunky, 
+.calc-select-chunky, 
+.calc-date-chunky,
+.calc-label,
+.calc-val-group, 
+.calc-val-before, 
+.calc-val-group span {
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1rem !important;
+    color: #000000 !important;
+    -webkit-text-stroke: 0px transparent !important;
+    text-shadow: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+}
+
+/* 5. INPUT BOXES SPECIFIC STYLING */
+.calc-input-chunky, .calc-select-chunky, .calc-date-chunky, .mobile-only.custom-date-group {
+    background: #ffffff;
+    border: 2px solid #000000 !important; 
+    border-radius: 8px;
+    padding: 4px 8px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    width: auto;
+    min-width: 100px;
+    text-align: center;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Mobile Date Group overrides */
+.mobile-only.custom-date-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    background: transparent;
+    border: none !important;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* 6. RESULT VALUES & COLORS */
+.calc-val-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* THE GREEN "AFTER" VALUE FIX */
+/* Forces Green on the container AND all children (spans, text) to override default black */
+.calc-val-group .calc-val-after,
+.calc-val-group .calc-val-after span,
+.calc-val-group .calc-val-after * {
+    color: #198754 !important; 
+    fill: #198754 !important; /* Ensures SVGs match if used inside */
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    -webkit-text-stroke: 0px transparent !important;
+}
+
+/* ==========================================================
+   UPDATED ARROW FIX: Matches STATS and Fixes Alignment
+   ========================================================== */
+.calc-val-group .calc-arrow {
+    margin: 0 6px; 
+    
+    /* MATCH STATS STYLE: White Fill, Thick Black Outline */
+    color: #ffffff !important; 
+    -webkit-text-stroke: 2px #000000 !important; 
+    paint-order: stroke fill; 
+    
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 1.1rem !important; 
+    font-weight: 700 !important; 
+    
+    /* ALIGNMENT FIX: Forces absolute center next to text */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* A tiny optical nudge upwards to account for font baselines */
+    transform: translateY(-1px) !important; 
+    
+    /* Removing shadow to match the flat cartoon look of the STATS tab */
+    filter: none !important;
+}
+
+/* 7. ICONS */
+/* Standard Icon (Right side - Legacy) */
+.calc-icon {
+    height: 20px; width: 20px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-left: 5px;
+    filter: none;
+}
+
+/* Icon styling when placed BEFORE text (Left side) */
+.calc-icon-left {
+    height: 18px; 
+    width: 18px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 4px; /* Space between icon and number */
+    margin-bottom: 2px; /* Visual alignment */
+    filter: none;
+}
+
+/* 8. DATE SPECIFICS */
+.calc-multiline-date {
+    display: flex;
+    flex-direction: row; /* Single Row */
+    align-items: center;
+    gap: 0px;
+    white-space: nowrap;
+}
+.calc-time-block { 
+    font-size: 1rem !important; 
+    opacity: 1 !important; 
+    margin-left: 4px;
+}
+.calc-date-comma { display: inline !important; } 
+.info-tooltip { cursor: pointer; color: #95a5a6 !important; margin-left: 5px; opacity: 0.7; }
 
 /* ==========================================================================
    SECTION 8: RIGHT COLUMN - EGG PLANNER TAB
@@ -352,12 +686,59 @@
 .egg-actions { display: flex; gap: 5px; }
 .egg-instruction { font-size: 0.85em; color: #7f8c8d; font-weight: 600; margin-bottom: 5px; padding-left: 2px; }
 
-.egg-selector { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 10px 5px; background: #ffffff; border-radius: 8px; border: 1px solid #dfe6e9; margin-bottom: 20px; margin-top: 0 !important; }
-.egg-btn { background: transparent; border: none; cursor: pointer; padding: 2px; display: flex; justify-content: center; align-items: center; transition: transform 0.2s; }
-.egg-btn img { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,0,0,0.1)); }
-.egg-btn:hover img { transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(155, 89, 182, 0.4)); }
+/* 1. The Big Rectangle Container - KEEPS THE BOX */
+.egg-selector { 
+    display: grid; 
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 8px; 
+    padding: 10px; 
+    
+    /* This creates the big white rectangle with black border */
+    background: #ffffff !important; 
+    border: 2px solid #000000 !important; 
+    border-radius: 8px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); 
+    
+    margin-bottom: 5px; 
+}
 
-.egg-log-container { height: auto; overflow-y: visible; border-top: 2px solid #dfe6e9; display: flex; flex-direction: column; }
+
+/* 2. The Individual Egg Buttons - TRANSPARENT (No Squares) */
+.egg-btn { 
+    background: transparent !important; /* Removes the grey square background */
+    border: none !important;            /* Removes any border around the egg */
+    box-shadow: none !important; 
+    
+    cursor: pointer; 
+    padding: 2px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    transition: transform 0.2s; 
+}
+
+/* 3. The Egg Images - Clean (No Shadow/Glow) */
+.egg-btn img { 
+    width: 54px; 
+    height: 54px; 
+    object-fit: contain; 
+    filter: none !important; 
+}
+
+.egg-btn:hover img { 
+    transform: scale(1.15); 
+    filter: none !important; 
+}
+
+/* Remove the top border (grey line) */
+.egg-log-container { 
+    height: auto; 
+    overflow-y: visible; 
+    border-top: none !important; /* Grey line removed */
+    display: flex; 
+    flex-direction: column; 
+}
+
 .egg-row { display: flex; flex-direction: column; border-bottom: 1px solid #f1f1f1; padding: 6px 10px; border-left: 4px solid transparent; background: #ffffff; position: relative; font-size: 0.85em; }
 .egg-row.common { border-left-color: #AE988C; }
 .egg-row.rare { border-left-color: #3498db; }
@@ -379,16 +760,30 @@
 .egg-row:hover { background: #f8f9fa; }
 .egg-insert-active { border: 2px solid #e74c3c !important; animation: pulse 1s infinite; }
 
-/* Egg Stats Summary Row */
+/* Styling for the new instructional text (Matches 'Egg Start' label) */
+.egg-prompt-text {
+    color: #ffffff; 
+    font-family: 'Fredoka', sans-serif; 
+    font-size: 1rem; 
+    font-weight: 800; 
+    -webkit-text-stroke: 3px #000000; 
+    paint-order: stroke fill; 
+    text-align: center;
+    margin: 15px 0 8px 0;
+    display: block;
+}
+
+/* Egg Stats Summary Row (Matches Logs .stats-box-row) */
 .egg-stats-row {
     background-color: #EBEBEB;
+    border: 2px solid #000000;
     border-radius: 12px;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 40px;
     padding: 10px;
-    margin: 20px 15px; /* Add margin to bottom */
+    margin: 10px 15px; /* Spacing for between selector and list */
     width: auto;
     box-sizing: border-box;
 }
@@ -398,11 +793,19 @@
     align-items: center;
     justify-content: center;
 }
+
 .es-item.type-points::before {
-    content: '⭐';
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background-image: url('../icons/warpoint.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
     margin-right: 5px;
-    font-size: 1.2em;
 }
+
 .es-item.type-time::before {
     content: '';
     display: inline-block;
@@ -415,16 +818,29 @@
     margin-right: 5px;
 }
 
+/* Value Text (Identical to Logs .sb-value: White with Black Stroke) */
 .es-value {
-    color: #ffffff;
-    font-family: 'Fredoka One', 'Fredoka', sans-serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    -webkit-text-stroke: 3px #000000;
+    color: #ffffff !important; 
+    font-family: 'Fredoka', sans-serif; 
+    font-size: 1.05rem; 
+    font-weight: 650;
+    -webkit-text-stroke: 2.5px #000000; 
     paint-order: stroke fill;
 }
-.es-value.points { color: #f1c40f !important; }
-.es-value.time { color: #2ecc71 !important; }
+
+/* Overwrite old colors to ensure they stay White like the Logs tab */
+.es-value.points { color: #ffffff !important; }
+.es-value.time { color: #ffffff !important; }
+
+/* CLOSER SPACING: Move Name closer to Icon in Egg Planner only */
+#panel-egg .log-left-group {
+    gap: 2px !important; /* Reduced from default 12px */
+}
+
+/* Remove shadows from the eggs inside the list list as well */
+#panel-egg .log-icon-wrapper img {
+    filter: none !important;
+}
 
 /* ==========================================================================
    SECTION 10: MOBILE OVERRIDES, MODALS & FOOTER
@@ -451,6 +867,14 @@
     .desktop-only { display: none !important; }
     #calc-date-mobile { display: none; margin-left: auto; gap: 5px; }
     #egg-date-mobile { display: none; gap: 5px; align-items: center; }
+    .egg-selector {
+        /* Change from 6 columns to 3 columns */
+        /* This forces the 6 eggs into 2 neat rows of 3 */
+        grid-template-columns: repeat(3, 1fr) !important;
+        
+        /* slightly larger gap for touch targets */
+        gap: 12px !important; 
+    }
 }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -609,7 +1033,7 @@
    ========================================= */
 
 /* 1. Ensure the top row (Setup/Plan) stays physically behind the second row (Forge/SPT) 
-     This prevents the blue 'pop-out' from covering the green/yellow buttons */
+      This prevents the blue 'pop-out' from covering the green/yellow buttons */
 .new-header-container {
     z-index: 10 !important;
 }
@@ -705,13 +1129,13 @@
 
 .config-card {
     background-color: #ecf0f1;
-    border: 3px solid #000000;
+    border: 2px solid #000000;
     border-radius: 12px;
-    padding: 10px;
+    padding: 8 10px;
     margin: 0 15px 15px 15px; /* Spacing from sides and bottom */
     display: flex;
     flex-direction: column;
-    gap: 5px; /* Spacing between the two rows inside */
+    gap: 0px; /* Spacing between the two rows inside */
 }
 
 /* Remove the old margins from the inner rows so they fit nicely inside the card */
@@ -719,7 +1143,7 @@
 .config-card .date-row-styled {
     margin: 0 !important;
     width: 100%;
-    padding: 5px 0;
+    padding: 2px 0;
 }
 
 .tier-block { width: 100%; max-width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 0px; }
@@ -849,10 +1273,7 @@
 }
 
 /* Hide MAX button when in PLAN mode */
-body[data-mode="plan"] .tier-max-btn {
-    /* OLD WAY (Causes Shake): display: none !important; */
-    
-    /* NEW WAY (Stable): Keeps the space but hides the button */
+body[data-mode="plan"] .tier-max-btn {    
     visibility: hidden !important;
     pointer-events: none !important; /* Ensures you can't click the invisible button */
 }

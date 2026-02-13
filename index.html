@@ -47,15 +47,11 @@
     <input type="file" id="file-upload" style="display:none" onchange="uploadData(this)" accept=".json">
 
     <div id="mobile-tree-nav" class="mobile-only tree-sticky-nav">
-<div class="tn-row-1">
-            <div class="segmented-control" style="margin: 0; width: auto; flex: 3; height: 32px;">
+        <div class="tn-row-1" style="justify-content: center !important;">
+            <div class="segmented-control" style="margin: 0; width: 200px; height: 32px;">
                 <button class="seg-btn active" id="btn-setup-mobile-new" onclick="setMode('setup')">SETUP</button>
                 <button class="seg-btn" id="btn-plan-mobile-new" onclick="setMode('plan')">PLAN</button>
             </div>
-            
-            <button class="tn-action-btn reset-neutral" onclick="resetCurrentTree()">Reset</button>
-            <button class="tn-action-btn" id="btn-undo-mobile-new" onclick="undo()" disabled>↩️</button>
-            <button class="tn-action-btn" id="btn-redo-mobile-new" onclick="redo()" disabled>↪️</button>
         </div>
         <div class="tn-row-2" style="padding: 5px 10px !important; margin-top: 10px !important;">
             <div class="segmented-control" style="margin: 0 10px; width: 100%; height: 32px;">
@@ -68,54 +64,50 @@
 
     <div class="desktop-workspace">
         
-<div class="pane dashboard-pane desktop-only">
-    
-    <div class="floating-header-container" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: max-content; z-index: 500;">
-        <div class="fhc-circle">
-            <span>
-                <img src="icons/Doraemon.png" alt="Icon" style="width: 110% !important; height: 110% !important; object-fit: contain;">
-            </span>
-        </div>
-        <div class="fhc-pill" style="justify-content: center;">
-            <span style="white-space: nowrap;">TECH PLANNER</span>
-        </div>
-    </div>
+        <div class="pane dashboard-pane desktop-only">
+            
+            <div class="floating-header-container" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: max-content; z-index: 500;">
+                <div class="fhc-circle">
+                    <span>
+                        <img src="icons/Doraemon.png" alt="Icon" style="width: 110% !important; height: 110% !important; object-fit: contain;">
+                    </span>
+                </div>
+                <div class="fhc-pill" style="justify-content: center;">
+                    <span style="white-space: nowrap;">TECH PLANNER</span>
+                </div>
+            </div>
 
-    <div class="dashboard-scroll-wrapper">
-        <div class="tools-group-box">
-            <button class="mode-btn dash-btn" id="btn-logs" onclick="setSidebarPanel('logs')">
-                <img src="icons/icon_timeline.png" class="dash-icon"> Schedule
-            </button>
-            <button class="mode-btn dash-btn" id="btn-stats" onclick="setSidebarPanel('stats')">
-                <img src="icons/icon_stats.png" class="dash-icon"> Stats
-            </button>
-            <button class="mode-btn dash-btn" id="btn-calc" onclick="setSidebarPanel('calc')">
-                <img src="icons/anvil.png" class="dash-icon"> Forge Calc
-            </button>
-            <button class="mode-btn dash-btn" id="btn-daily" onclick="setSidebarPanel('daily')">
-                <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
-            </button>
-            <button class="mode-btn dash-btn" id="btn-egg" onclick="setSidebarPanel('egg')">
-                <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
-            </button>
+            <div class="dashboard-scroll-wrapper">
+                <div class="tools-group-box">
+                    <button class="mode-btn dash-btn" id="btn-logs" onclick="setSidebarPanel('logs')">
+                        <img src="icons/icon_timeline.png" class="dash-icon"> Schedule
+                    </button>
+                    <button class="mode-btn dash-btn" id="btn-stats" onclick="setSidebarPanel('stats')">
+                        <img src="icons/icon_stats.png" class="dash-icon"> Stats
+                    </button>
+                    <button class="mode-btn dash-btn" id="btn-calc" onclick="setSidebarPanel('calc')">
+                        <img src="icons/anvil.png" class="dash-icon"> Forge Calc
+                    </button>
+                    <button class="mode-btn dash-btn" id="btn-daily" onclick="setSidebarPanel('daily')">
+                        <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
+                    </button>
+                    <button class="mode-btn dash-btn" id="btn-egg" onclick="setSidebarPanel('egg')">
+                        <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
+                    </button>
+                </div>
+            </div>
+            <div class="control-capsule dashboard-capsule bottom-capsule">
+                <button class="sys-btn" onclick="downloadData()" title="Save Data">
+                    <img src="icons/icon_save.png" class="sys-icon">
+                </button>
+                <button class="sys-btn" onclick="document.getElementById('file-upload').click()" title="Load Data">
+                    <img src="icons/icon_load.png" class="sys-icon">
+                </button>
+                <button class="sys-btn" onclick="toggleHelp()" title="Help">
+                    <img src="icons/icon_help.png" class="sys-icon" onerror="this.style.display='none';this.parentNode.innerHTML='❓'">
+                </button>
+            </div>
         </div>
-    </div>
-<div class="control-capsule dashboard-capsule bottom-capsule">
-    
-    <button class="sys-btn" onclick="downloadData()" title="Save Data">
-        <img src="icons/icon_save.png" class="sys-icon">
-    </button>
-    
-    <button class="sys-btn" onclick="document.getElementById('file-upload').click()" title="Load Data">
-        <img src="icons/icon_load.png" class="sys-icon">
-    </button>
-    
-    <button class="sys-btn" onclick="toggleHelp()" title="Help">
-        <img src="icons/icon_help.png" class="sys-icon" onerror="this.style.display='none';this.parentNode.innerHTML='❓'">
-    </button>
-
-</div>
-</div>
 
         <div class="workspace-card">
             
@@ -206,57 +198,99 @@
                         </div>
 
                         <div id="panel-calc" class="sidebar-panel" style="display:none;">
-                             <div style="padding: 15px;">
-                                <div class="calc-wrapper">
-                                    <div class="calc-row-input">
-                                        <label>Hammer:</label>
-                                        <input type="text" id="calc-hammers" value="1,000" class="calc-input-tiny" oninput="updateCalculator()">
+                            <div class="calc-container">
+                                
+                                <div class="calc-tool-card">
+                                    <div class="calc-card-input-area">
+                                        <div class="calc-row-input">
+                                            <label>Current Hammer:</label>
+                                            <input type="text" id="calc-hammers" value="50,000" class="calc-input-chunky" 
+                                                   onfocus="unformatInput(this)" 
+                                                   onblur="formatInput(this); updateCalculator()" 
+                                                   oninput="cleanInput(this); updateCalculator()">
+                                        </div>
                                     </div>
                                     <div id="calc-res-1" class="calc-result-box"></div>
                                 </div>
-                                <div class="calc-wrapper">
-                                    <div class="calc-row-input">
-                                        <label>Target Gold:</label>
-                                        <input type="text" id="calc-target" value="1,000,000" class="calc-input-tiny" oninput="updateCalculator()">
+
+                                <div class="calc-tool-card">
+                                    <div class="calc-card-input-area">
+                                        <div class="calc-row-input">
+                                            <label>Target Gold:</label>
+                                            <input type="text" id="calc-target" value="10,000,000" class="calc-input-chunky" 
+                                                   onfocus="unformatInput(this)" 
+                                                   onblur="formatInput(this); updateCalculator()" 
+                                                   oninput="cleanInput(this); updateCalculator()">
+                                        </div>
                                     </div>
                                     <div id="calc-res-2" class="calc-result-box"></div>
                                 </div>
-                                <div class="calc-wrapper">
-                                     <div class="calc-row-input">
-                                        <label>Forge Level:</label>
-                                        <select id="calc-forge-lv" class="calc-select-tiny" onchange="updateCalculator()"></select>
+
+                                <div class="calc-tool-card">
+                                    <div class="calc-card-input-area">
+                                        <div class="calc-row-input">
+                                            <label>Current Forge Lv:</label>
+                                            <select id="calc-forge-lv" class="calc-select-chunky" onchange="updateCalculator()"></select>
+                                        </div>
+                                        <div class="calc-row-input">
+                                            <label>Upgrade Start:</label>
+                                            <input type="datetime-local" id="calc-start-date" class="calc-date-chunky desktop-only" onchange="updateCalculator(); syncCalcMobileDate(this.value)">
+
+                                            <div id="calc-mobile-custom-date" class="mobile-only custom-date-group">
+                                                <select id="cm-month" class="cd-select cd-month" onchange="updateCalcFromDropdowns()"></select>
+                                                <select id="cm-day" class="cd-select cd-day" onchange="updateCalcFromDropdowns()"></select>
+                                                <select id="cm-hour" class="cd-select cd-time" onchange="updateCalcFromDropdowns()"></select>
+                                                <span class="cd-sep">:</span>
+                                                <select id="cm-min" class="cd-select cd-time" onchange="updateCalcFromDropdowns()"></select>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div id="calc-res-5" class="calc-result-box"></div>
                                 </div>
-                                <input type="datetime-local" id="calc-start-date" style="display:none;">
-                             </div>
+
+                            </div>
                         </div>
 
                         <div id="panel-daily" class="sidebar-panel" style="display:none;">
                              <div class="log-container"></div>
                         </div>
 
-                        <div id="panel-egg" class="sidebar-panel" style="display:none;">
-                            <div class="log-container">
-                                <div class="date-row-styled" style="margin-bottom:10px;">
-                                    <label class="drs-label">Egg Start:</label>
-                                    <input type="datetime-local" id="egg-date-desktop" class="drs-input" lang="en-GB" onchange="renderEggLog()">
-                                </div>
+<div id="panel-egg" class="sidebar-panel" style="display:none;">
+    <div class="log-container">
+        
+        <div class="config-card">
+            <div class="date-row-styled">
+                <label class="drs-label">Start:</label>
+                <input type="datetime-local" id="egg-date-desktop" class="drs-input desktop-only" lang="en-GB" onchange="renderEggLog()">
+                
+                <div id="egg-mobile-custom-date" class="mobile-only custom-date-group">
+                    <select id="em-month" class="cd-select cd-month" onchange="updateFromDropdowns('egg')"></select>
+                    <select id="em-day" class="cd-select cd-day" onchange="updateFromDropdowns('egg')"></select>
+                    <select id="em-hour" class="cd-select cd-time" onchange="updateFromDropdowns('egg')"></select>
+                    <span class="cd-sep">:</span>
+                    <select id="em-min" class="cd-select cd-time" onchange="updateFromDropdowns('egg')"></select>
+                </div>
+            </div>
+            <div class="egg-prompt-text">Choose which egg to hatch next:</div>           
+            <div class="egg-selector" id="egg-selector-box">
+                <button class="egg-btn" onclick="addEggToQueue('common')"><img src="icons/EggCommon.png"></button>
+                <button class="egg-btn" onclick="addEggToQueue('rare')"><img src="icons/EggRare.png"></button>
+                <button class="egg-btn" onclick="addEggToQueue('epic')"><img src="icons/EggEpic.png"></button>
+                <button class="egg-btn" onclick="addEggToQueue('legendary')"><img src="icons/EggLegendary.png"></button>
+                <button class="egg-btn" onclick="addEggToQueue('ultimate')"><img src="icons/EggUltimate.png"></button>
+                <button class="egg-btn" onclick="addEggToQueue('mythic')"><img src="icons/EggMythic.png"></button>
+            </div>
+        </div>
+        
+        <!-- 2. Summary moved here (Right below selector) -->
+        <div id="egg-total-summary"></div>
 
-                                <div class="egg-selector" id="egg-selector-box">
-                                    <button class="egg-btn" onclick="addEggToQueue('common')"><img src="icons/EggCommon.png"></button>
-                                    <button class="egg-btn" onclick="addEggToQueue('rare')"><img src="icons/EggRare.png"></button>
-                                    <button class="egg-btn" onclick="addEggToQueue('epic')"><img src="icons/EggEpic.png"></button>
-                                    <button class="egg-btn" onclick="addEggToQueue('legendary')"><img src="icons/EggLegendary.png"></button>
-                                    <button class="egg-btn" onclick="addEggToQueue('ultimate')"><img src="icons/EggUltimate.png"></button>
-                                    <button class="egg-btn" onclick="addEggToQueue('mythic')"><img src="icons/EggMythic.png"></button>
-                                </div>
-                                
-                                <div class="egg-log-container" id="egg-log-list"></div>
-                                <div id="egg-total-summary"></div>
-                                <div class="physical-spacer" style="height: 60px;"></div>
-                            </div>
-                        </div>
+        <div class="egg-log-container" id="egg-log-list"></div>
+        <!-- Summary removed from here -->
+
+        <div class="physical-spacer" style="height: 60px;"></div>
+    </div>
+</div>
 
                     </div>
                 </div>
@@ -276,27 +310,62 @@
         </div>
     </div>
 
+    <div id="mobile-floating-controls" class="mobile-only">
+        <div class="control-capsule">
+            <button class="tn-action-btn reset-neutral" onclick="resetCurrentTree()"></button>
+            <button class="tn-action-btn" id="btn-undo-mobile-new" onclick="undo()" disabled></button>
+            <button class="tn-action-btn" id="btn-redo-mobile-new" onclick="redo()" disabled></button>
+        </div>
+    </div>
+    <div id="float-tree" class="mobile-floating-container mobile-only">
+        <div class="control-capsule">
+            <button class="tn-action-btn reset-neutral" onclick="resetCurrentTree()"></button>
+            <button class="tn-action-btn" id="btn-undo-mobile-tree" onclick="undo()" disabled></button>
+            <button class="tn-action-btn" id="btn-redo-mobile-tree" onclick="redo()" disabled></button>
+        </div>
+    </div>
+
+    <div id="float-logs" class="mobile-floating-container mobile-only">
+        <div class="control-capsule">
+            <button class="tn-action-btn reset-neutral" onclick="clearPlan()"></button>
+            <button class="tn-action-btn" id="btn-undo-mobile-log" onclick="undo()" disabled></button>
+            <button class="tn-action-btn" id="btn-redo-mobile-log" onclick="redo()" disabled></button>
+        </div>
+    </div>
+
+    <div id="float-egg" class="mobile-floating-container mobile-only">
+        <div class="control-capsule">
+            <button class="tn-action-btn reset-neutral" onclick="clearEggPlan()"></button>
+            <button class="tn-action-btn" id="btn-undo-mobile-egg" onclick="undoEgg()" disabled></button>
+            <button class="tn-action-btn" id="btn-redo-mobile-egg" onclick="redoEgg()" disabled></button>
+        </div>
+    </div>
+
     <div id="mobile-more-view" class="more-view-container mobile-only">
-        <div class="more-section-header">Tools</div>
-        <div class="more-card" onclick="setSidebarPanel('calc'); switchMobileView('calc')">
-            <img src="icons/anvil.png"> Forge Calculator
-        </div>
-        <div class="more-card" onclick="setSidebarPanel('daily'); switchMobileView('daily')">
-            <img src="icons/icon_daily.png"> Daily Gain
-        </div>
-        <div class="more-card" onclick="setSidebarPanel('egg'); switchMobileView('egg')">
-            <img src="icons/icon_eggplan.png"> Egg Planner
+        <div class="more-top-bar">
+            <div class="mtb-actions">
+                <button class="sys-btn-mobile" onclick="downloadData()">
+                    <img src="icons/icon_save.png"> <span>Save</span>
+                </button>
+                <button class="sys-btn-mobile" onclick="document.getElementById('file-upload').click()">
+                    <img src="icons/icon_load.png"> <span>Load</span>
+                </button>
+                <button class="sys-btn-mobile" onclick="toggleHelp()">
+                    <img src="icons/icon_help.png"> <span>Help</span>
+                </button>
+            </div>
         </div>
 
-        <div class="more-section-header">System</div>
-        <div class="more-card" onclick="downloadData()">
-            <img src="icons/icon_save.png" onerror="this.src='icons/icon_timeline.png'"> Save Data
-        </div>
-        <div class="more-card" onclick="document.getElementById('file-upload').click()">
-            <img src="icons/icon_load.png" onerror="this.src='icons/icon_timeline.png'"> Load Data
-        </div>
-        <div class="more-card" onclick="toggleHelp()">
-            <img src="icons/icon_help.png" onerror="this.src='icons/icon_timeline.png'"> How to Use
+        <div class="tools-group-box mobile-tools-tray">
+            <button class="dash-btn" onclick="setSidebarPanel('calc'); switchMobileView('calc')">
+                <img src="icons/anvil.png" class="dash-icon"> Forge Calc
+            </button>
+            <button class="dash-btn" onclick="setSidebarPanel('daily'); switchMobileView('daily')">
+                <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
+            </button>
+            <button class="dash-btn" onclick="setSidebarPanel('egg'); switchMobileView('egg')">
+                <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
+            </button>
         </div>
     </div>
 
@@ -406,10 +475,69 @@
             }
         }
 
+        // --- NEW: CALCULATOR MOBILE DROPDOWN LOGIC ---
+        function initCalcDateSelectors() {
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const mSel = document.getElementById('cm-month');
+            const dSel = document.getElementById('cm-day');
+            const hSel = document.getElementById('cm-hour');
+            const minSel = document.getElementById('cm-min');
+
+            if(!mSel) return; 
+
+            // Clear and Populate
+            mSel.innerHTML = ""; months.forEach((m, i) => mSel.add(new Option(m, i)));
+            dSel.innerHTML = ""; for(let i=1; i<=31; i++) dSel.add(new Option(i, i));
+            hSel.innerHTML = ""; for(let i=0; i<=23; i++) hSel.add(new Option(i, i));
+            minSel.innerHTML = ""; for(let i=0; i<=59; i++) minSel.add(new Option(i < 10 ? '0'+i : i, i));
+
+            // Set default to NOW
+            const now = new Date();
+            mSel.value = now.getMonth();
+            dSel.value = now.getDate();
+            hSel.value = now.getHours();
+            minSel.value = now.getMinutes();
+            
+            // Push this initial value to the main calculator
+            updateCalcFromDropdowns();
+        }
+
+        function updateCalcFromDropdowns() {
+            const year = new Date().getFullYear();
+            const m = parseInt(document.getElementById('cm-month').value);
+            const d = parseInt(document.getElementById('cm-day').value);
+            const h = parseInt(document.getElementById('cm-hour').value);
+            const min = parseInt(document.getElementById('cm-min').value);
+
+            const date = new Date(year, m, d, h, min);
+            
+            // Create ISO string for the datetime-local input
+            const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            
+            const mainInput = document.getElementById('calc-start-date');
+            if(mainInput) {
+                mainInput.value = localIso;
+                if(typeof updateCalculator === 'function') updateCalculator();
+            }
+        }
+
+        function syncCalcMobileDate(isoStr) {
+            if(!isoStr) return;
+            const d = new Date(isoStr);
+            const mSel = document.getElementById('cm-month');
+            if(mSel) {
+                mSel.value = d.getMonth();
+                document.getElementById('cm-day').value = d.getDate();
+                document.getElementById('cm-hour').value = d.getHours();
+                document.getElementById('cm-min').value = d.getMinutes();
+            }
+        }
+
         window.addEventListener('load', () => {
              if(typeof populateForgeDropdown === 'function') populateForgeDropdown();
              updateRightPaneVisuals('logs');
              if(typeof updateCalculations === 'function') updateCalculations();
+             initCalcDateSelectors(); // Init the new mobile dropdowns
         });
     </script>
 </body>

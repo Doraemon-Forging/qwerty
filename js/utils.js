@@ -194,18 +194,19 @@ function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, custo
     const modal = document.getElementById('tableModal');
     const content = modal.querySelector('.modal-content');
 
-    // 1. ICON DETECTION LOGIC
+// 1. ICON DETECTION LOGIC
     const tLower = title.toLowerCase();
     let valueIconHTML = '';
 
-    if (tLower.includes('research') && tLower.includes('cost')) {
+    // CHANGED: Now looks for 'tech' instead of 'research' so it catches "TECH UPGRADE COST"
+    if (tLower.includes('tech') && tLower.includes('cost')) {
         // CASE: Tech Research Cost -> RED POTION
         valueIconHTML = `<img src="icons/red_potion.png" class="icon-gold-inline">`;
     } else if (tLower.includes('price') || tLower.includes('sell') || tLower.includes('cost')) {
         // CASE: Forge/Sell -> GOLD
         valueIconHTML = `<img src="icons/fm_gold.png" class="icon-gold-inline">`;
     }
-
+    
     let statHTML = '';
     if (statData && typeof statData === 'object' && statData.label) {
         if (statData.before === statData.after) {
@@ -286,19 +287,19 @@ function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, custo
                         td.innerHTML = `
                             <div class="spine-grid">
                                 <div class="spine-left">
-                                    ${valBefore} ${valueIconHTML}
+                                    ${valueIconHTML}${valBefore} 
                                 </div>
                                 <div class="spine-center">
                                     <span class="stat-arrow-table">➜</span>
                                 </div>
                                 <div class="spine-right">
-                                    <span class="${rightClass}">${valAfter}</span> ${valueIconHTML}
+                                    ${valueIconHTML}<span class="${rightClass}">${valAfter}</span> 
                                 </div>
                             </div>
                         `;
                     } else {
                         // SINGLE VALUE (Flex wrapper needed for icon alignment)
-                        td.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; gap:4px; color:#fff;">${cellContent} ${valueIconHTML}</div>`;
+                        td.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; gap:4px; color:#fff;">${valueIconHTML}${cellContent} </div>`;
                     }
                 } else {
                     td.innerHTML = cellContent;

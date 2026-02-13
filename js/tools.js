@@ -10,6 +10,7 @@
 function populateForgeDropdown() {
     const s = document.getElementById('calc-forge-lv');
     if (!s) return;
+    s.innerHTML = ""; // Clear existing options to prevent duplication
     for (let i = 1; i <= 34; i++) s.add(new Option(i, i));
     s.value = 20; // Default
 }
@@ -56,43 +57,47 @@ function updateCalculator() {
     const targetEl = document.getElementById('calc-target');
     if (!hammerEl || !targetEl) return;
 
-    // 1. Parse Inputs
+// 1. Parse Inputs
     const hIn = parseFloat(hammerEl.value.replace(/,/g, '')) || 0;
     const gTarget = parseFloat(targetEl.value.replace(/,/g, '')) || 0;
     const fLv = parseInt(document.getElementById('calc-forge-lv').value) || 1;
 
-    // Input Formatting
-    if (document.activeElement !== hammerEl || !hammerEl.value.endsWith('.')) {
-         if(hIn > 0) hammerEl.value = hIn.toLocaleString('en-US');
+    // Input Formatting - FIXED: Only format when the user clicks AWAY (not focused)
+    if (document.activeElement !== hammerEl) {
+         hammerEl.value = hIn > 0 ? hIn.toLocaleString('en-US') : (hammerEl.value ? '0' : '');
     }
-    if (document.activeElement !== targetEl || !targetEl.value.endsWith('.')) {
-         if(gTarget > 0) targetEl.value = gTarget.toLocaleString('en-US');
+    if (document.activeElement !== targetEl) {
+         targetEl.value = gTarget > 0 ? gTarget.toLocaleString('en-US') : (targetEl.value ? '0' : '');
     }
 
     const curStats = getTechBonuses(setupLevels);
     const projStats = getTechBonuses(calcState().levels);
 
+    // Helper: Generate Line with Icons
     const genLine = (label, v1, v2, iconKey, tooltip = "") => {
         const tt = tooltip ? `<span class="info-tooltip" title="${tooltip}" onclick="alert('${tooltip}')">(?)</span>` : '';
-        const iconImg = iconKey ? `<img src="icons/${iconKey}.png" class="calc-icon">` : '';
+        const iconHtml = iconKey ? `<img src="icons/${iconKey}.png" class="calc-icon-left">` : '';
+
         return `
             <div class="calc-line">
                 <div class="calc-label">${label} ${tt}</div>
                 <div class="calc-val-group">
-                    ${v1 === v2 ? `<span>${v1}</span>` : `<span class="calc-val-before">${v1}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${v2}</span>`}
-                    ${iconImg}
+                    ${v1 === v2 
+                        ? `<span>${iconHtml}${v1}</span>` 
+                        : `<span class="calc-val-before">${iconHtml}${v1}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${iconHtml}${v2}</span>`
+                    }
                 </div>
             </div>`;
     };
 
-    // 2. Render RES-1 (Effective Hammer & Gold Value)
+    // 2. Render RES-1
     let effH1 = hIn / (1 - curStats.free / 100);
     let effH2 = hIn / (1 - projStats.free / 100);
     let h1 = genLine('Effective Hammer', formatResourceValue(effH1, 'hammer'), formatResourceValue(effH2, 'hammer'), 'fm_hammer');
     h1 += genLine('Gold', formatResourceValue(effH1 * curStats.avgGold, 'gold'), formatResourceValue(effH2 * projStats.avgGold, 'gold'), 'fm_gold');
     const res1 = document.getElementById('calc-res-1'); if (res1) res1.innerHTML = h1;
 
-    // 3. Render RES-2 (Hammer Needed)
+    // 3. Render RES-2
     const res2 = document.getElementById('calc-res-2');
     if (res2) res2.innerHTML = genLine('Hammer Needed', 
         formatResourceValue(gTarget / curStats.avgGold * (1 - curStats.free / 100), 'hammer'), 
@@ -125,13 +130,15 @@ function updateCalculator() {
         const f2 = baseMins / (1 + speedBonusAtStart / 100);
         const dFinish = new Date(mainStartTime + f1 * 60000);
         const dFinishProj = new Date(mainStartTime + f2 * 60000);
+        
         const timeStr = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
         const dateStr = (d) => d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
         const formatDT = (d) => `<span class="calc-multiline-date">${dateStr(d)}<span class="calc-date-comma">, </span><span class="calc-time-block">${timeStr(d)}</span></span>`;
 
+        // UPDATED: Added 'calc-val-before' class to the first span here vvv
         let finishHtml = (dFinish.getTime() === dFinishProj.getTime())
             ? `<div class="calc-val-group calc-date-single"><span>${formatDT(dFinish)}</span></div>`
-            : `<div class="calc-val-group"><span>${formatDT(dFinish)}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${formatDT(dFinishProj)}</span></div>`;
+            : `<div class="calc-val-group"><span class="calc-val-before">${formatDT(dFinish)}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${formatDT(dFinishProj)}</span></div>`;
 
         let h5 = `<div class="calc-line"><div class="calc-label">Finish</div>${finishHtml}</div>`;
         h5 += genLine('Duration', formatSmartTime(f1), formatSmartTime(f2));
@@ -259,12 +266,22 @@ function redoEgg() {
 function updateEggUndoButtons() {
     const hasHistory = eggHistoryStack.length > 0;
     const hasRedo = eggRedoStack.length > 0;
-    
-    const uBtn = document.getElementById('btn-undo-egg');
-    const rBtn = document.getElementById('btn-redo-egg');
-    
-    if (uBtn) { uBtn.disabled = !hasHistory; uBtn.style.opacity = !hasHistory ? "0.3" : "1"; }
-    if (rBtn) { rBtn.disabled = !hasRedo; rBtn.style.opacity = !hasRedo ? "0.3" : "1"; }
+
+    // UPDATED: Target both Desktop and Mobile buttons
+    const undoIds = ['btn-undo-egg', 'btn-undo-mobile-egg'];
+    const redoIds = ['btn-redo-egg', 'btn-redo-mobile-egg'];
+
+    const updateBtn = (id, isActive) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.disabled = !isActive;
+            el.style.opacity = !isActive ? "0.3" : "1";
+            el.style.pointerEvents = !isActive ? "none" : "auto";
+        }
+    };
+
+    undoIds.forEach(id => updateBtn(id, hasHistory));
+    redoIds.forEach(id => updateBtn(id, hasRedo));
 }
 
 // --- EGG LOGIC ---
@@ -332,46 +349,81 @@ function renderEggLog() {
 
     eggPlanQueue.forEach((item, idx) => {
         const div = document.createElement('div');
+        
         if (item.type === 'delay') {
             totalQueueMins += item.mins;
             curTime += item.mins * 60000;
             const finishDate = new Date(curTime);
             const timeStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-            div.className = `egg-row ${expandedEggIdx === idx ? 'expanded' : ''}`;
-            div.style.borderLeftColor = '#7f8c8d';
+            
+            div.className = `log-row ${expandedEggIdx === idx ? 'expanded' : ''}`;
+            
+            const iconHtml = `
+                <div class="log-icon-wrapper desktop-only" style="align-items: center; justify-content: center; height: 44px;">
+                    <span style="font-size:1.8em; line-height:1;">💤</span>
+                </div>`;
+            const nameHtml = `<div class="log-name">Delay (+${item.mins}m)</div>`;
+            const rightHtml = `
+                <div class="log-right-group">
+                    <div class="log-time" style="color:#ccc">${timeStr}</div>
+                </div>`;
+                
             div.innerHTML = `
-                <div class="egg-row-header" onclick="toggleEggExp(${idx})">
-                    <div class="egg-info"><span style="font-size:1.5em">💤</span><span class="egg-name">DELAY</span></div>
-                    <div class="egg-details-right">
-                        <div class="egg-time-finish" style="color:#ccc">${timeStr}</div>
-                        <div class="egg-meta">Duration: ${item.mins}m</div>
-                    </div>
+                <div class="log-entry delay" onclick="toggleEggExp(${idx})">
+                    <div class="log-left-group">${iconHtml}${nameHtml}</div>
+                    ${rightHtml}
                 </div>
-                <div class="egg-ctrls">
-                    <button class="btn-ctrl" style="background:#c0392b" onclick="deleteEggStep(${idx})">🗑️</button>
+                <div class="log-controls">
+                    <button class="btn-ctrl" style="background:#c0392b" onclick="deleteEggStep(${idx})">🗑️ Delete</button>
                 </div>`;
         } else {
             const data = EGG_DATA[item.key];
-            if (EGG_POINTS[item.key]) totalPoints += EGG_POINTS[item.key];
+            const pts = EGG_POINTS[item.key] || 0; // Get the warpoints
+            
+            totalPoints += pts;
+            
             const techLvl = getEggSpeedAtTime(data.id, curTime);
             const speedMult = 1 + (techLvl * 0.1);
             const finalMins = data.t / speedMult;
+            
             totalQueueMins += finalMins;
             curTime += finalMins * 60000;
             const finishDate = new Date(curTime);
             const finishTs = finishDate.getTime();
             const timeStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
             
-            div.className = `egg-row ${data.c} ${expandedEggIdx === idx ? 'expanded' : ''}`;
+            div.className = `log-row ${expandedEggIdx === idx ? 'expanded' : ''}`;
+            
+            // Clean icon wrapper (No tier badge!)
+            const iconHtml = `
+                <div class="log-icon-wrapper">
+                    <img src="${data.img}" style="width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));" onerror="this.style.display='none'">
+                </div>`;
+            
+            // Details HTML using the exact structure from the Schedule Log
+            const detailsHtml = `
+                <div class="log-details">
+                    <div class="ld-part pot">
+                        <img src="icons/warpoint.png" class="ld-icon">
+                        <span>${pts.toLocaleString('en-US')}</span>
+                    </div>
+                    <div class="ld-part time" style="width: auto;">
+                        <img src="icons/icon_time.png" class="ld-icon">
+                        <span>${formatEggTime(finalMins)}</span>
+                    </div>
+                </div>`;
+                
             div.innerHTML = `
-                <div class="egg-row-header" onclick="toggleEggExp(${idx})">
-                    <div class="egg-info"><img src="${data.img}"><span class="egg-name">${data.n}</span></div>
-                    <div class="egg-details-right">
-                        <div class="egg-time-finish">${timeStr}</div>
-                        <div class="egg-meta">⏱️ ${formatEggTime(finalMins)} | Speed +${Math.round(techLvl * 10)}%</div>
+                <div class="log-entry ${data.c}" onclick="toggleEggExp(${idx})">
+                    <div class="log-left-group">
+                        ${iconHtml}
+                        <div class="log-name">${data.n}</div> </div>
+                    <div class="log-right-group">
+                        <div class="log-time">${timeStr}</div>
+                        ${detailsHtml}
                     </div>
                 </div>
-                <div class="egg-ctrls">
+                <div class="log-controls">
                     <button class="btn-ctrl" style="background:#c0392b" onclick="deleteEggStep(${idx})">🗑️ Delete</button>
                     <button class="btn-ctrl" style="background:#2980b9" onclick="markEggDone(${idx}, ${finishTs})">✅ Done</button>
                     <button class="btn-ctrl" style="background:#27ae60" onclick="addEggDelay(${idx})">➕ Delay</button>

@@ -91,12 +91,37 @@ const TREES = {
             auto: { n: "Auto Forge", p: ["h_bonus", "c_bonus"], m: 1, stat: l => `Hammers +${l}` },
             free: { n: "Free Forge Chance", p: ["auto"], m: 5, stat: l => `Chance +${l}%` },
             max: {
-                n: "Max Offline", p: ["free"], m: 5, stat: (l) => {
+                n: "Max Offline Timer", // UPDATED: Name
+                p: ["free"], 
+                m: 5, 
+                stat: (l) => {
+                    // 1. Calculate Time
                     const p = l * 16;
                     const m = 240 * (1 + p / 100);
                     const h = Math.floor(m / 60);
                     const min = Math.round(m % 60);
-                    return `Time +${p}% (${h}h ${min}m)`;
+
+                    // 2. Calculate Rates (Look up global setupLevels for context)
+                    let cLvl = 0, hLvl = 0;
+                    if (typeof setupLevels !== 'undefined') {
+                        for (let t = 1; t <= 5; t++) {
+                            cLvl += (setupLevels[`forge_T${t}_off_c`] || 0);
+                            hLvl += (setupLevels[`forge_T${t}_off_h`] || 0);
+                        }
+                    }
+                    
+                    // Gold Rate (1/s base + 2% per lvl)
+                    const goldRate = 1 * (1 + (cLvl * 2) / 100);
+                    const totalGold = (m * 60) * goldRate;
+                    
+                    // Hammer Rate (1/m base + 2% per lvl)
+                    const hammerRate = 1 * (1 + (hLvl * 2) / 100);
+                    const totalHammer = m * hammerRate;
+
+                    // 3. Format
+                    const fmt = (v, t) => (typeof formatResourceValue === 'function') ? formatResourceValue(v, t) : Math.round(v);
+
+                    return `Time +${p}% (${h}h ${min}m | <img src="icons/fm_gold.png" class="stat-key-icon"> ${fmt(totalGold, 'gold')} | <img src="icons/fm_hammer.png" class="stat-key-icon"> ${fmt(totalHammer, 'hammer')})`;
                 }
             },
             off_c: {

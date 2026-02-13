@@ -1,6 +1,7 @@
 /**
  * TECH-PLANNER.JS
  * Updated for Light Mode, Exact Centered Connections, and Clan War Logic
+ * REVISION: Stats Icons Manually Swapped (Icon + Value)
  */
 
 // --- GLOBAL STATE ---
@@ -500,41 +501,61 @@ function drawLines() {
 
 function handleClick(id, isRight) {
     showFloatingLabel(id);
-    pushHistory(); 
+    // REMOVED: pushHistory(); from here
     const meta = getMeta(id);
 
     if (currentMode === 'setup') {
+        const currentLvl = setupLevels[id] || 0;
+        
         if (isRight) {
-            if ((setupLevels[id] || 0) > 1) { setupLevels[id]--; } else { delete setupLevels[id]; }
-        } else {
-            setupLevels[id] = Math.min(meta.m, (setupLevels[id] || 0) + 1);
-            if ((setupLevels[id] || 0) === 1) autoUnlock(id);
-        }
-        if (!setupLevels[id]) {
-            let changed = true;
-            while (changed) {
-                changed = false;
-                Object.keys(setupLevels).forEach(k => {
-                    if (setupLevels[k] > 0 && !isUnlocked(k, setupLevels)) {
-                        delete setupLevels[k];
-                        changed = true;
-                    }
-                });
-            }
-            const sim = calcState();
-            if (sim.brokenSteps.length > 0) {
-                for (let i = sim.brokenSteps.length - 1; i >= 0; i--) {
-                    planQueue.splice(sim.brokenSteps[i], 1);
+            // Only push history if there is something to remove/decrement
+            if (currentLvl > 0) {
+                pushHistory();
+                if (currentLvl > 1) { 
+                    setupLevels[id]--; 
+                } else { 
+                    delete setupLevels[id]; 
                 }
+                
+                // Cleanup invalid children (Logic from your original code)
+                if (!setupLevels[id]) {
+                    let changed = true;
+                    while (changed) {
+                        changed = false;
+                        Object.keys(setupLevels).forEach(k => {
+                            if (setupLevels[k] > 0 && !isUnlocked(k, setupLevels)) {
+                                delete setupLevels[k];
+                                changed = true;
+                            }
+                        });
+                    }
+                    // Sync Queue if needed
+                    const sim = calcState();
+                    if (sim.brokenSteps.length > 0) {
+                        for (let i = sim.brokenSteps.length - 1; i >= 0; i--) {
+                            planQueue.splice(sim.brokenSteps[i], 1);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Only push history if we are NOT at max level
+            if (currentLvl < meta.m) {
+                pushHistory();
+                setupLevels[id] = currentLvl + 1;
+                if ((setupLevels[id] || 0) === 1) autoUnlock(id);
             }
         }
     } else {
+        // PLAN MODE
         if (isRight) {
             let idx = -1;
             for (let i = planQueue.length - 1; i >= 0; i--) {
                 if (planQueue[i].id === id) { idx = i; break; }
             }
+            // Only push history if we found an item to remove
             if (idx > -1) {
+                pushHistory();
                 planQueue.splice(idx, 1);
                 let clean = false;
                 while (!clean) {
@@ -547,13 +568,17 @@ function handleClick(id, isRight) {
                 }
             }
         } else {
+            // Add to Plan
             let checkState;
             if (insertModeIndex > -1) {
                 checkState = calcState(planQueue.slice(0, insertModeIndex));
             } else {
                 checkState = calcState();
             }
+            
+            // Only push history if the node is valid to add (unlocked and not maxed)
             if ((checkState.levels[id] || 0) < meta.m && isUnlocked(id, checkState.levels)) {
+                pushHistory();
                 if (insertModeIndex > -1) {
                     planQueue.splice(insertModeIndex, 0, { type: 'node', id });
                     insertModeIndex = -1;
@@ -760,10 +785,25 @@ function renderStats() {
         const max = treeData.maxLevels;
         const pct = ((currentCount / max) * 100).toFixed(1);
 
-        const group = document.createElement('div'); group.className = 'stats-group';
+const group = document.createElement('div'); group.className = 'stats-group';
         const header = document.createElement('div'); header.className = `stats-header ${key}`;
         
-        header.innerHTML = `<img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" class="nav-icon"> <span>${treeData.name.toUpperCase()}</span> <span class="progress-badge">${currentCount}/${max} (${pct}%)</span>`;
+        // --- NEW HEADER HTML GENERATION ---
+// --- NEW HEADER HTML (With Wrapper for 80% Icon) ---
+        header.innerHTML = `
+            <div class="header-left">
+                <div class="header-icon-circle">
+                    <img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" class="nav-icon"> 
+                </div>
+                <span class="header-title-text">${treeData.name.toUpperCase()}</span>
+            </div>
+            <div class="header-right">
+                <span class="stat-count-text">${currentCount}/${max}</span>
+                <span class="stat-pct-text">${pct}%</span>
+            </div>
+        `;
+        // ----------------------------------
+
         group.appendChild(header);
 
         let hasStats = false;
@@ -789,19 +829,27 @@ function renderStats() {
                     txtProj = match[0];
                 }
             }
-            
+
+            // NEW: Manually swap text/icon positions inline
+            // Looks for patterns like "123 <img...>" and swaps to "<img...> 123"
+            // Handles cases like "1.24 <img...>/s" -> "<img...> 1.24/s"
+            const iconRegex = /([\d\.\,kmb]+)\s*(<img[^>]+>)/g;
+            if (txtCur && typeof txtCur === 'string') txtCur = txtCur.replace(iconRegex, '$2 $1');
+            if (txtProj && typeof txtProj === 'string') txtProj = txtProj.replace(iconRegex, '$2 $1');
+
             let infoBtnHTML = '';
 
+            // REVERTED: Changed button back to 'i'
             if (key === 'forge' && ns.id === 'sell') {
-                txtCur += ` <span style="color:#aaa;font-size:0.9em">(Avg: ${formatResourceValue(globCur, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
-                txtProj += ` <span style="font-size:0.9em">(Avg: ${formatResourceValue(globProj_SellIso, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
+                txtCur += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globCur, 'gold')})</span>`;
+                txtProj += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellIso, 'gold')})</span>`;
                 infoBtnHTML = `<button class="btn-info" onclick="showEqSellTable(${curT * 2},${projT * 2},1)">i</button>`;
 
             } else if (meta.isSlot) {
                 const sCur = getSlotStats(99 + curT * 2, state.totalSellBonusCur);
                 const sProj = getSlotStats(99 + projT * 2, state.totalSellBonusCur);
-                txtCur = `Max ${99 + curT * 2} <span style="color:#aaa;font-size:0.9em">(Range: ${sCur.range} | Avg: ${formatResourceValue(sCur.avg, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
-                txtProj = `Max ${99 + projT * 2} <span style="font-size:0.9em">(Range: ${sProj.range} | Avg: ${formatResourceValue(sProj.avg, 'gold')} <img src="icons/fm_gold.png" class="stat-key-icon">)</span>`;
+                txtCur = `Max ${99 + curT * 2} (Range: ${sCur.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sCur.avg, 'gold')})</span>`;
+                txtProj = `Max ${99 + projT * 2} (Range: ${sProj.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sProj.avg, 'gold')})</span>`;
             
             } else if (meta.isDiscount) {
                 infoBtnHTML = `<button class="btn-info" onclick="showPotionTable(${curT * 2}, ${projT * 2})">i</button>`;
@@ -819,7 +867,8 @@ function renderStats() {
             let finalHTML = txtCur;
             if (projT > curT) finalHTML += `<span class="stat-arrow">➜</span> <span class="stat-new">${txtProj}</span>`;
 
-            const row = document.createElement('div'); row.className = 'stats-row';
+            const row = document.createElement('div'); 
+            row.className = 'stats-row ' + key; 
             
             row.innerHTML = `
                 <div class="stat-icon-box">
@@ -843,7 +892,6 @@ function renderStats() {
 
 function showPotionTable(cur, proj) {
     const isUpgrade = proj > cur;
-    const discount = Math.max(cur, proj); 
     const headers = ['Level', 'Upgrade Cost'];
     const allRows = [];
     
@@ -859,13 +907,13 @@ function showPotionTable(cur, proj) {
             tierSumAfter += v2;
             let valStr = v1.toLocaleString();
             if (isUpgrade) valStr += ` ➜ ${v2.toLocaleString()}`;
-            allRows.push([`<b>Lv ${i + 1}</b>`, valStr]);
+            allRows.push([`${i + 1}`, valStr]);
         }
-        let sumStr = `<b>${tierSumBefore.toLocaleString()}</b>`;
-        if (isUpgrade) sumStr += ` ➜ <b>${tierSumAfter.toLocaleString()}</b>`;
-        allRows.push([`<b>Total</b>`, sumStr]);
+        let sumStr = `${tierSumBefore.toLocaleString()}`;
+        if (isUpgrade) sumStr += ` ➜ ${tierSumAfter.toLocaleString()}`;
+        allRows.push([`Total`, sumStr]);
     }
-    showTable("Tech Research Cost", "icons/spt_disc.png", { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
+    showTable("TECH UPGRADE COST", "icons/spt_disc.png", { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
 }
 
 function showTechTimerTable(cur, proj) {
@@ -886,13 +934,13 @@ function showTechTimerTable(cur, proj) {
             tierSumAfter += v2;
             let valStr = formatSmartTime(v1);
             if (isUpgrade) valStr += ` ➜ ${formatSmartTime(v2)}`;
-            allRows.push([`<b>Lv ${i + 1}</b>`, valStr]);
+            allRows.push([`${i + 1}`, valStr]);
         }
-        let sumStr = `<b>${formatSmartTime(tierSumBefore)}</b>`;
-        if (isUpgrade) sumStr += ` ➜ <b>${formatSmartTime(tierSumAfter)}</b>`;
-        allRows.push([`<b>Total</b>`, sumStr]);
+        let sumStr = `${formatSmartTime(tierSumBefore)}`;
+        if (isUpgrade) sumStr += ` ➜ ${formatSmartTime(tierSumAfter)}`;
+        allRows.push([`Total`, sumStr]);
     }
-    showTable("Tech Research Time", "icons/spt_timer.png", { label: "Speed Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
+    showTable("TECH RESEARCH TIMER", "icons/spt_timer.png", { label: "Speed Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
 }
 
 function showEqSellTable(cur, proj, page = 1) {
@@ -906,15 +954,15 @@ function showEqSellTable(cur, proj, page = 1) {
         const v2 = Math.round(base * (100 + proj) / 100);
         let valStr = formatResourceValue(v1, 'gold');
         if (isUpgrade) valStr += ` ➜ ${formatResourceValue(v2, 'gold')}`;
-        allRows.push([`<b>${i}</b>`, valStr]);
+        allRows.push([`${i}`, valStr]);
     }
-    showTable("Item Sell Price", "icons/forge_sell.png", { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows);
+    showTable("EQUIPMENT SELL PRICE", "icons/forge_sell.png", { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows);
 }
 
 function showForgeTable(type, cur, proj, page = 1) {
     const isUpgrade = proj > cur;
     const isT = type === 'timer';
-    const title = isT ? "Forge Upgrade Time" : "Forge Upgrade Cost";
+    const title = isT ? "FORGE UPGRADE TIME" : "FORGE UPGRADE COST";
     const iconSrc = isT ? "icons/forge_timer.png" : "icons/forge_disc.png";
     const headers = ["Level", isT ? "Upgrade Duration" : "Upgrade Cost"]; 
     const rows = [];
@@ -933,7 +981,7 @@ function showForgeTable(type, cur, proj, page = 1) {
         }
         let cellContent = v1;
         if (isUpgrade) cellContent += ` ➜ ${v2}`;
-        const levelLabel = `<b>${i} ➜ ${i + 1}</b>`;
+        const levelLabel = `${i} ➜ ${i + 1}`;
         rows.push([levelLabel, cellContent]);
     }
     showTable(title, iconSrc, isT ? { label: "Speed", before: `+${cur}%`, after: `+${proj}%` } : { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, headers, rows, 50);
@@ -982,8 +1030,11 @@ function redo() {
 function updateUndoRedoBtns() {
     const hasHistory = (typeof historyStack !== 'undefined' && historyStack.length > 0);
     const hasRedo = (typeof redoStack !== 'undefined' && redoStack.length > 0);
-    const undoIds = ['btn-undo-desktop', 'btn-undo-log', 'btn-undo', 'btn-undo-mobile-new'];
-    const redoIds = ['btn-redo-desktop', 'btn-redo-log', 'btn-redo', 'btn-redo-mobile-new'];
+    
+    // UPDATED: Now targeting the specific mobile IDs you created
+    const undoIds = ['btn-undo-desktop', 'btn-undo-log', 'btn-undo-mobile-tree', 'btn-undo-mobile-log'];
+    const redoIds = ['btn-redo-desktop', 'btn-redo-log', 'btn-redo-mobile-tree', 'btn-redo-mobile-log'];
+    
     const updateBtn = (id, isActive) => {
         const el = document.getElementById(id);
         if (el) {
