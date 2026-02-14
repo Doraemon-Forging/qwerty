@@ -7,9 +7,10 @@
     <link rel="icon" type="image/png" href="icons/app-icon.png">
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/desktop2.css">
+    <link rel="stylesheet" href="css/desktop3.css">
     <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/mobile2.css">
     <link rel="stylesheet" href="css/modal.css">
-
     <style>
         /* INLINE STYLES FOR BUTTON ACTIVE STATES */
         .seg-btn.active::before {
@@ -251,9 +252,50 @@
                             </div>
                         </div>
 
-                        <div id="panel-daily" class="sidebar-panel" style="display:none;">
-                             <div class="log-container"></div>
-                        </div>
+<div id="panel-daily" class="sidebar-panel" style="display:none;">
+    <div class="log-container">
+        
+        <!-- CARD 1: THIEF DUNGEON CALCULATOR -->
+        <div class="daily-card">
+            <div class="daily-header-strip" style="background-color: #9b59b6;"> <!-- Purple for Thief -->
+                <span class="daily-header-title">THIEF DUNGEON</span>
+            </div>
+            
+            <div class="daily-input-row">
+                <label class="daily-label">Highest World:</label>
+                <input type="number" id="calc-world" value="1" class="daily-input" onchange="updateDaily()">
+            </div>
+            
+            <div class="daily-input-row">
+                <label class="daily-label">Highest Stage:</label>
+                <input type="number" id="calc-stage" value="1" class="daily-input" onchange="updateDaily()">
+            </div>
+
+            <!-- RESULT AREA 1 -->
+            <div class="daily-result-box" id="calc-res-3">
+                <!-- Content injected by js/daily.js -->
+            </div>
+        </div>
+
+        <!-- CARD 2: DAILY SUMMARY -->
+        <div class="daily-card">
+            <div class="daily-header-strip" style="background-color: #2ecc71;"> <!-- Green for Total -->
+                <span class="daily-header-title">TOTAL DAILY INCOME</span>
+            </div>
+
+            <!-- RESULT AREA 2 -->
+            <div class="daily-result-box" id="calc-res-4">
+                 <!-- Content injected by js/daily.js -->
+            </div>
+            
+            <div style="text-align:center; font-family:'Fredoka',sans-serif; font-size:0.8rem; color:#95a5a6; margin-top:5px;">
+                *Calculations include 4x Thief Runs + Passive Regen
+            </div>
+        </div>
+
+        <div class="physical-spacer" style="height: 60px;"></div>
+    </div>
+</div>
 
 <div id="panel-egg" class="sidebar-panel" style="display:none;">
     <div class="log-container">
@@ -341,7 +383,7 @@
         </div>
     </div>
 
-    <div id="mobile-more-view" class="more-view-container mobile-only">
+<div id="mobile-more-view" class="more-view-container mobile-only">
         <div class="more-top-bar">
             <div class="mtb-actions">
                 <button class="sys-btn-mobile" onclick="downloadData()">
@@ -356,21 +398,40 @@
             </div>
         </div>
 
-        <div class="tools-group-box mobile-tools-tray">
-            <button class="dash-btn" onclick="setSidebarPanel('calc'); switchMobileView('calc')">
-                <img src="icons/anvil.png" class="dash-icon"> Forge Calc
-            </button>
-            <button class="dash-btn" onclick="setSidebarPanel('daily'); switchMobileView('daily')">
-                <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
-            </button>
-            <button class="dash-btn" onclick="setSidebarPanel('egg'); switchMobileView('egg')">
-                <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
-            </button>
+        <div class="mobile-dashboard-wrapper">
+            
+            <div class="floating-header-container mobile-floating-header">
+                <div class="fhc-circle">
+                    <span>
+                        <img src="icons/Doraemon.png" alt="Icon" style="width: 110% !important; height: 110% !important; object-fit: contain;">
+                    </span>
+                </div>
+                <div class="fhc-pill" style="justify-content: center;">
+                    <span style="white-space: nowrap;">TOOLBOX</span>
+                </div>
+            </div>
+
+            <div class="tools-group-box mobile-tools-tray">
+                <button class="dash-btn" onclick="setSidebarPanel('calc'); switchMobileView('calc')">
+                    <img src="icons/anvil.png" class="dash-icon"> Forge Calc
+                </button>
+                <button class="dash-btn" onclick="setSidebarPanel('daily'); switchMobileView('daily')">
+                    <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
+                </button>
+                <button class="dash-btn" onclick="setSidebarPanel('egg'); switchMobileView('egg')">
+                    <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
+                </button>
+            </div>
+            
         </div>
     </div>
 
-    <nav class="bottom-nav mobile-only">
-        <button class="b-nav-item active" data-target="tree" onclick="switchMobileView('tree')">
+<nav class="bottom-nav mobile-only">
+        <button class="b-nav-item active" data-target="more" onclick="switchMobileView('more')">
+            <img src="icons/icon_more.png" class="b-icon">
+            <span class="b-label">Home</span>
+        </button>
+        <button class="b-nav-item" data-target="tree" onclick="switchMobileView('tree')">
             <img src="icons/icon_techtree.png" class="b-icon">
             <span class="b-label">Tech Tree</span>
         </button>
@@ -381,10 +442,6 @@
         <button class="b-nav-item" data-target="stats" onclick="switchMobileView('stats')">
             <img src="icons/icon_stats.png" class="b-icon">
             <span class="b-label">Stats</span>
-        </button>
-        <button class="b-nav-item" data-target="more" onclick="switchMobileView('more')">
-            <img src="icons/icon_more.png" class="b-icon">
-            <span class="b-label">More</span>
         </button>
     </nav>
 
@@ -405,140 +462,5 @@
     <script src="js/tools.js"></script>
     <script src="js/main.js"></script>
     <script src="js/daily.js"></script>
-
-    <script>
-    function switchMobileView(viewName) {
-            // 1. Reset Body Classes
-            document.body.classList.remove('view-planner', 'view-log', 'view-stats', 'view-more', 'view-calc', 'view-daily', 'view-egg');
-            
-            // 2. Hide "More" Menu explicitly
-            const moreMenu = document.getElementById('mobile-more-view');
-            if(moreMenu) moreMenu.classList.remove('active');
-
-            // 3. Update Nav Button Active State
-            document.querySelectorAll('.b-nav-item').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.querySelector(`.b-nav-item[data-target="${viewName}"]`);
-            
-            // Map sub-tools (calc, egg) to 'more' button active state
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            } else if (['calc', 'daily', 'egg'].includes(viewName)) {
-                document.querySelector('.b-nav-item[data-target="more"]').classList.add('active');
-            }
-
-            // 4. View Logic
-            if (viewName === 'tree') {
-                document.body.classList.add('view-planner');
-            } 
-            else if (viewName === 'more') {
-                if(moreMenu) moreMenu.classList.add('active');
-                document.body.classList.add('view-more'); 
-            } 
-            else {
-                setSidebarPanel(viewName); 
-                document.body.classList.add('view-' + viewName);
-            }
-        }
-        
-        // Override setSidebarPanel to update Header and Capsules AND Trigger Renders
-        if (typeof setSidebarPanel === 'function') {
-            const _originalSetPanel = setSidebarPanel;
-            window.setSidebarPanel = function(panelId) {
-                _originalSetPanel(panelId);
-                updateRightPaneVisuals(panelId);
-                triggerPaneRender(panelId);
-            }
-        } else {
-            // Fallback definition
-            window.setSidebarPanel = function(panelId) {
-                document.querySelectorAll('.sidebar-panel').forEach(p => p.style.display = 'none');
-                const t = document.getElementById('panel-' + panelId);
-                if(t) t.style.display = 'block';
-                updateRightPaneVisuals(panelId);
-                triggerPaneRender(panelId);
-            }
-        }
-        
-        function triggerPaneRender(panelId) {
-            if (panelId === 'stats' && typeof renderStats === 'function') {
-                renderStats();
-            }
-            if (panelId === 'calc' && typeof updateCalculator === 'function') {
-                const sel = document.getElementById('calc-forge-lv');
-                if (sel && sel.options.length === 0 && typeof populateForgeDropdown === 'function') {
-                    populateForgeDropdown();
-                }
-                updateCalculator();
-            }
-            if (panelId === 'egg' && typeof renderEggLog === 'function') {
-                renderEggLog();
-            }
-        }
-
-        // --- NEW: CALCULATOR MOBILE DROPDOWN LOGIC ---
-        function initCalcDateSelectors() {
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const mSel = document.getElementById('cm-month');
-            const dSel = document.getElementById('cm-day');
-            const hSel = document.getElementById('cm-hour');
-            const minSel = document.getElementById('cm-min');
-
-            if(!mSel) return; 
-
-            // Clear and Populate
-            mSel.innerHTML = ""; months.forEach((m, i) => mSel.add(new Option(m, i)));
-            dSel.innerHTML = ""; for(let i=1; i<=31; i++) dSel.add(new Option(i, i));
-            hSel.innerHTML = ""; for(let i=0; i<=23; i++) hSel.add(new Option(i, i));
-            minSel.innerHTML = ""; for(let i=0; i<=59; i++) minSel.add(new Option(i < 10 ? '0'+i : i, i));
-
-            // Set default to NOW
-            const now = new Date();
-            mSel.value = now.getMonth();
-            dSel.value = now.getDate();
-            hSel.value = now.getHours();
-            minSel.value = now.getMinutes();
-            
-            // Push this initial value to the main calculator
-            updateCalcFromDropdowns();
-        }
-
-        function updateCalcFromDropdowns() {
-            const year = new Date().getFullYear();
-            const m = parseInt(document.getElementById('cm-month').value);
-            const d = parseInt(document.getElementById('cm-day').value);
-            const h = parseInt(document.getElementById('cm-hour').value);
-            const min = parseInt(document.getElementById('cm-min').value);
-
-            const date = new Date(year, m, d, h, min);
-            
-            // Create ISO string for the datetime-local input
-            const localIso = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-            
-            const mainInput = document.getElementById('calc-start-date');
-            if(mainInput) {
-                mainInput.value = localIso;
-                if(typeof updateCalculator === 'function') updateCalculator();
-            }
-        }
-
-        function syncCalcMobileDate(isoStr) {
-            if(!isoStr) return;
-            const d = new Date(isoStr);
-            const mSel = document.getElementById('cm-month');
-            if(mSel) {
-                mSel.value = d.getMonth();
-                document.getElementById('cm-day').value = d.getDate();
-                document.getElementById('cm-hour').value = d.getHours();
-                document.getElementById('cm-min').value = d.getMinutes();
-            }
-        }
-
-        window.addEventListener('load', () => {
-             if(typeof populateForgeDropdown === 'function') populateForgeDropdown();
-             updateRightPaneVisuals('logs');
-             if(typeof updateCalculations === 'function') updateCalculations();
-             initCalcDateSelectors(); // Init the new mobile dropdowns
-        });
-    </script>
 </body>
 </html>

@@ -1,7 +1,6 @@
 /**
  * TECH-PLANNER.JS
- * Updated for Light Mode, Exact Centered Connections, and Clan War Logic
- * REVISION: Stats Icons Manually Swapped (Icon + Value)
+ * Core Logic: State Management, Calculations, Tree Rendering, and Log Operations.
  */
 
 // --- GLOBAL STATE ---
@@ -15,1040 +14,12 @@ let historyStack = [];
 let redoStack = [];
 let lineUpdateRequested = false;
 let scrollPositions = { forge: 0, spt: 0, power: 0, stats: 0 };
-
-// Default War Config: Tuesday (2) at 12 AM
-let warConfig = { day: 2, hour: 12, ampm: 'AM' };
-
-// --- TREE NAVIGATION & RENDERING ---
-
-function switchTree(key) {
-    if (key === 'stats') return; 
-    
-    // 1. Update Global Key
-    activeTreeKey = key;
-    
-    // 2. Update New Segmented Buttons (Both Desktop and Mobile)
-    const updateTreeBtn = (btnId, isSelected) => {
-        const btn = document.getElementById(btnId);
-        if (btn) {
-            // Add/Remove 'active' class
-            if (isSelected) btn.classList.add('active');
-            else btn.classList.remove('active');
-        }
-    };
-
-    // Update Desktop Buttons
-    updateTreeBtn('tab-forge', key === 'forge');
-    updateTreeBtn('tab-spt', key === 'spt');
-    updateTreeBtn('tab-power', key === 'power');
-
-    // Update Mobile Buttons
-    updateTreeBtn('mtab-forge', key === 'forge');
-    updateTreeBtn('mtab-spt', key === 'spt');
-    updateTreeBtn('mtab-power', key === 'power');
-
-    // 3. Scroll & Display Logic (Existing code)
-    const treeCont = document.getElementById('tree-container');
-    if (treeCont) scrollPositions[key] = treeCont.scrollTop;
-
-    treeCont.style.display = 'flex';
-    document.getElementById('stats-container').style.display = 'block'; 
-    treeCont.scrollTop = scrollPositions[key] || 0;
-    
-    // 4. Update Canvas Class for Backgrounds
-    document.getElementById('canvas').className = `tree-canvas tree-${key}`;
-    
-    // 5. Render
-    renderTree(key);
-    setTimeout(drawLines, 0);
-}
-
-function renderTree(key) {
-    const canvas = document.getElementById('canvas');
-    Array.from(canvas.children).forEach(c => {
-        if (!c.classList.contains('connections-layer') && !c.classList.contains('tree-reset-btn')) c.remove();
-    });
-
-    const data = TREES[key];
-    for (let t = 1; t <= 5; t++) {
-        const block = document.createElement('div'); block.className = 'tier-block';
-        
-        // --- NEW HEADER LOGIC START ---
-        const header = document.createElement('div');
-        header.className = 'tier-header';
-
-        // Left: The Title
-        const title = document.createElement('div'); 
-        title.className = 'tier-title'; 
-        title.innerText = `TIER ${toRoman(t)}`;
-        header.appendChild(title);
-
-        // Right: The Max Button
-        const maxBtn = document.createElement('button');
-        maxBtn.className = 'tier-max-btn';
-        maxBtn.innerText = "MAX";
-        maxBtn.onclick = (e) => { e.stopPropagation(); maxTier(key, t); };
-        header.appendChild(maxBtn);
-
-        block.appendChild(header);
-        // --- NEW HEADER LOGIC END ---
-
-        const rows = {};
-        data.structure.forEach(nDef => {
-            // ... (Keep existing node generation logic exactly as is) ...
-            const fullId = `${key}_T${t}_${nDef.id}`;
-            const meta = data.meta[nDef.id];
-            if (!meta) return;
-
-            if (!rows[nDef.r]) {
-                const rDiv = document.createElement('div');
-                rDiv.style = "display:flex;justify-content:center;margin-bottom:60px;width:100%";
-                block.appendChild(rDiv);
-                rows[nDef.r] = rDiv;
-            }
-
-            const node = document.createElement('div');
-            node.className = 'node';
-            node.id = fullId;
-            node.dataset.name = meta.n;
-            node.title = `${meta.n} ${toRoman(t)}`;
-            if (nDef.c === 1) node.style.marginLeft = "120px"; 
-
-            const iconPath = `icons/${key}_${nDef.id}.png`;
-            const fallbackEmoji = key === 'forge' ? '🔨' : (key === 'spt' ? '🐾' : '⚔️');
-
-            node.innerHTML = `
-                <div class="node-tier-badge">${toRoman(t)}</div>
-                <img src="${iconPath}" class="node-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-                <div class="node-fallback" style="display:none">${fallbackEmoji}</div>
-                <div class="node-level">0/${meta.m}</div>
-            `;
-            node.onclick = (e) => {
-                if (e.shiftKey && currentMode === 'setup') handleShiftClick(fullId);
-                else handleClick(fullId, false);
-            };
-            node.oncontextmenu = (e) => {
-                e.preventDefault();
-                handleClick(fullId, true);
-            };
-            rows[nDef.r].appendChild(node);
-        });
-        canvas.appendChild(block);
-    }
-    updateCalculations();
-}
-
-function maxTier(tree, tier) {
-    // Safety check
-    if (!confirm(`Max all nodes in ${tree.toUpperCase()} Tier ${tier}?`)) return;
-    
-    pushHistory();
-    
-    // Find all nodes in this specific Tree + Tier
-    TREES[tree].structure.forEach(nDef => {
-        const fullId = `${tree}_T${tier}_${nDef.id}`;
-        const meta = getMeta(fullId);
-        
-        if (meta) {
-            // Set to Max Level
-            setupLevels[fullId] = meta.m;
-
-            // Ensure parents are unlocked (Recursive Unlock)
-            const ensure = (cid) => getParents(cid).forEach(pid => {
-                if ((setupLevels[pid] || 0) === 0) {
-                    setupLevels[pid] = 1;
-                    ensure(pid);
-                }
-            });
-            ensure(fullId);
-        }
-    });
-
-    updateCalculations();
-}
-
-// --- CALCULATION ENGINE ---
-
-function calcState(customQueue) {
-    const levels = { ...setupLevels };
-    let totalMin = 0, history = [], speed = 0, totalPotions = 0, totalSellBonusCur = 0, currentDiscount = 0;
-
-    Object.keys(setupLevels).forEach(id => {
-        const m = getMeta(id);
-        if (m && m.n === "Eq. Sell Price") totalSellBonusCur += (setupLevels[id] * 2);
-    });
-    Object.keys(levels).forEach(id => {
-        const m = getMeta(id);
-        if (m && m.speed) speed += m.speed * levels[id];
-        if (m && m.isDiscount) currentDiscount += levels[id] * 2;
-    });
-    if (speed > 1) speed = 1; 
-
-    const q = customQueue || planQueue;
-    const brokenSteps = [];
-
-    q.forEach((item, i) => {
-        if (item.type === 'delay') {
-            totalMin += item.mins;
-            history.push({ type: 'delay', mins: item.mins, idx: i });
-        } else {
-            if (!isUnlocked(item.id, levels)) {
-                brokenSteps.push(i);
-                return;
-            }
-            const cur = levels[item.id] || 0;
-            const m = getMeta(item.id);
-            if (cur >= m.m) return;
-
-            const tier = getTier(item.id);
-            const timeBase = tierTimes[tier][cur];
-            const finalTime = timeBase / (1 + speed);
-            const potionBase = potionCosts[tier][cur];
-            const finalPotion = Math.round(potionBase * (1 - (currentDiscount / 100)));
-
-            totalMin += finalTime;
-            totalPotions += finalPotion;
-            levels[item.id] = cur + 1;
-
-            const spStr = Math.round(speed * 100);
-            if (m.speed) { speed += m.speed; if (speed > 1) speed = 1; }
-            if (m.isDiscount) currentDiscount += 2;
-
-            history.push({
-                type: 'node', id: item.id, name: m.n, lvl: levels[item.id],
-                added: finalTime, cost: finalPotion, speedStr: `+${spStr}% Speed`,
-                idx: i, tree: item.id.split('_')[0]
-            });
-        }
-    });
-
-    let totalSellBonusProj = 0;
-    Object.keys(levels).forEach(id => {
-        const m = getMeta(id);
-        if (m && m.n === "Eq. Sell Price") totalSellBonusProj += (levels[id] * 2);
-    });
-
-    return { levels, totalMin, history, finalSpeed: speed, brokenSteps, totalPotions, totalSellBonusCur, totalSellBonusProj };
-}
-
-// --- CLAN WAR LOGIC ---
-
-function updateWarConfig() {
-    const d = document.getElementById('war-day');
-    const h = document.getElementById('war-hour');
-    const ap = document.getElementById('war-ampm');
-    
-    if(d && h && ap) {
-        warConfig.day = parseInt(d.value);
-        warConfig.hour = parseInt(h.value);
-        warConfig.ampm = ap.value;
-        
-        // SAVE CHANGES
-        if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-        
-        updateCalculations();
-    }
-}
-
-function isWarTime(date) {
-    const d = date.getDay(); // 0=Sun, 1=Mon... 6=Sat
-    const h = date.getHours();
-    const m = date.getMinutes();
-    
-    // Normalize Config Start Time to 24h format (0-23)
-    let startH = warConfig.hour;
-    if (startH === 12) {
-        startH = (warConfig.ampm === 'PM') ? 12 : 0;
-    } else {
-        if (warConfig.ampm === 'PM') startH += 12;
-    }
-    
-    // Convert everything to "Hours since Sunday 00:00" (Max 168 hours in a week)
-    const currentWeeklyHour = (d * 24) + h + (m / 60);
-    const warStartWeeklyHour = (warConfig.day * 24) + startH;
-    
-    // Helper to check if current time is inside a [start, start+24h] window
-    const checkWindow = (startOffset) => {
-        const duration = 24; 
-        let s = startOffset % 168;
-        let e = (startOffset + duration) % 168;
-        
-        if (e > s) {
-            return currentWeeklyHour >= s && currentWeeklyHour < e;
-        } else {
-            return currentWeeklyHour >= s || currentWeeklyHour < e;
-        }
-    };
-    
-    // Check Day 1 Window
-    if (checkWindow(warStartWeeklyHour)) return true;
-    
-    // Check Day 4 Window (Exactly 72 hours after Day 1 Start)
-    if (checkWindow(warStartWeeklyHour + 72)) return true;
-    
-    return false;
-}
-
-// --- MAIN RENDER LOOP ---
-
-function updateCalculations() {
-    const state = calcState();
-    const sVal = document.getElementById('start-date').value;
-    const start = sVal ? new Date(sVal) : new Date();
-    const startTime = start.getTime();
-
-    const potStr = state.totalPotions.toLocaleString('en-US');
-    const timeStr = formatSmartTime(state.totalMin);
-
-    const resVal = document.getElementById('res-val');
-    const timeVal = document.getElementById('time-val');
-    if (resVal) resVal.innerText = potStr;
-    if (timeVal) timeVal.innerText = timeStr;
-
-    const resValDesk = document.getElementById('res-val-desktop');
-    const timeValDesk = document.getElementById('time-val-desktop');
-    if (resValDesk) resValDesk.innerText = potStr;
-    if (timeValDesk) timeValDesk.innerText = timeStr;
-
-    const vLvls = currentMode === 'setup' ? setupLevels : state.levels;
-    document.querySelectorAll('.node').forEach(el => {
-        const lvl = vLvls[el.id] || 0;
-        const m = getMeta(el.id);
-        if (!m) return;
-
-        const lvlLabel = el.querySelector('.node-level');
-        if (lvlLabel) lvlLabel.innerText = `${lvl}/${m.m}`;
-
-        el.className = 'node';
-        if (isUnlocked(el.id, vLvls)) el.classList.add('unlocked');
-        if (setupLevels[el.id]) el.classList.add('active-setup');
-        if (lvl > (setupLevels[el.id] || 0)) el.classList.add('active-plan');
-        if (lvl >= m.m) el.classList.add('maxed');
-        el.style.opacity = (!isUnlocked(el.id, vLvls) && lvl === 0) ? "1" : "1";
-    });
-
-    const list = document.getElementById('log-list');
-    if (list) {
-        list.innerHTML = '';
-        let curTime = startTime;
-        state.history.forEach(h => {
-            const row = document.createElement('div');
-            let durMs = (h.type === 'delay' ? h.mins : h.added) * 60000;
-            curTime += durMs;
-
-            const finishDate = new Date(curTime);
-            const finishTs = finishDate.getTime();
-            const durStr = formatSmartTime(h.type === 'delay' ? h.mins : h.added);
-            const finishDateStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-            
-            // Check War Status
-            const isWar = isWarTime(finishDate);
-            const warClass = isWar ? 'war-active' : '';
-
-            // Apply classes
-            row.className = `log-row ${expandedLogIndex === h.idx ? 'expanded' : ''} ${warClass}`;
-
-            let content = '';
-            
-if (h.type === 'delay') {
-                // 1. Icon Wrapper (Centered Sleep Emoji)
-                const iconHtml = `
-                    <div class="log-icon-wrapper desktop-only">
-                        <div class="log-node-preview" style="background-color: #bdc3c7;">
-                            <span style="font-size:1.4em; line-height:1; margin-top:2px;">💤</span>
-                        </div>
-                    </div>`;
-                // 2. The Delay Name
-                const nameHtml = `<div class="log-name">Delay (+${h.mins}m)</div>`;
-                const rightHtml = `
-                    <div class="log-right-group">
-                        <div class="log-time">${finishDateStr}</div>
-                    </div>`;
-                content = `
-                    <div class="log-entry delay" onclick="toggleExp(${h.idx})">
-                        <div class="log-left-group">
-                            ${iconHtml}
-                            ${nameHtml}
-                        </div>
-                        ${rightHtml}
-                    </div>`;
-} else {
-                const tierNum = getTier(h.id);
-                
-                const parts = h.id.split('_');
-                const iconLocalId = parts.slice(2).join('_'); 
-                const iconPath = `icons/${parts[0]}_${iconLocalId}.png`;
-
-                const tierLevelCode = `${toRoman(tierNum)}-${h.lvl}`;
-                // CHANGED: Added -${h.lvl} to the end
-                const nameWithTier = `${h.name} ${toRoman(tierNum)}-${h.lvl}`; 
-                const costVal = h.cost.toLocaleString('en-US');
-
-                // Left: Icon + Name
-                const iconHtml = `
-    <div class="log-icon-wrapper">
-                        <div class="log-node-preview">
-                            <img src="${iconPath}" class="lnp-img" onerror="this.style.display='none'">
-                        </div>
-                        <div class="log-tier-text">${tierLevelCode}</div>
-                    </div>`;
-
-                // Right: Details (Pot/Time)
-                const detailsHtml = `
-                    <div class="log-details">
-                        <div class="ld-part pot">
-                            <img src="icons/red_potion.png" class="ld-icon">
-                            <span>${costVal}</span>
-                        </div>
-                        <div class="ld-part time">
-                            <img src="icons/icon_time.png" class="ld-icon">
-                            <span>${durStr}</span>
-                        </div>
-                    </div>
-                `;
-
-                content = `
-                    <div class="log-entry ${h.tree}" onclick="toggleExp(${h.idx})">
-                        <div class="log-left-group">
-                            ${iconHtml}
-                            <div class="log-name">${nameWithTier}</div>
-                        </div>
-                        <div class="log-right-group">
-                            <div class="log-time">${finishDateStr}</div>
-                            ${detailsHtml}
-                        </div>
-                    </div>`;
-            }
-
-            row.innerHTML = content + `<div class="log-controls"><button class="btn-ctrl" style="background:#c0392b" onclick="delStep(${h.idx})">🗑️ Delete</button><button class="btn-ctrl" style="background:#2980b9" onclick="markDone(${h.idx}, ${finishTs})">✅ Done</button><button class="btn-ctrl" style="background:#27ae60" onclick="addDelay(${h.idx})">➕ Delay</button><button class="btn-ctrl" style="background:#f39c12" onclick="activateInsert(${h.idx})">⤵️ Insert</button></div>`;
-            list.appendChild(row);
-        });
-    }
-
-    drawLines();
-    const statsPanel = document.getElementById('panel-stats');
-    if (statsPanel && statsPanel.style.display !== 'none') {
-        renderStats();
-    }
-
-    const pBtn = document.getElementById('btn-plan');
-    if (pBtn) {
-        if (insertModeIndex > -1) {
-            pBtn.innerHTML = "⤵️ INSERTING...";
-            pBtn.classList.add('insert');
-        } else {
-            pBtn.innerHTML = "Plan";
-            pBtn.classList.remove('insert');
-        }
-    }
-}
-
-// --- VISUALIZATION (PIPES & LINES) - UPDATED FOR LOCKED STATE ---
-function drawLines() {
-    if (lineUpdateRequested) return;
-    lineUpdateRequested = true;
-    requestAnimationFrame(() => {
-        const svg = document.getElementById('svg-layer');
-        const canvas = document.getElementById('canvas');
-        if (!canvas || !svg) { lineUpdateRequested = false; return; }
-
-        svg.innerHTML = ''; 
-        const lastBlock = canvas.lastElementChild;
-        let contentHeight = 0;
-        if (lastBlock) contentHeight = lastBlock.offsetTop + lastBlock.offsetHeight;
-        svg.style.height = (contentHeight + 20) + "px";
-
-        // Get Coordinates relative to Canvas
-        const c = canvas.getBoundingClientRect();
-
-        document.querySelectorAll('.node').forEach(child => {
-            if (child.closest('.tree-container').style.display === 'none') return;
-
-            // CHECK: Is this child node locked? (Does NOT have 'unlocked' class)
-            const isLocked = !child.classList.contains('unlocked');
-
-            getParents(child.id).forEach(pId => {
-                const parent = document.getElementById(pId);
-                if (!parent) return;
-                
-                const r1 = parent.getBoundingClientRect();
-                const r2 = child.getBoundingClientRect();
-
-                // Direct Center-to-Center coordinates
-                const x1 = r1.left + (r1.width / 2) - c.left;
-                const y1 = r1.top + (r1.height / 2) - c.top;
-                
-                const x2 = r2.left + (r2.width / 2) - c.left;
-                const y2 = r2.top + (r2.height / 2) - c.top;
-
-                // Simple Straight Line (Diagonal)
-                const d = `M ${x1} ${y1} L ${x2} ${y2}`;
-
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', d);
-                
-                // IF LOCKED: Add 'locked' class to the connector
-                path.setAttribute('class', isLocked ? 'connector locked' : 'connector');
-                
-                svg.appendChild(path);
-            });
-        });
-        lineUpdateRequested = false;
-    });
-}
-
-// --- INTERACTION HANDLERS ---
-
-function handleClick(id, isRight) {
-    showFloatingLabel(id);
-    // REMOVED: pushHistory(); from here
-    const meta = getMeta(id);
-
-    if (currentMode === 'setup') {
-        const currentLvl = setupLevels[id] || 0;
-        
-        if (isRight) {
-            // Only push history if there is something to remove/decrement
-            if (currentLvl > 0) {
-                pushHistory();
-                if (currentLvl > 1) { 
-                    setupLevels[id]--; 
-                } else { 
-                    delete setupLevels[id]; 
-                }
-                
-                // Cleanup invalid children (Logic from your original code)
-                if (!setupLevels[id]) {
-                    let changed = true;
-                    while (changed) {
-                        changed = false;
-                        Object.keys(setupLevels).forEach(k => {
-                            if (setupLevels[k] > 0 && !isUnlocked(k, setupLevels)) {
-                                delete setupLevels[k];
-                                changed = true;
-                            }
-                        });
-                    }
-                    // Sync Queue if needed
-                    const sim = calcState();
-                    if (sim.brokenSteps.length > 0) {
-                        for (let i = sim.brokenSteps.length - 1; i >= 0; i--) {
-                            planQueue.splice(sim.brokenSteps[i], 1);
-                        }
-                    }
-                }
-            }
-        } else {
-            // Only push history if we are NOT at max level
-            if (currentLvl < meta.m) {
-                pushHistory();
-                setupLevels[id] = currentLvl + 1;
-                if ((setupLevels[id] || 0) === 1) autoUnlock(id);
-            }
-        }
-    } else {
-        // PLAN MODE
-        if (isRight) {
-            let idx = -1;
-            for (let i = planQueue.length - 1; i >= 0; i--) {
-                if (planQueue[i].id === id) { idx = i; break; }
-            }
-            // Only push history if we found an item to remove
-            if (idx > -1) {
-                pushHistory();
-                planQueue.splice(idx, 1);
-                let clean = false;
-                while (!clean) {
-                    const sim = calcState(planQueue);
-                    if (sim.brokenSteps.length > 0) {
-                        for (let j = sim.brokenSteps.length - 1; j >= 0; j--) {
-                            planQueue.splice(sim.brokenSteps[j], 1);
-                        }
-                    } else clean = true;
-                }
-            }
-        } else {
-            // Add to Plan
-            let checkState;
-            if (insertModeIndex > -1) {
-                checkState = calcState(planQueue.slice(0, insertModeIndex));
-            } else {
-                checkState = calcState();
-            }
-            
-            // Only push history if the node is valid to add (unlocked and not maxed)
-            if ((checkState.levels[id] || 0) < meta.m && isUnlocked(id, checkState.levels)) {
-                pushHistory();
-                if (insertModeIndex > -1) {
-                    planQueue.splice(insertModeIndex, 0, { type: 'node', id });
-                    insertModeIndex = -1;
-                    setMode('plan');
-                } else {
-                    planQueue.push({ type: 'node', id });
-                }
-            }
-        }
-    }
-    updateCalculations();
-}
-
-function handleShiftClick(id) {
-    pushHistory();
-    setupLevels[id] = getMeta(id).m;
-    const ensure = (cid) => getParents(cid).forEach(pid => {
-        if ((setupLevels[pid] || 0) === 0) {
-            setupLevels[pid] = 1;
-            ensure(pid);
-        }
-    });
-    ensure(id);
-    updateCalculations();
-}
-
-function autoUnlock(id) {
-    getParents(id).forEach(p => {
-        if ((setupLevels[p] || 0) === 0) {
-            setupLevels[p] = 1;
-            autoUnlock(p);
-        }
-    });
-}
-
-function showFloatingLabel(nodeId) {
-    if (window.innerWidth > 768) return;
-    const node = document.getElementById(nodeId), meta = getMeta(nodeId), tier = getTier(nodeId);
-    document.querySelectorAll('.floating-label').forEach(e => e.remove());
-    const lbl = document.createElement('div');
-    lbl.className = 'floating-label';
-    const tree = nodeId.split('_')[0];
-    const color = tree === 'forge' ? '#2980b9' : (tree === 'spt' ? '#8e44ad' : '#c0392b');
-    lbl.innerHTML = `<span style="color:${color}">${meta.n} ${toRoman(tier)}</span>`;
-    document.body.appendChild(lbl);
-    const rect = node.getBoundingClientRect();
-    lbl.style.left = (rect.left + rect.width / 2) + 'px';
-    lbl.style.top = (rect.top - 15) + 'px';
-    setTimeout(() => { lbl.style.opacity = '0'; setTimeout(() => lbl.remove(), 500); }, 2000);
-}
-
-// --- LOG & PLAN MANAGEMENT ---
-
-function setMode(m) {
-    currentMode = m;
-    document.body.dataset.mode = m; // <--- NEW: Allows CSS to hide/show buttons based on mode
-
-    if (m !== 'plan') insertModeIndex = -1;
-
-    // --- UPDATED BUTTON LOGIC START ---
-    // Update classes to use 'seg-btn' and 'active' (Dark Grey/Blue style)
-const updateBtn = (id, isActive) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.className = `seg-btn ${isActive ? 'active' : ''}`;
-            if (id.includes('plan')) {
-                 if (insertModeIndex > -1) { el.innerText = "Insert"; el.classList.add('insert'); } 
-                 else { el.innerText = "PLAN"; el.classList.remove('insert'); }
-            }
-        }
-    };
-
-   updateBtn('btn-setup', m === 'setup');
-    updateBtn('btn-plan', m === 'plan');
-    updateBtn('btn-setup-mobile-new', m === 'setup');
-    updateBtn('btn-plan-mobile-new', m === 'plan');
-    // --- UPDATED BUTTON LOGIC END ---
-
-    // ... (Keep existing sidebar logic) ...
-    if (m === 'log') { if (typeof setSidebarPanel === 'function') setSidebarPanel('logs'); } 
-    else { if (window.innerWidth <= 768) { document.body.classList.remove('view-log', 'view-calc', 'view-egg'); document.body.classList.add('view-planner'); } }
-    
-    updateCalculations();
-}
-
-function toggleExp(i) {
-    expandedLogIndex = expandedLogIndex === i ? -1 : i;
-    updateCalculations();
-}
-
-function delStep(i) {
-    if (!confirm(`Delete this step?`)) return;
-    const q = [...planQueue];
-    q.splice(i, 1);
-    let clean = false;
-    while (!clean) {
-        const sim = calcState(q);
-        if (sim.brokenSteps.length > 0) {
-            for (let j = sim.brokenSteps.length - 1; j >= 0; j--) q.splice(sim.brokenSteps[j], 1);
-        } else clean = true;
-    }
-    pushHistory();
-    planQueue = q;
-    expandedLogIndex = -1;
-    updateCalculations();
-}
-
-function markDone(targetIdx, timestamp) {
-    try {
-        pushHistory();
-        for (let i = 0; i <= targetIdx; i++) {
-            const item = planQueue[i];
-            if (item.type === 'node') {
-                const cur = setupLevels[item.id] || 0;
-                const meta = getMeta(item.id);
-                if (meta) setupLevels[item.id] = Math.min(meta.m, cur + 1);
-            }
-        }
-        planQueue.splice(0, targetIdx + 1);
-        let clean = false;
-        while (!clean) {
-            const sim = calcState(planQueue);
-            if (sim.brokenSteps.length > 0) {
-                for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1);
-            } else clean = true;
-        }
-        const d = new Date(timestamp);
-        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        const localIso = d.toISOString().slice(0, 16);
-        expandedLogIndex = -1; 
-        if (typeof syncMainDate === 'function') syncMainDate(localIso);
-    } catch (e) {
-        console.error("MarkDone Failed:", e);
-        alert("Error marking done. See console.");
-    }
-}
-
-function addDelay(i) {
-    const m = prompt("Enter delay in MINUTES:");
-    if (m) {
-        pushHistory();
-        planQueue.splice(i + 1, 0, { type: 'delay', mins: parseFloat(m) });
-        expandedLogIndex = -1;
-        updateCalculations();
-    }
-}
-
-function activateInsert(idx) {
-    insertModeIndex = idx + 1;
-    expandedLogIndex = -1;
-    setMode('plan');
-    updateCalculations();
-}
-
-function clearPlan() {
-    if (confirm("Clear Plan?")) {
-        pushHistory();
-        planQueue = [];
-        updateCalculations();
-    }
-}
-
-function resetCurrentTree() {
-    if (!confirm(`Reset the ${activeTreeKey.toUpperCase()} tree?`)) return;
-    pushHistory();
-    Object.keys(setupLevels).forEach(id => {
-        if (id.startsWith(activeTreeKey + "_")) delete setupLevels[id];
-    });
-    planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
-    let clean = false;
-    while (!clean) {
-        const sim = calcState(planQueue);
-        if (sim.brokenSteps.length > 0) {
-            for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1);
-        } else clean = true;
-    }
-    updateCalculations();
-}
-
-// --- STATS VIEW ---
-
-function renderStats() {
-    const container = document.getElementById('stats-content');
-    container.innerHTML = '';
-    const state = calcState();
-
-    let totalAvgCur = 0, totalAvgSellIso = 0;
-    const slots = [];
-    TREES.power.structure.forEach(s => { if (TREES.power.meta[s.id].isSlot) slots.push(s.id); });
-
-    slots.forEach(sid => {
-        let l = 0; for (let t = 1; t <= 5; t++) l += (setupLevels[`power_T${t}_${sid}`] || 0);
-        totalAvgCur += getSlotStats(99 + l * 2, state.totalSellBonusCur).avg;
-        totalAvgSellIso += getSlotStats(99 + l * 2, state.totalSellBonusProj).avg;
-    });
-
-    const globCur = totalAvgCur / slots.length;
-    const globProj_SellIso = totalAvgSellIso / slots.length;
-
-    ['forge', 'spt', 'power'].forEach(key => {
-        const treeData = TREES[key];
-        let currentCount = 0;
-        Object.keys(setupLevels).forEach(id => { if (id.startsWith(key + '_')) currentCount += setupLevels[id]; });
-        const max = treeData.maxLevels;
-        const pct = ((currentCount / max) * 100).toFixed(1);
-
-const group = document.createElement('div'); group.className = 'stats-group';
-        const header = document.createElement('div'); header.className = `stats-header ${key}`;
-        
-        // --- NEW HEADER HTML GENERATION ---
-// --- NEW HEADER HTML (With Wrapper for 80% Icon) ---
-        header.innerHTML = `
-            <div class="header-left">
-                <div class="header-icon-circle">
-                    <img src="icons/tree_${key === 'spt' ? 'SPT' : key}.png" class="nav-icon"> 
-                </div>
-                <span class="header-title-text">${treeData.name.toUpperCase()}</span>
-            </div>
-            <div class="header-right">
-                <span class="stat-count-text">${currentCount}/${max}</span>
-                <span class="stat-pct-text">${pct}%</span>
-            </div>
-        `;
-        // ----------------------------------
-
-        group.appendChild(header);
-
-        let hasStats = false;
-        treeData.structure.forEach(ns => {
-            const meta = treeData.meta[ns.id];
-            if (!meta || !meta.stat) return;
-
-            let curT = 0, projT = 0;
-            for (let t = 1; t <= 5; t++) {
-                const id = `${key}_T${t}_${ns.id}`;
-                curT += (setupLevels[id] || 0);
-                projT += (state.levels[id] || 0);
-            }
-            hasStats = true;
-
-            let txtCur = meta.stat(curT);
-            let txtProj = meta.stat(projT);
-
-            // NEW LOGIC: Remove the label from the projected value if it matches
-            if (txtProj.includes('%') && txtCur.includes('%')) {
-                const match = txtProj.match(/([+\-]?\d+%?)$/); 
-                if (match) {
-                    txtProj = match[0];
-                }
-            }
-
-            // NEW: Manually swap text/icon positions inline
-            // Looks for patterns like "123 <img...>" and swaps to "<img...> 123"
-            // Handles cases like "1.24 <img...>/s" -> "<img...> 1.24/s"
-            const iconRegex = /([\d\.\,kmb]+)\s*(<img[^>]+>)/g;
-            if (txtCur && typeof txtCur === 'string') txtCur = txtCur.replace(iconRegex, '$2 $1');
-            if (txtProj && typeof txtProj === 'string') txtProj = txtProj.replace(iconRegex, '$2 $1');
-
-            let infoBtnHTML = '';
-
-            // REVERTED: Changed button back to 'i'
-            if (key === 'forge' && ns.id === 'sell') {
-                txtCur += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globCur, 'gold')})</span>`;
-                txtProj += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellIso, 'gold')})</span>`;
-                infoBtnHTML = `<button class="btn-info" onclick="showEqSellTable(${curT * 2},${projT * 2},1)">i</button>`;
-
-            } else if (meta.isSlot) {
-                const sCur = getSlotStats(99 + curT * 2, state.totalSellBonusCur);
-                const sProj = getSlotStats(99 + projT * 2, state.totalSellBonusCur);
-                txtCur = `Max ${99 + curT * 2} (Range: ${sCur.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sCur.avg, 'gold')})</span>`;
-                txtProj = `Max ${99 + projT * 2} (Range: ${sProj.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sProj.avg, 'gold')})</span>`;
-            
-            } else if (meta.isDiscount) {
-                infoBtnHTML = `<button class="btn-info" onclick="showPotionTable(${curT * 2}, ${projT * 2})">i</button>`;
-
-            } else if (key === 'spt' && ns.id === 'timer') {
-                infoBtnHTML = `<button class="btn-info" onclick="showTechTimerTable(${curT * 4}, ${projT * 4})">i</button>`;
-
-            } else if (key === 'forge' && ns.id === 'disc') {
-                infoBtnHTML = `<button class="btn-info" onclick="showForgeTable('cost',${curT * 2},${projT * 2},1)">i</button>`;
-
-            } else if (key === 'forge' && ns.id === 'timer') {
-                infoBtnHTML = `<button class="btn-info" onclick="showForgeTable('timer',${curT * 4},${projT * 4},1)">i</button>`;
-            }
-
-            let finalHTML = txtCur;
-            if (projT > curT) finalHTML += `<span class="stat-arrow">➜</span> <span class="stat-new">${txtProj}</span>`;
-
-            const row = document.createElement('div'); 
-            row.className = 'stats-row ' + key; 
-            
-            row.innerHTML = `
-                <div class="stat-icon-box">
-                    <img src="icons/${key}_${ns.id}.png" class="stat-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-                    <div class="stat-icon-fallback" style="display:none">?</div>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-name">
-                        ${meta.n} ${infoBtnHTML}
-                    </div>
-                    <div class="stat-value">${finalHTML}</div>
-                </div>`;
-            
-            group.appendChild(row);
-        });
-        if (hasStats) container.appendChild(group);
-    });
-}
-
-// --- TABLE MODALS ---
-
-function showPotionTable(cur, proj) {
-    const isUpgrade = proj > cur;
-    const headers = ['Level', 'Upgrade Cost'];
-    const allRows = [];
-    
-    for (let t = 1; t <= 5; t++) {
-        let tierSumBefore = 0;
-        let tierSumAfter = 0;
-
-        for (let i = 0; i < 5; i++) {
-            const base = potionCosts[t][i];
-            const v1 = Math.round(base * (1 - cur / 100));
-            const v2 = Math.round(base * (1 - proj / 100));
-            tierSumBefore += v1;
-            tierSumAfter += v2;
-            let valStr = v1.toLocaleString();
-            if (isUpgrade) valStr += ` ➜ ${v2.toLocaleString()}`;
-            allRows.push([`${i + 1}`, valStr]);
-        }
-        let sumStr = `${tierSumBefore.toLocaleString()}`;
-        if (isUpgrade) sumStr += ` ➜ ${tierSumAfter.toLocaleString()}`;
-        allRows.push([`Total`, sumStr]);
-    }
-    showTable("TECH UPGRADE COST", "icons/spt_disc.png", { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
-}
-
-function showTechTimerTable(cur, proj) {
-    const isUpgrade = proj > cur;
-    const speedBonus = Math.max(cur, proj);
-    const headers = ['Level', 'Duration'];
-    const allRows = [];
-    
-    for (let t = 1; t <= 5; t++) {
-        let tierSumBefore = 0;
-        let tierSumAfter = 0;
-
-        for (let i = 0; i < 5; i++) {
-            const base = tierTimes[t][i];
-            const v1 = base / (1 + cur / 100);
-            const v2 = base / (1 + proj / 100);
-            tierSumBefore += v1;
-            tierSumAfter += v2;
-            let valStr = formatSmartTime(v1);
-            if (isUpgrade) valStr += ` ➜ ${formatSmartTime(v2)}`;
-            allRows.push([`${i + 1}`, valStr]);
-        }
-        let sumStr = `${formatSmartTime(tierSumBefore)}`;
-        if (isUpgrade) sumStr += ` ➜ ${formatSmartTime(tierSumAfter)}`;
-        allRows.push([`Total`, sumStr]);
-    }
-    showTable("TECH RESEARCH TIMER", "icons/spt_timer.png", { label: "Speed Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows, 6, ['I', 'II', 'III', 'IV', 'V']);
-}
-
-function showEqSellTable(cur, proj, page = 1) {
-    const isUpgrade = proj > cur; 
-    const headers = ["Level", "Sell Price"];
-    const allRows = [];
-    
-    for (let i = 1; i <= 149; i++) {
-        const base = 20 * Math.pow(1.01, i - 1);
-        const v1 = Math.round(base * (100 + cur) / 100);
-        const v2 = Math.round(base * (100 + proj) / 100);
-        let valStr = formatResourceValue(v1, 'gold');
-        if (isUpgrade) valStr += ` ➜ ${formatResourceValue(v2, 'gold')}`;
-        allRows.push([`${i}`, valStr]);
-    }
-    showTable("EQUIPMENT SELL PRICE", "icons/forge_sell.png", { label: "Bonus", before: `+${cur}%`, after: `+${proj}%` }, headers, allRows);
-}
-
-function showForgeTable(type, cur, proj, page = 1) {
-    const isUpgrade = proj > cur;
-    const isT = type === 'timer';
-    const title = isT ? "FORGE UPGRADE TIME" : "FORGE UPGRADE COST";
-    const iconSrc = isT ? "icons/forge_timer.png" : "icons/forge_disc.png";
-    const headers = ["Level", isT ? "Upgrade Duration" : "Upgrade Cost"]; 
-    const rows = [];
-
-    for (let i = 1; i <= 34; i++) {
-        if (!forgeLevelData[i]) continue;
-        const [cost, hours] = forgeLevelData[i];
-        let v1, v2;
-        if (isT) {
-             const mins = hours * 60;
-             v1 = formatSmartTime(mins / (1 + cur / 100));
-             v2 = formatSmartTime(mins / (1 + proj / 100));
-        } else {
-             v1 = formatForgeCost(Math.round(cost * (1 - cur / 100)));
-             v2 = formatForgeCost(Math.round(cost * (1 - proj / 100)));
-        }
-        let cellContent = v1;
-        if (isUpgrade) cellContent += ` ➜ ${v2}`;
-        const levelLabel = `${i} ➜ ${i + 1}`;
-        rows.push([levelLabel, cellContent]);
-    }
-    showTable(title, iconSrc, isT ? { label: "Speed", before: `+${cur}%`, after: `+${proj}%` } : { label: "Discount", before: `-${cur}%`, after: `-${proj}%` }, headers, rows, 50);
-}
-
-// --- UNDO / REDO ---
-
-function pushHistory() {
-    if (historyStack.length > 50) historyStack.shift();
-    if (typeof captureFullState === 'function') {
-        historyStack.push(JSON.stringify(captureFullState()));
-        redoStack = [];
-        updateUndoRedoBtns();
-        if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-    }
-}
-
-function undo() {
-    if (historyStack.length === 0) return;
-    if (typeof captureFullState !== 'function' || typeof loadState !== 'function') return;
-    redoStack.push(JSON.stringify(captureFullState()));
-    const stateToLoad = JSON.parse(historyStack.pop());
-    if (typeof eggPlanQueue !== 'undefined') {
-        const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null;
-        stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart };
-    }
-    loadState(stateToLoad);
-    updateUndoRedoBtns();
-    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-}
-
-function redo() {
-    if (redoStack.length === 0) return;
-    if (typeof captureFullState !== 'function' || typeof loadState !== 'function') return;
-    historyStack.push(JSON.stringify(captureFullState()));
-    const stateToLoad = JSON.parse(redoStack.pop());
-    if (typeof eggPlanQueue !== 'undefined') {
-        const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null;
-        stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart };
-    }
-    loadState(stateToLoad);
-    updateUndoRedoBtns();
-    if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
-}
-
-function updateUndoRedoBtns() {
-    const hasHistory = (typeof historyStack !== 'undefined' && historyStack.length > 0);
-    const hasRedo = (typeof redoStack !== 'undefined' && redoStack.length > 0);
-    
-    // UPDATED: Now targeting the specific mobile IDs you created
-    const undoIds = ['btn-undo-desktop', 'btn-undo-log', 'btn-undo-mobile-tree', 'btn-undo-mobile-log'];
-    const redoIds = ['btn-redo-desktop', 'btn-redo-log', 'btn-redo-mobile-tree', 'btn-redo-mobile-log'];
-    
-    const updateBtn = (id, isActive) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.disabled = !isActive;
-            el.style.opacity = !isActive ? "0.3" : "1"; 
-            el.style.pointerEvents = !isActive ? "none" : "auto";
-        }
-    };
-    undoIds.forEach(id => updateBtn(id, hasHistory));
-    redoIds.forEach(id => updateBtn(id, hasRedo));
-}
+let warConfig = { day: 2, hour: 12, ampm: 'AM' }; // Default: Tuesday 12 AM
+let movingStepIndex = -1;
+let validDropTargets = [];
+let justMovedIndex = -1;
 
 // --- HELPERS (Logic) ---
-
 function getMeta(id) { const p = id.split('_'); return TREES[p[0]].meta[p.slice(2).join('_')]; }
 function getTier(id) { return parseInt(id.split('_T')[1]); }
 function getParents(id) {
@@ -1063,51 +34,525 @@ function getParents(id) {
     return res;
 }
 function isUnlocked(id, lvls) { const p = getParents(id); return p.length === 0 || p.every(pr => (lvls[pr] || 0) > 0); }
-function toRoman(n) { return ["", "I", "II", "III", "IV", "V"][n]; }
 
-function getMinLevel(maxLv) {
-    if (maxLv === 99) return 96;
-    let floor = 1;
-    for (let f of bracketFloors) if (f <= maxLv - 5) floor = f; else break;
-    return floor;
+// --- TREE NAVIGATION & RENDERING ---
+function switchTree(key) {
+    if (key === 'stats') return; 
+    activeTreeKey = key;
+    
+    // Update Tabs
+    const update = (id, check) => { const b = document.getElementById(id); if(b) check ? b.classList.add('active') : b.classList.remove('active'); };
+    update('tab-forge', key === 'forge'); update('tab-spt', key === 'spt'); update('tab-power', key === 'power');
+    update('mtab-forge', key === 'forge'); update('mtab-spt', key === 'spt'); update('mtab-power', key === 'power');
+
+    // Display
+    const treeCont = document.getElementById('tree-container');
+    if (treeCont) scrollPositions[key] = treeCont.scrollTop;
+    treeCont.style.display = 'flex';
+    document.getElementById('stats-container').style.display = 'block'; 
+    treeCont.scrollTop = scrollPositions[key] || 0;
+    document.getElementById('canvas').className = `tree-canvas tree-${key}`;
+    
+    renderTree(key);
+    setTimeout(drawLines, 0);
 }
 
-function getSlotStats(maxLv, bonus) {
-    let total = 0, count = 0, minLv = getMinLevel(maxLv);
-    for (let i = minLv; i <= maxLv; i++) { total += Math.round(20 * Math.pow(1.01, i - 1) * (100 + bonus) / 100); count++; }
-    return { range: `${minLv}-${maxLv}`, avg: (count > 0 ? total / count : 0) };
-}
+function renderTree(key) {
+    const canvas = document.getElementById('canvas');
+    Array.from(canvas.children).forEach(c => { if (!c.classList.contains('connections-layer') && !c.classList.contains('tree-reset-btn')) c.remove(); });
+    const data = TREES[key];
+    for (let t = 1; t <= 5; t++) {
+        const block = document.createElement('div'); block.className = 'tier-block';
+        
+        // Tier Header
+        const header = document.createElement('div'); header.className = 'tier-header';
+        header.innerHTML = `<div class="tier-title">TIER ${toRoman(t)}</div><button class="tier-max-btn" onclick="event.stopPropagation(); maxTier('${key}', ${t})">MAX</button>`;
+        block.appendChild(header);
 
-// --- HELPERS (Formatting) ---
-
-function formatSmartTime(totalMins) {
-    if (totalMins < 60) {
-        const mFloor = Math.floor(totalMins);
-        const s = Math.round((totalMins - mFloor) * 60);
-        if (s === 60) return `${mFloor + 1}m`;
-        if (mFloor === 0 && s > 0) return `${s}s`;
-        if (mFloor === 0 && s === 0) return `0m`;
-        return s > 0 ? `${mFloor}m ${s}s` : `${mFloor}m`;
+        const rows = {};
+        data.structure.forEach(nDef => {
+            const fullId = `${key}_T${t}_${nDef.id}`;
+            const meta = data.meta[nDef.id];
+            if (!meta) return;
+            if (!rows[nDef.r]) {
+                const rDiv = document.createElement('div'); rDiv.style = "display:flex;justify-content:center;margin-bottom:60px;width:100%";
+                block.appendChild(rDiv); rows[nDef.r] = rDiv;
+            }
+            const node = document.createElement('div'); node.className = 'node'; node.id = fullId;
+            if (nDef.c === 1) node.style.marginLeft = "120px"; 
+            node.innerHTML = `<div class="node-tier-badge">${toRoman(t)}</div><img src="icons/${key}_${nDef.id}.png" class="node-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="node-fallback" style="display:none">${key==='forge'?'🔨':(key==='spt'?'🐾':'⚔️')}</div><div class="node-level">0/${meta.m}</div>`;
+            node.onclick = (e) => (e.shiftKey && currentMode === 'setup') ? handleShiftClick(fullId) : handleClick(fullId, false);
+            node.oncontextmenu = (e) => { e.preventDefault(); handleClick(fullId, true); };
+            rows[nDef.r].appendChild(node);
+        });
+        canvas.appendChild(block);
     }
-    const m = Math.round(totalMins);
-    if (m < 60) return `${m}m`;
-    let h = Math.floor(m / 60), minLeft = m % 60;
-    if (h < 24) return minLeft > 0 ? `${h}h ${minLeft}m` : `${h}h`;
-    const d = Math.floor(h / 24), hLeft = h % 24;
-    let res = `${d}d`; if (hLeft > 0) res += ` ${hLeft}h`; if (minLeft > 0) res += ` ${minLeft}m`;
-    return res;
+    updateCalculations();
 }
 
-function formatResourceValue(val, type) {
-    if (type === 'hammer') return Math.round(val).toLocaleString('en-US');
-    if (val < 1000) return val.toLocaleString('en-US', { maximumFractionDigits: 1 });
-    if (val < 1000000) return (val / 1000).toFixed(1) + 'k';
-    return (val / 1000000).toFixed(2) + 'm';
+function maxTier(tree, tier) {
+    if (!confirm(`Max all nodes in ${tree.toUpperCase()} Tier ${tier}?`)) return;
+    pushHistory();
+    TREES[tree].structure.forEach(nDef => {
+        const fullId = `${tree}_T${tier}_${nDef.id}`;
+        const meta = getMeta(fullId);
+        if (meta) {
+            setupLevels[fullId] = meta.m;
+            const ensure = (cid) => getParents(cid).forEach(pid => { if ((setupLevels[pid] || 0) === 0) { setupLevels[pid] = 1; ensure(pid); } });
+            ensure(fullId);
+        }
+    });
+    updateCalculations();
 }
 
-function formatForgeCost(val) {
-    if (val < 1000) return val.toLocaleString('en-US');
-    if (val < 10000) return (val / 1000).toFixed(2) + 'k';
-    if (val < 1000000) return (val / 1000).toFixed(1) + 'k';
-    return (val / 1000000).toFixed(2) + 'm';
+// --- CALCULATION ENGINE ---
+function calcState(customQueue) {
+    const levels = { ...setupLevels };
+    let totalMin = 0, history = [], speed = 0, totalPotions = 0, totalSellBonusCur = 0, currentDiscount = 0;
+    Object.keys(setupLevels).forEach(id => { const m = getMeta(id); if (m && m.n === "Eq. Sell Price") totalSellBonusCur += (setupLevels[id] * 2); });
+    Object.keys(levels).forEach(id => { const m = getMeta(id); if (m && m.speed) speed += m.speed * levels[id]; if (m && m.isDiscount) currentDiscount += levels[id] * 2; });
+    if (speed > 1) speed = 1; 
+
+    const q = customQueue || planQueue;
+    const brokenSteps = [];
+    q.forEach((item, i) => {
+        if (item.type === 'delay') {
+            totalMin += item.mins; history.push({ type: 'delay', mins: item.mins, idx: i });
+        } else {
+            if (!isUnlocked(item.id, levels)) { brokenSteps.push(i); return; }
+            const cur = levels[item.id] || 0; const m = getMeta(item.id);
+            if (cur >= m.m) return;
+            const tier = getTier(item.id);
+            const timeBase = tierTimes[tier][cur]; const finalTime = timeBase / (1 + speed);
+            const potionBase = potionCosts[tier][cur]; const finalPotion = Math.round(potionBase * (1 - (currentDiscount / 100)));
+            totalMin += finalTime; totalPotions += finalPotion; levels[item.id] = cur + 1;
+            const spStr = Math.round(speed * 100);
+            if (m.speed) { speed += m.speed; if (speed > 1) speed = 1; }
+            if (m.isDiscount) currentDiscount += 2;
+            history.push({ type: 'node', id: item.id, name: m.n, lvl: levels[item.id], added: finalTime, cost: finalPotion, speedStr: `+${spStr}% Speed`, idx: i, tree: item.id.split('_')[0] });
+        }
+    });
+    let totalSellBonusProj = 0;
+    Object.keys(levels).forEach(id => { const m = getMeta(id); if (m && m.n === "Eq. Sell Price") totalSellBonusProj += (levels[id] * 2); });
+    return { levels, totalMin, history, finalSpeed: speed, brokenSteps, totalPotions, totalSellBonusCur, totalSellBonusProj };
+}
+
+// --- CLAN WAR & RENDER LOOP ---
+function updateWarConfig() {
+    const d = document.getElementById('war-day'); const h = document.getElementById('war-hour'); const ap = document.getElementById('war-ampm');
+    if(d && h && ap) { warConfig.day = parseInt(d.value); warConfig.hour = parseInt(h.value); warConfig.ampm = ap.value; if(typeof saveToLocalStorage === 'function') saveToLocalStorage(); updateCalculations(); }
+}
+
+function isWarTime(date) {
+    const d = date.getDay(); const h = date.getHours(); const m = date.getMinutes();
+    let startH = warConfig.hour; if (startH === 12) startH = (warConfig.ampm === 'PM') ? 12 : 0; else if (warConfig.ampm === 'PM') startH += 12;
+    const curH = (d * 24) + h + (m / 60); const warH = (warConfig.day * 24) + startH;
+    const check = (off) => { const s = off % 168; const e = (off + 24) % 168; return (e > s) ? (curH >= s && curH < e) : (curH >= s || curH < e); };
+    return check(warH) || check(warH + 72);
+}
+
+function updateCalculations() {
+    const state = calcState();
+    const sVal = document.getElementById('start-date').value;
+    const start = sVal ? new Date(sVal) : new Date();
+    const startTime = start.getTime();
+
+    const potStr = state.totalPotions.toLocaleString('en-US');
+    const timeStr = formatSmartTime(state.totalMin);
+    const updateVal = (id, txt) => { const el = document.getElementById(id); if(el) el.innerText = txt; };
+    updateVal('res-val', potStr); updateVal('time-val', timeStr); updateVal('res-val-desktop', potStr); updateVal('time-val-desktop', timeStr);
+
+    // --- NODE COLORING & UNLOCKS ---
+    let vLvls;
+    if (currentMode === 'setup') {
+        vLvls = setupLevels;
+    } else if (insertModeIndex > -1) {
+        vLvls = calcState(planQueue.slice(0, insertModeIndex)).levels;
+    } else {
+        vLvls = state.levels;
+    }
+    document.querySelectorAll('.node').forEach(el => {
+        const lvl = vLvls[el.id] || 0; const m = getMeta(el.id); if (!m) return;
+        const lvlLabel = el.querySelector('.node-level'); if (lvlLabel) lvlLabel.innerText = `${lvl}/${m.m}`;
+        el.className = 'node';
+        if (isUnlocked(el.id, vLvls)) el.classList.add('unlocked');
+        if (setupLevels[el.id]) el.classList.add('active-setup');
+        if (lvl > (setupLevels[el.id] || 0)) el.classList.add('active-plan');
+        if (lvl >= m.m) el.classList.add('maxed');
+    });
+
+    // --- RENDER LOG LIST ---
+    const list = document.getElementById('log-list');
+    if (list) {
+        list.innerHTML = '';
+        let curTime = startTime;
+        state.history.forEach(h => {
+            const row = document.createElement('div');
+            let durMs = (h.type === 'delay' ? h.mins : h.added) * 60000;
+            curTime += durMs;
+            const finishDate = new Date(curTime); const finishTs = finishDate.getTime();
+            const durStr = formatSmartTime(h.type === 'delay' ? h.mins : h.added);
+            
+            // 3-Row Split Data
+            const dayStr = finishDate.toLocaleDateString([], { weekday: 'short' });   // "Thu"
+            const dateStr = finishDate.toLocaleDateString([], { month: 'short', day: 'numeric' }); // "Feb 14"
+            const timeOnlyStr = finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // "17:11"
+            
+            // Normal Full String
+            const finishDateStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            // 1. Determine States
+            let isMovingThis = (movingStepIndex === h.idx);
+            let isValidDrop = (movingStepIndex > -1 && !isMovingThis && validDropTargets[h.idx]);
+            
+            let classNames = ['log-row'];
+            if (expandedLogIndex === h.idx) classNames.push('expanded'); 
+            if (isWarTime(finishDate)) classNames.push('war-active');
+            if (isMovingThis) classNames.push('moving-active');
+            if (isValidDrop) classNames.push('drop-valid');
+            if (justMovedIndex === h.idx) classNames.push('flash-success');
+            
+            if (h.idx === 0 && validDropTargets['top']) classNames.push('has-top-btn');
+
+            row.className = classNames.join(' ');
+
+            if (!isMovingThis && movingStepIndex === -1) {
+                row.onclick = () => toggleExp(h.idx);
+            } else if (isValidDrop) {
+                row.onclick = () => executeMove(h.idx);
+            }
+
+            // 4. Build Content
+            let iconHtml, nameHtml, rightGroupHtml;
+
+            // A. Compact Time HTML (3-Rows) - Added "log-time-style" class for font matching
+            const compactTimeHtml = `
+                <div class="move-time-group">
+                    <div class="mt-row log-time-style">${dayStr}</div>
+                    <div class="mt-row log-time-style">${dateStr}</div>
+                    <div class="mt-row log-time-style">${timeOnlyStr}</div>
+                </div>
+            `;
+            
+            // B. Active Item Duration - Added "duration-style" class
+            // NOTE: We do NOT inject this directly into row.innerHTML anymore.
+            // We put it INSIDE the buttons container so it hides automatically.
+            const activeDurationHtml = `
+                <div class="active-duration-group">
+                    <img src="icons/icon_time.png" class="ad-icon">
+                    <span class="duration-style">${durStr}</span>
+                </div>
+            `;
+
+            if (h.type === 'delay') {
+                iconHtml = `<div class="log-node-preview" style="background-color: #bdc3c7;"><span style="font-size:1.4em; line-height:1; margin-top:2px;">💤</span></div>`;
+                nameHtml = `<div class="log-name">Delay (+${h.mins}m)</div>`;
+                rightGroupHtml = `<div class="log-right-group"><div class="log-time">${finishDateStr}</div></div>`;
+            } else {
+                const tierNum = getTier(h.id);
+                const parts = h.id.split('_');
+                const iconPath = `icons/${parts[0]}_${parts.slice(2).join('_')}.png`;
+                iconHtml = `<div class="log-node-preview"><img src="${iconPath}" class="lnp-img" onerror="this.style.display='none'"></div><div class="log-tier-text">${toRoman(tierNum)}-${h.lvl}</div>`;
+                nameHtml = `<div class="log-name">${h.name} ${toRoman(tierNum)}-${h.lvl}</div>`;
+                
+                rightGroupHtml = `
+                    <div class="log-right-group">
+                        <div class="log-time">${finishDateStr}</div>
+                        <div class="log-details">
+                            <div class="ld-part pot"><img src="icons/red_potion.png" class="ld-icon"><span>${h.cost.toLocaleString('en-US')}</span></div>
+                            <div class="ld-part time"><img src="icons/icon_time.png" class="ld-icon"><span>${durStr}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 5. BUTTON LOGIC
+            let actionButtons = '';
+            
+            if (isMovingThis) {
+                // We inject the Duration Info HERE, inside the buttons area
+                actionButtons = `
+                    ${activeDurationHtml}
+                    <button class="btn-move-action btn-move-cancel" onclick="event.stopPropagation(); cancelMove()">❌ CANCEL</button>
+                `;
+            } else if (isValidDrop) {
+                if (h.idx === 0 && validDropTargets['top']) {
+                    actionButtons += `<button class="btn-move-action btn-move-top" onclick="event.stopPropagation(); executeMove('top')">⬆️ ABOVE</button>`;
+                }
+                actionButtons += `<button class="btn-move-action btn-move-below" onclick="event.stopPropagation(); executeMove(${h.idx})">⬇️ BELOW</button>`;
+            }
+
+            // 6. Assemble HTML
+            row.innerHTML = `
+                <div class="log-entry ${h.tree || ''}">
+                    <div class="log-left-group">
+                        <div class="log-icon-wrapper">${iconHtml}</div>
+                        ${nameHtml}
+                    </div>
+                    ${rightGroupHtml} 
+                    ${compactTimeHtml}
+                    <div class="move-actions-container">
+                        ${actionButtons}
+                    </div>
+                </div>
+            `;
+
+            if (movingStepIndex === -1) {
+                const controlsHTML = `
+                    <button class="btn-ctrl" style="background:#8e44ad" onclick="startMove(${h.idx})">🔄 Move</button>
+                    <button class="btn-ctrl" style="background:#f39c12" onclick="activateInsert(${h.idx})">⤵️ Insert</button>
+                    <button class="btn-ctrl" style="background:#27ae60" onclick="addDelay(${h.idx})">➕ Delay</button>
+                    <button class="btn-ctrl" style="background:#2980b9" onclick="markDone(${h.idx}, ${finishTs})">✅ Done</button>
+                    <button class="btn-ctrl" style="background:#c0392b" onclick="delStep(${h.idx})">🗑️ Del</button>
+                `;
+                row.innerHTML += `<div class="log-controls">${controlsHTML}</div>`;
+            }
+
+            list.appendChild(row);
+        });
+    }
+    drawLines();
+    if (typeof renderStats === 'function') renderStats();
+    const pBtn = document.getElementById('btn-plan');
+    if (pBtn) {
+        if (insertModeIndex > -1) { pBtn.innerHTML = "⤵️ INSERTING..."; pBtn.classList.add('insert'); } 
+        else { pBtn.innerHTML = "PLAN"; pBtn.classList.remove('insert'); }
+    }
+}
+// --- VISUALIZATION ---
+function drawLines() {
+    if (lineUpdateRequested) return;
+    lineUpdateRequested = true;
+    requestAnimationFrame(() => {
+        const svg = document.getElementById('svg-layer'); const canvas = document.getElementById('canvas');
+        if (!canvas || !svg) { lineUpdateRequested = false; return; }
+        svg.innerHTML = ''; 
+        const lastBlock = canvas.lastElementChild;
+        svg.style.height = (lastBlock ? (lastBlock.offsetTop + lastBlock.offsetHeight + 20) : 0) + "px";
+        const c = canvas.getBoundingClientRect();
+        document.querySelectorAll('.node').forEach(child => {
+            if (child.closest('.tree-container').style.display === 'none') return;
+            const isLocked = !child.classList.contains('unlocked');
+            getParents(child.id).forEach(pId => {
+                const parent = document.getElementById(pId);
+                if (!parent) return;
+                const r1 = parent.getBoundingClientRect(); const r2 = child.getBoundingClientRect();
+                const x1 = r1.left + (r1.width / 2) - c.left; const y1 = r1.top + (r1.height / 2) - c.top;
+                const x2 = r2.left + (r2.width / 2) - c.left; const y2 = r2.top + (r2.height / 2) - c.top;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+                path.setAttribute('class', isLocked ? 'connector locked' : 'connector');
+                svg.appendChild(path);
+            });
+        });
+        lineUpdateRequested = false;
+    });
+}
+
+// --- INTERACTION ---
+function handleClick(id, isRight) {
+    showFloatingLabel(id); const meta = getMeta(id);
+    if (currentMode === 'setup') {
+        const currentLvl = setupLevels[id] || 0;
+        if (isRight) {
+            if (currentLvl > 0) {
+                pushHistory(); if (currentLvl > 1) setupLevels[id]--; else delete setupLevels[id];
+                if (!setupLevels[id]) {
+                    let changed = true;
+                    while (changed) { changed = false; Object.keys(setupLevels).forEach(k => { if (setupLevels[k] > 0 && !isUnlocked(k, setupLevels)) { delete setupLevels[k]; changed = true; } }); }
+                    const sim = calcState(); if (sim.brokenSteps.length > 0) for (let i = sim.brokenSteps.length - 1; i >= 0; i--) planQueue.splice(sim.brokenSteps[i], 1);
+                }
+            }
+        } else { if (currentLvl < meta.m) { pushHistory(); setupLevels[id] = currentLvl + 1; if ((setupLevels[id] || 0) === 1) autoUnlock(id); } }
+    } else {
+        if (isRight) {
+            let idx = -1; for (let i = planQueue.length - 1; i >= 0; i--) if (planQueue[i].id === id) { idx = i; break; }
+            if (idx > -1) {
+                pushHistory(); planQueue.splice(idx, 1);
+                let clean = false; while (!clean) { const sim = calcState(planQueue); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1); else clean = true; }
+            }
+        } else {
+            let checkState = insertModeIndex > -1 ? calcState(planQueue.slice(0, insertModeIndex)) : calcState();
+            if ((checkState.levels[id] || 0) < meta.m && isUnlocked(id, checkState.levels)) {
+                pushHistory();
+                if (insertModeIndex > -1) { planQueue.splice(insertModeIndex, 0, { type: 'node', id }); insertModeIndex = -1; setMode('plan'); } 
+                else planQueue.push({ type: 'node', id });
+            }
+        }
+    }
+    updateCalculations();
+}
+
+function handleShiftClick(id) {
+    pushHistory(); setupLevels[id] = getMeta(id).m;
+    const ensure = (cid) => getParents(cid).forEach(pid => { if ((setupLevels[pid] || 0) === 0) { setupLevels[pid] = 1; ensure(pid); } });
+    ensure(id); updateCalculations();
+}
+
+function autoUnlock(id) { getParents(id).forEach(p => { if ((setupLevels[p] || 0) === 0) { setupLevels[p] = 1; autoUnlock(p); } }); }
+
+function showFloatingLabel(nodeId) {
+    if (window.innerWidth > 768) return;
+    const node = document.getElementById(nodeId), meta = getMeta(nodeId), tier = getTier(nodeId);
+    document.querySelectorAll('.floating-label').forEach(e => e.remove());
+    const lbl = document.createElement('div'); lbl.className = 'floating-label';
+    const tree = nodeId.split('_')[0]; const color = tree === 'forge' ? '#2980b9' : (tree === 'spt' ? '#8e44ad' : '#c0392b');
+    lbl.innerHTML = `<span style="color:${color}">${meta.n} ${toRoman(tier)}</span>`;
+    document.body.appendChild(lbl);
+    const rect = node.getBoundingClientRect();
+    lbl.style.left = (rect.left + rect.width / 2) + 'px'; lbl.style.top = (rect.top - 15) + 'px';
+    setTimeout(() => { lbl.style.opacity = '0'; setTimeout(() => lbl.remove(), 500); }, 2000);
+}
+
+// --- LOG & PLAN MANAGEMENT ---
+function setMode(m) {
+    currentMode = m; document.body.dataset.mode = m;
+    if (m !== 'plan') insertModeIndex = -1;
+    const updateBtn = (id, isActive) => {
+        const el = document.getElementById(id);
+        if (el) { el.className = `seg-btn ${isActive ? 'active' : ''}`; if (id.includes('plan')) { if (insertModeIndex > -1) { el.innerText = "Insert"; el.classList.add('insert'); } else { el.innerText = "PLAN"; el.classList.remove('insert'); } } }
+    };
+    updateBtn('btn-setup', m === 'setup'); updateBtn('btn-plan', m === 'plan');
+    updateBtn('btn-setup-mobile-new', m === 'setup'); updateBtn('btn-plan-mobile-new', m === 'plan');
+    if (m === 'log') { if (typeof setSidebarPanel === 'function') setSidebarPanel('logs'); } 
+    else if (window.innerWidth <= 768) { document.body.classList.remove('view-log', 'view-calc', 'view-egg'); document.body.classList.add('view-planner'); }
+    updateCalculations();
+}
+
+function toggleExp(i) { expandedLogIndex = expandedLogIndex === i ? -1 : i; updateCalculations(); }
+function delStep(i) {
+    if (!confirm(`Delete this step?`)) return;
+    const q = [...planQueue]; q.splice(i, 1);
+    let clean = false; while (!clean) { const sim = calcState(q); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) q.splice(sim.brokenSteps[j], 1); else clean = true; }
+    pushHistory(); planQueue = q; expandedLogIndex = -1; updateCalculations();
+}
+
+// --- SMART DROP LOGIC ---
+function startMove(idx) {
+    movingStepIndex = idx;
+    expandedLogIndex = -1; 
+    validDropTargets = [];
+
+    // Pre-calculate valid spots to avoid lag during render
+    for (let targetIdx = 0; targetIdx < planQueue.length; targetIdx++) {
+        if (targetIdx === idx) {
+            validDropTargets[targetIdx] = true; 
+            continue;
+        }
+        const testQueue = [...planQueue];
+        const item = testQueue.splice(idx, 1)[0];
+        
+        // Simulates inserting AFTER the targeted item
+        let insertPos = targetIdx > idx ? targetIdx : targetIdx + 1;
+        testQueue.splice(insertPos, 0, item);
+        
+        const sim = calcState(testQueue);
+        validDropTargets[targetIdx] = (sim.brokenSteps.length === 0);
+    }
+    
+    // Check if we can move it to the absolute top of the list
+    const testTopQueue = [...planQueue];
+    const itemTop = testTopQueue.splice(idx, 1)[0];
+    testTopQueue.splice(0, 0, itemTop);
+    validDropTargets['top'] = (calcState(testTopQueue).brokenSteps.length === 0);
+
+    updateCalculations();
+}
+
+function cancelMove() {
+    movingStepIndex = -1;
+    validDropTargets = [];
+    updateCalculations();
+}
+
+function executeMove(targetIdx) {
+    if (targetIdx === movingStepIndex) { cancelMove(); return; }
+
+    const testQueue = [...planQueue];
+    const item = testQueue.splice(movingStepIndex, 1)[0];
+    
+    let insertPos;
+    if (targetIdx === 'top') {
+        insertPos = 0;
+    } else {
+        insertPos = targetIdx > movingStepIndex ? targetIdx : targetIdx + 1;
+    }
+
+    planQueue = testQueue;
+    planQueue.splice(insertPos, 0, item);
+    
+    pushHistory();
+    movingStepIndex = -1;
+    validDropTargets = [];
+    expandedLogIndex = -1; 
+    
+    // Set the tracker for the flash animation
+    justMovedIndex = insertPos; 
+    
+    updateCalculations();
+    
+    // NEW: Scroll to the moved item so the user sees the flash!
+    setTimeout(() => {
+        const rows = document.querySelectorAll('.log-row');
+        if (rows[insertPos]) {
+            rows[insertPos].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 50);
+
+    // Clear tracker immediately so it doesn't stick
+    justMovedIndex = -1; 
+}
+// --- END SMART MOVE LOGIC ---
+
+function markDone(targetIdx, timestamp) {
+    try {
+        pushHistory();
+        for (let i = 0; i <= targetIdx; i++) {
+            const item = planQueue[i];
+            if (item.type === 'node') { const cur = setupLevels[item.id] || 0; const meta = getMeta(item.id); if (meta) setupLevels[item.id] = Math.min(meta.m, cur + 1); }
+        }
+        planQueue.splice(0, targetIdx + 1);
+        let clean = false; while (!clean) { const sim = calcState(planQueue); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1); else clean = true; }
+        const d = new Date(timestamp); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        const localIso = d.toISOString().slice(0, 16); expandedLogIndex = -1; 
+        if (typeof syncMainDate === 'function') syncMainDate(localIso);
+    } catch (e) { console.error(e); }
+}
+
+function addDelay(i) { const m = prompt("Enter delay in MINUTES:"); if (m) { pushHistory(); planQueue.splice(i + 1, 0, { type: 'delay', mins: parseFloat(m) }); expandedLogIndex = -1; updateCalculations(); } }
+function activateInsert(idx) { insertModeIndex = idx + 1; expandedLogIndex = -1; setMode('plan'); updateCalculations(); }
+function clearPlan() { if (confirm("Clear Plan?")) { pushHistory(); planQueue = []; updateCalculations(); } }
+function resetCurrentTree() {
+    if (!confirm(`Reset ${activeTreeKey.toUpperCase()}?`)) return;
+    pushHistory();
+    Object.keys(setupLevels).forEach(id => { if (id.startsWith(activeTreeKey + "_")) delete setupLevels[id]; });
+    planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
+    let clean = false; while (!clean) { const sim = calcState(planQueue); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1); else clean = true; }
+    updateCalculations();
+}
+
+// --- UNDO / REDO ---
+function pushHistory() {
+    if (historyStack.length > 50) historyStack.shift();
+    if (typeof captureFullState === 'function') { historyStack.push(JSON.stringify(captureFullState())); redoStack = []; updateUndoRedoBtns(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); }
+}
+function undo() {
+    if (historyStack.length === 0) return;
+    redoStack.push(JSON.stringify(captureFullState()));
+    const stateToLoad = JSON.parse(historyStack.pop());
+    if (typeof eggPlanQueue !== 'undefined') { const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null; stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart }; }
+    loadState(stateToLoad); updateUndoRedoBtns(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+}
+function redo() {
+    if (redoStack.length === 0) return;
+    historyStack.push(JSON.stringify(captureFullState()));
+    const stateToLoad = JSON.parse(redoStack.pop());
+    if (typeof eggPlanQueue !== 'undefined') { const currentEggStart = document.getElementById('egg-date-desktop') ? document.getElementById('egg-date-desktop').value : null; stateToLoad.eggData = { queue: eggPlanQueue, start: currentEggStart }; }
+    loadState(stateToLoad); updateUndoRedoBtns(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage();
+}
+function updateUndoRedoBtns() {
+    const hasH = historyStack.length > 0; const hasR = redoStack.length > 0;
+    const upd = (id, on) => { const el = document.getElementById(id); if (el) { el.disabled = !on; el.style.opacity = !on ? "0.3" : "1"; el.style.pointerEvents = !on ? "none" : "auto"; } };
+    ['btn-undo-desktop', 'btn-undo-log', 'btn-undo-mobile-tree', 'btn-undo-mobile-log'].forEach(id => upd(id, hasH));
+    ['btn-redo-desktop', 'btn-redo-log', 'btn-redo-mobile-tree', 'btn-redo-mobile-log'].forEach(id => upd(id, hasR));
 }

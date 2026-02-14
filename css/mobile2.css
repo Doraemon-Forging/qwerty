@@ -1,0 +1,29 @@
+/* ==========================================================================
+   MOBILE OVERRIDES 2 (New Tools)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* DAILY TAB ADJUSTMENTS */
+    .daily-card {
+        margin: 0 10px 15px 10px; /* Tighter margins on mobile */
+        padding: 12px;
+    }
+
+    .daily-input {
+        width: 70px; /* Slightly smaller input boxes */
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .daily-label {
+        font-size: 0.9rem;
+    }
+
+    .daily-header-title {
+        font-size: 1rem;
+    }
+    
+    .daily-res-value {
+        font-size: 1rem;
+    }
+}

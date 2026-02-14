@@ -149,23 +149,25 @@
     /* =========================================
        F. HEADERS & STICKY NAVS
        ========================================= */
-    /* Floating Pill Header */
+/* Floating Pill Header */
     .floating-header-container {
         display: flex !important;
         position: relative !important; 
         top: auto !important;
         left: auto !important;
-        transform: none !important;
+        transform: none !important; /* REVERTED */
         margin: 20px auto 10px auto !important;
         z-index: 10;
     }
 
     .fhc-pill {
         white-space: nowrap !important;
-        min-width: 180px !important;
+        min-width: 0 !important;
         width: auto !important;
         justify-content: center !important;
-        padding-right: 20px !important;
+        padding-left: 20px !important;
+        /* Match the desktop balance */
+        padding-right: 45px !important; 
     }
 
     /* Sticky Tree Nav */
@@ -183,11 +185,14 @@
         flex-direction: column;
     }
 
-    .tn-row-1 {
+.tn-row-1 {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 5px 10px;
+        
+        /* CHANGED: Increased the top padding from 5px to 15px to create breathing room from the address bar */
+        padding: 15px 10px 5px 10px; 
+        
         gap: 10px !important; 
     }
 
@@ -431,6 +436,30 @@
         width: 100%;
         justify-content: space-between;
     }
+    /* =========================================
+       TOOLBOX DASHBOARD (MOBILE HOME)
+       ========================================= */
+    .mobile-dashboard-wrapper {
+        position: relative;
+        padding: 0 20px;
+        margin-top: 40px; /* Leaves room above for the header to pop up */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+.mobile-floating-header {
+        position: absolute !important;
+        top: 0 !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important; /* REVERTED to perfect center */
+        margin: 0 !important;
+        z-index: 20;
+    }
+
+    .mobile-dashboard-wrapper .mobile-tools-tray {
+        margin: 0 !important; /* Overrides the old 20px margin */
+        padding-top: 35px !important; /* Pushes the first button down so Doraemon doesn't cover it */
+    }
 
     /* System Buttons (Matches Desktop Style) */
  /* 4. DESKTOP-STYLE BUTTONS (Updated without shadow) */
@@ -624,4 +653,12 @@
     justify-content: flex-end !important;
     width: 100% !important; /* Ensures the container fills the space so it can align right */
 }
+
+    .log-row.has-top-btn .log-name {
+        display: none !important;
+    }
+
+    .move-action-target {
+        gap: 4px !important;
+    }
 }

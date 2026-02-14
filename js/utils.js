@@ -1,6 +1,6 @@
 /**
  * UTILS.JS
- * Generic helper functions for Formatting, UI, Date handling, and Layout Logic.
+ * Formatting, UI Helpers, Date Sync, and Modal Table Builder.
  */
 
 // --- FORMATTING HELPERS ---
@@ -41,12 +41,6 @@ function formatResourceValue(val, type) {
     return (val / 1000000).toFixed(2) + 'm';
 }
 
-function formatThiefGold(val) {
-    if (val < 1000) return Math.floor(val).toLocaleString('en-US');
-    if (val < 1000000) return (Math.floor(val / 100) / 10).toFixed(1) + 'k';
-    return (Math.floor(val / 10000) / 100).toFixed(2) + 'm';
-}
-
 function formatForgeCost(val) {
     if(val < 1000) return val.toLocaleString('en-US');
     if(val < 10000) return (val/1000).toFixed(2) + 'k';
@@ -77,9 +71,7 @@ function unformatInput(el) {
 
 function toggleDropdown(id) {
     const all = document.querySelectorAll('.dropdown-content');
-    all.forEach(d => {
-        if(d.id !== id) d.classList.remove('show');
-    });
+    all.forEach(d => { if(d.id !== id) d.classList.remove('show'); });
     const el = document.getElementById(id);
     if(el) el.classList.toggle('show');
 }
@@ -124,7 +116,6 @@ function updateFromDropdowns(source) {
     const min = parseInt(minEl.value);
 
     const newDate = new Date(y, m, d, h, min);
-
     if (newDate < now && (now - newDate) > 2592000000) newDate.setFullYear(y+1);
     
     newDate.setMinutes(newDate.getMinutes() - newDate.getTimezoneOffset());
@@ -139,10 +130,8 @@ function syncMainDate(val, shouldSave = true) {
     if (!val) return;
     const date = new Date(val);
     if (isNaN(date.getTime())) return;
-
     const el = document.getElementById('start-date');
     if (el) el.value = val;
-
     const setVal = (id, v) => { const e = document.getElementById(id); if(e) e.value = v; };
     setVal('dm-month', date.getMonth() + 1);
     setVal('dm-day', date.getDate());
@@ -157,10 +146,8 @@ function syncCalcDate(val, shouldSave = true) {
     if (!val) return;
     const date = new Date(val);
     if (isNaN(date.getTime())) return;
-
     const el = document.getElementById('calc-start-date');
     if (el) el.value = val;
-
     const setVal = (id, v) => { const e = document.getElementById(id); if(e) e.value = v; };
     setVal('cm-month', date.getMonth() + 1);
     setVal('cm-day', date.getDate());
@@ -175,10 +162,8 @@ function syncEggDate(val, shouldSave = true) {
     if (!val) return; 
     const date = new Date(val);
     if (isNaN(date.getTime())) return; 
-
     const el = document.getElementById('egg-date-desktop');
     if (el) el.value = val;
-
     const setVal = (id, v) => { const e = document.getElementById(id); if(e) e.value = v; };
     setVal('em-month', date.getMonth() + 1);
     setVal('em-day', date.getDate());
@@ -189,71 +174,35 @@ function syncEggDate(val, shouldSave = true) {
     if (shouldSave && typeof saveToLocalStorage === 'function') saveToLocalStorage();
 }
 
-// --- TABLE MODAL BUILDER (POLISHED V15 - POTION ICON & MOBILE FIT) ---
+// --- TABLE MODAL BUILDER ---
 function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, customTabLabels = null) {
     const modal = document.getElementById('tableModal');
     const content = modal.querySelector('.modal-content');
 
-// 1. ICON DETECTION LOGIC
     const tLower = title.toLowerCase();
     let valueIconHTML = '';
-
-    // CHANGED: Now looks for 'tech' instead of 'research' so it catches "TECH UPGRADE COST"
-    if (tLower.includes('tech') && tLower.includes('cost')) {
-        // CASE: Tech Research Cost -> RED POTION
-        valueIconHTML = `<img src="icons/red_potion.png" class="icon-gold-inline">`;
-    } else if (tLower.includes('price') || tLower.includes('sell') || tLower.includes('cost')) {
-        // CASE: Forge/Sell -> GOLD
-        valueIconHTML = `<img src="icons/fm_gold.png" class="icon-gold-inline">`;
-    }
+    if (tLower.includes('tech') && tLower.includes('cost')) valueIconHTML = `<img src="icons/red_potion.png" class="icon-gold-inline">`;
+    else if (tLower.includes('price') || tLower.includes('sell') || tLower.includes('cost')) valueIconHTML = `<img src="icons/fm_gold.png" class="icon-gold-inline">`;
     
     let statHTML = '';
     if (statData && typeof statData === 'object' && statData.label) {
         if (statData.before === statData.after) {
-            statHTML = `
-                <div class="modal-sub-row">
-                    <span class="stat-val-old">${statData.label}: ${statData.before}</span>
-                </div>`;
+            statHTML = `<div class="modal-sub-row"><span class="stat-val-old">${statData.label}: ${statData.before}</span></div>`;
         } else {
-            statHTML = `
-                <div class="modal-sub-row">
-                    <span class="stat-val-old">${statData.label} ${statData.before}</span>
-                    <span class="stat-arrow">➜</span>
-                    <span class="stat-val-new">${statData.after}</span>
-                </div>`;
+            statHTML = `<div class="modal-sub-row"><span class="stat-val-old">${statData.label} ${statData.before}</span><span class="stat-arrow">➜</span><span class="stat-val-new">${statData.after}</span></div>`;
         }
     }
 
     const thHTML = headers.map(h => `<th>${h}</th>`).join('');
-
     content.innerHTML = `
-        <div class="modal-header-fixed">
-            <h2 class="modal-title-text">${title}</h2>
-            ${statHTML}
-            <div id="modal-tabs-container" class="segmented-control" style="display:none;"></div>
-        </div>
-
-        <div id="modal-scroll-area" class="modal-body-scroll">
-            <table class="clean-table">
-                <thead>
-                    <tr>${thHTML}</tr>
-                </thead>
-                <tbody id="modal-tbody"></tbody>
-            </table>
-        </div>
-
-        <div class="modal-footer">
-            <div class="modal-disclaimer">Values may differ slightly from the game</div>
-            <button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'">
-                <span>&times;</span>
-            </button>
-        </div>
+        <div class="modal-header-fixed"><h2 class="modal-title-text">${title}</h2>${statHTML}<div id="modal-tabs-container" class="segmented-control" style="display:none;"></div></div>
+        <div id="modal-scroll-area" class="modal-body-scroll"><table class="clean-table"><thead><tr>${thHTML}</tr></thead><tbody id="modal-tbody"></tbody></table></div>
+        <div class="modal-footer"><div class="modal-disclaimer">Values may differ slightly from the game</div><button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'"><span>&times;</span></button></div>
     `;
 
     const tbody = document.getElementById('modal-tbody');
     const tabContainer = document.getElementById('modal-tabs-container');
     const scrollContainer = document.getElementById('modal-scroll-area'); 
-    
     const scrollPositions = {}; 
     let activePageIndex = 0; 
     
@@ -264,41 +213,19 @@ function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, custo
             const rowData = rows[i];
             const tr = document.createElement('tr');
             const cells = Array.isArray(rowData) ? rowData : Object.values(rowData);
-            
             cells.forEach((cellContent, index) => {
                 const td = document.createElement('td');
                 const isString = typeof cellContent === 'string';
-                
                 const hasArrow = isString && (cellContent.includes('➜') || cellContent.includes('→'));
-                
                 if (index > 0) {
                     if (hasArrow) {
                         const separator = cellContent.includes('➜') ? '➜' : '→';
                         const parts = cellContent.split(separator).map(s => s.trim());
-                        
-                        const valBefore = parts[0];
-                        const valAfter = parts[1] || valBefore; 
-
-                        const cleanBefore = valBefore.replace(/[^0-9.]/g, '');
-                        const cleanAfter = valAfter.replace(/[^0-9.]/g, '');
-                        const isDifferent = cleanBefore !== cleanAfter;
-                        const rightClass = isDifferent ? 'val-green' : 'val-white';
-
-                        td.innerHTML = `
-                            <div class="spine-grid">
-                                <div class="spine-left">
-                                    ${valueIconHTML}${valBefore} 
-                                </div>
-                                <div class="spine-center">
-                                    <span class="stat-arrow-table">➜</span>
-                                </div>
-                                <div class="spine-right">
-                                    ${valueIconHTML}<span class="${rightClass}">${valAfter}</span> 
-                                </div>
-                            </div>
-                        `;
+                        const cleanBefore = parts[0].replace(/[^0-9.]/g, '');
+                        const cleanAfter = (parts[1] || parts[0]).replace(/[^0-9.]/g, '');
+                        const rightClass = cleanBefore !== cleanAfter ? 'val-green' : 'val-white';
+                        td.innerHTML = `<div class="spine-grid"><div class="spine-left">${valueIconHTML}${parts[0]} </div><div class="spine-center"><span class="stat-arrow-table">➜</span></div><div class="spine-right">${valueIconHTML}<span class="${rightClass}">${parts[1]||parts[0]}</span> </div></div>`;
                     } else {
-                        // SINGLE VALUE (Flex wrapper needed for icon alignment)
                         td.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; gap:4px; color:#fff;">${valueIconHTML}${cellContent} </div>`;
                     }
                 } else {
@@ -313,76 +240,81 @@ function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, custo
     if (rows.length > pageSize) {
         tabContainer.style.display = 'flex';
         const pageCount = Math.ceil(rows.length / pageSize);
-        
         for (let i = 0; i < pageCount; i++) {
             const btn = document.createElement('button');
             const start = i * pageSize;
             const end = Math.min((i + 1) * pageSize, rows.length);
-            
-            if (customTabLabels && customTabLabels[i]) {
-                btn.innerText = customTabLabels[i];
-            } else {
-                btn.innerText = `${start + 1}-${end}`;
-            }
-
+            btn.innerText = (customTabLabels && customTabLabels[i]) ? customTabLabels[i] : `${start + 1}-${end}`;
             btn.className = 'seg-btn'; 
-            
             btn.onclick = () => {
                 scrollPositions[activePageIndex] = scrollContainer.scrollTop;
                 Array.from(tabContainer.children).forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 renderChunk(start, end);
                 activePageIndex = i;
-                setTimeout(() => {
-                    scrollContainer.scrollTop = scrollPositions[i] || 0;
-                }, 0);
+                setTimeout(() => { scrollContainer.scrollTop = scrollPositions[i] || 0; }, 0);
             };
-            
             tabContainer.appendChild(btn);
-            if (i === 0) {
-                btn.classList.add('active');
-                renderChunk(start, end);
-            }
+            if (i === 0) { btn.classList.add('active'); renderChunk(start, end); }
         }
     } else {
         tabContainer.style.display = 'none';
         renderChunk(0, rows.length);
     }
-
     modal.style.display = 'block';
 }
 
-// --- LAYOUT & VISUAL HELPERS (MOVED FROM INDEX.HTML) ---
+// ==========================================
+// LAYOUT & HEADER VISUALS
+// ==========================================
 
 function updateRightPaneVisuals(panelId) {
     const iconEl = document.getElementById('fh-icon');
     const titleEl = document.getElementById('fh-title');
 
-    const img = (src) => `<img src="icons/${src}">`;
+    // Helper to generate image tag
+    const img = (src) => `<img src="icons/${src}" style="width: 100%; height: 100%; object-fit: contain;">`;
 
-    let iconHtml = img("icon_timeline.png");
-    let titleText = "LOGS";
+    let iconHtml = "📜"; // Default Emoji
+    let titleText = "SCHEDULE";
 
-    if (panelId === 'logs') { iconHtml = img("icon_timeline.png"); titleText = "SCHEDULE"; }
-    else if (panelId === 'stats') { iconHtml = img("icon_stats.png"); titleText = "STATS"; }
-    else if (panelId === 'calc') { iconHtml = img("anvil.png"); titleText = "FORGE CALC"; }
-    else if (panelId === 'daily') { iconHtml = img("icon_daily.png"); titleText = "DAILY"; }
-    else if (panelId === 'egg') { iconHtml = img("icon_eggplan.png"); titleText = "EGG PLANNER"; }
+    // Define Icons and Titles for each tool
+    if (panelId === 'logs') { 
+        iconHtml = img("icon_timeline.png"); 
+        titleText = "SCHEDULE"; 
+    }
+    else if (panelId === 'stats') { 
+        iconHtml = img("icon_stats.png"); 
+        titleText = "STATS"; 
+    }
+    else if (panelId === 'calc') { 
+        iconHtml = img("anvil.png"); 
+        titleText = "FORGE CALC"; 
+    }
+    else if (panelId === 'daily') { 
+        iconHtml = img("icon_daily.png"); 
+        titleText = "DAILY GAIN"; 
+    }
+    else if (panelId === 'egg') { 
+        iconHtml = img("icon_eggplan.png"); 
+        titleText = "EGG PLANNER"; 
+    }
 
+    // Apply changes
     if(iconEl) iconEl.innerHTML = iconHtml;
     if(titleEl) titleEl.innerText = titleText;
 
+    // Handle "Capsule" Visibility (Bottom Buttons)
     const logCap = document.getElementById('capsule-logs');
     const eggCap = document.getElementById('capsule-egg');
 
-    // FIX: Use setProperty with 'important' to override the .desktop-only CSS class
     if(logCap) {
-        if (panelId === 'logs') logCap.style.setProperty('display', 'flex', 'important');
-        else logCap.style.setProperty('display', 'none', 'important');
+        // Only show Log Controls (Undo/Redo/Reset) on the Logs tab
+        logCap.style.setProperty('display', panelId === 'logs' ? 'flex' : 'none', 'important');
     }
 
     if(eggCap) {
-        if (panelId === 'egg') eggCap.style.setProperty('display', 'flex', 'important');
-        else eggCap.style.setProperty('display', 'none', 'important');
+        // Only show Egg Controls on the Egg tab
+        eggCap.style.setProperty('display', panelId === 'egg' ? 'flex' : 'none', 'important');
     }
 }

@@ -1,30 +1,23 @@
 /**
  * DATA.JS
- * Contains all static configuration, game constants, and tree definitions.
- * Loaded first so other scripts can access these variables.
+ * Static configuration, game constants, and tree definitions.
  */
 
 // --- HELPER FUNCTIONS FOR DATA ---
-// (These must be defined before TREES because TREES uses them in 'stat' functions)
-
 const formatEggTime = (totalMins) => {
     const h = Math.floor(totalMins / 60);
     const m = Math.floor(totalMins % 60);
     const s = Math.round((totalMins * 60) % 60);
-
     let parts = [];
     if (h > 0) parts.push(h + "h");
     if (m > 0) parts.push(m + "m");
     if (s > 0) parts.push(s + "s");
-
     return parts.join(" ") || "0s";
 };
 
 const eggStat = (l, b, n) => `Speed +${l * 10}% (${formatEggTime(b / (1 + l * 0.1))})`;
 
-
 // --- GAME CONSTANTS ---
-
 const tierTimes = {
     1: [5, 10, 20, 40, 80],
     2: [160, 320, 640, 1280, 1433.6],
@@ -53,14 +46,7 @@ const forgeLevelData = {
 
 const bracketFloors = [1, 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71, 76, 81, 86, 91, 96, 101, 106, 111, 116, 121, 126, 131, 136, 141, 146];
 
-const EGG_POINTS = {
-    'common': 250,
-    'rare': 1000,
-    'epic': 2000,
-    'legendary': 4000,
-    'ultimate': 8000,
-    'mythic': 16000
-};
+const EGG_POINTS = { 'common': 250, 'rare': 1000, 'epic': 2000, 'legendary': 4000, 'ultimate': 8000, 'mythic': 16000 };
 
 const EGG_DATA = {
     common: { n: "Common", t: 30, id: "egg1", img: "icons/EggCommon.png", c: "common" },
@@ -71,9 +57,7 @@ const EGG_DATA = {
     mythic: { n: "Mythic", t: 1920, id: "egg6", img: "icons/EggMythic.png", c: "mythic" }
 };
 
-
 // --- MAIN TECH TREE STRUCTURE ---
-
 const TREES = {
     forge: {
         name: "Forge", colorClass: "active-forge", maxLevels: 230,
@@ -91,17 +75,10 @@ const TREES = {
             auto: { n: "Auto Forge", p: ["h_bonus", "c_bonus"], m: 1, stat: l => `Hammers +${l}` },
             free: { n: "Free Forge Chance", p: ["auto"], m: 5, stat: l => `Chance +${l}%` },
             max: {
-                n: "Max Offline Timer", // UPDATED: Name
-                p: ["free"], 
-                m: 5, 
+                n: "Max Offline Timer", p: ["free"], m: 5, 
                 stat: (l) => {
-                    // 1. Calculate Time
-                    const p = l * 16;
-                    const m = 240 * (1 + p / 100);
-                    const h = Math.floor(m / 60);
-                    const min = Math.round(m % 60);
-
-                    // 2. Calculate Rates (Look up global setupLevels for context)
+                    const p = l * 16; const m = 240 * (1 + p / 100);
+                    const h = Math.floor(m / 60); const min = Math.round(m % 60);
                     let cLvl = 0, hLvl = 0;
                     if (typeof setupLevels !== 'undefined') {
                         for (let t = 1; t <= 5; t++) {
@@ -109,40 +86,27 @@ const TREES = {
                             hLvl += (setupLevels[`forge_T${t}_off_h`] || 0);
                         }
                     }
-                    
-                    // Gold Rate (1/s base + 2% per lvl)
                     const goldRate = 1 * (1 + (cLvl * 2) / 100);
                     const totalGold = (m * 60) * goldRate;
-                    
-                    // Hammer Rate (1/m base + 2% per lvl)
                     const hammerRate = 1 * (1 + (hLvl * 2) / 100);
                     const totalHammer = m * hammerRate;
-
-                    // 3. Format
                     const fmt = (v, t) => (typeof formatResourceValue === 'function') ? formatResourceValue(v, t) : Math.round(v);
-
                     return `Time +${p}% (${h}h ${min}m | <img src="icons/fm_gold.png" class="stat-key-icon"> ${fmt(totalGold, 'gold')} | <img src="icons/fm_hammer.png" class="stat-key-icon"> ${fmt(totalHammer, 'hammer')})`;
                 }
             },
             off_c: {
                 n: "Offline Coin", p: ["max"], m: 5, stat: (l) => {
-                    const p = l * 2;
-                    const r = 1 * (1 + p / 100);
-                    const d = r * 86400;
+                    const p = l * 2; const r = 1 * (1 + p / 100); const d = r * 86400;
                     if (l === 0) return `Bonus +0% (1 <img src="icons/fm_gold.png" class="stat-key-icon">/s | 86.4k <img src="icons/fm_gold.png" class="stat-key-icon">/d)`;
-                    const rStr = r.toFixed(2);
-                    const dStr = (d / 1000).toFixed(1) + 'k';
+                    const rStr = r.toFixed(2); const dStr = (d / 1000).toFixed(1) + 'k';
                     return `Bonus +${p}% (${rStr} <img src="icons/fm_gold.png" class="stat-key-icon">/s | ${dStr} <img src="icons/fm_gold.png" class="stat-key-icon">/d)`;
                 }
             },
             off_h: {
                 n: "Offline Hammer", p: ["max"], m: 5, stat: (l) => {
-                    const p = l * 2;
-                    const r = 1 * (1 + p / 100);
-                    const d = r * 1440;
+                    const p = l * 2; const r = 1 * (1 + p / 100); const d = r * 1440;
                     if (l === 0) return `Bonus +0% (1 <img src="icons/fm_hammer.png" class="stat-key-icon">/m | 1440 <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
-                    const rStr = r.toFixed(2);
-                    const dStr = d.toFixed(1);
+                    const rStr = r.toFixed(2); const dStr = d.toFixed(1);
                     return `Bonus +${p}% (${rStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/m | ${dStr} <img src="icons/fm_hammer.png" class="stat-key-icon">/d)`;
                 }
             }
@@ -168,8 +132,7 @@ const TREES = {
             pet_hp: { n: "Pet HP Mastery", p: ["disc"], m: 5, stat: l => `Bonus HP +${l * 2}%` },
             ticket: {
                 n: "Skill Summon Cost", p: ["pet_dmg", "pet_hp"], m: 5, stat: (l) => {
-                    const p = l * 1;
-                    const v = 200 * (1 - p / 100);
+                    const p = l * 1; const v = 200 * (1 - p / 100);
                     return `Cost -${p}% (${Math.round(v)}<img src="icons/green_ticket.png" class="stat-key-icon">)`;
                 }
             },

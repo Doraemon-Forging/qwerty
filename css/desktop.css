@@ -476,51 +476,56 @@ button[onclick="clearPlan()"]::after, button[onclick="clearEggPlan()"]::after {
 .connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .connector { fill: none; stroke-width: 4px; stroke: #2d3436; stroke-linecap: round; stroke-linejoin: round; }
 .connector.locked { stroke: #bdc3c7 !important; opacity: 0.5; }
-/* --- TIER HEADER & MAX BUTTON FIX --- */
-
-/* 1. The Container Row */
-.tier-header {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 600px; /* Limits width so it doesn't stretch too far on wide screens */
-    margin: 20px auto 10px auto; /* Centers it */
-    padding: 0 10px;
-    position: relative;
-    z-index: 5;
-}
-
-/* 2. The Title Pill (Tier I) */
-.tier-title {
-    font-family: 'Fredoka One', 'Fredoka', sans-serif;
-    font-size: 1.2rem;
-    color: #ffffff !important; /* User Request: White Text */
-    -webkit-text-stroke: 2px #000000;
-    
-    background-color: #ffffff;
-    border: 3px solid #000000;
-    border-radius: 12px;
-    padding: 5px 20px;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-}
-
-/* 3. The MAX Button */
+/* =========================================================
+   RIGHT SIDE: MAX BUTTON SETTINGS ("MAX")
+   ========================================================= */
 .tier-max-btn {
-    display: block !important; /* Forces it to show */
-    font-family: 'Fredoka One', cursive;
-    font-size: 1rem;
-    color: #ffffff;
-    background-color: #000000;
-    border: 2px solid #000000;
-    border-radius: 10px;
-    padding: 5px 15px;
+    /* --- SIZE SETTINGS --- */
+    height: 45px !important;       /* Change Height Here */
+    width: 90px !important;        /* Change Width Here */
+    
+    /* --- FONT SETTINGS --- */
+    font-family: 'Fredoka One', 'Fredoka', sans-serif !important;
+    font-size: 1.0rem !important;  /* Maybe smaller font for button? */
+    color: #ffffff !important;
+    text-transform: uppercase !important;
+    -webkit-text-stroke: 2px #000000 !important;
+    
+    /* --- BOX STYLE --- */
+    background-color: #00b0ff !important; 
+    border: 2px solid #000000 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2) !important;
+
+    /* Interaction (Click Effect) */
     cursor: pointer;
-    transition: transform 0.1s;
+    
+    /* Alignment (Do not change) */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    z-index: 2;
+    padding: 0 7px !important;
+    margin: 0 !important;
 }
 
+/* Click Animation for Max Button */
 .tier-max-btn:active {
-    transform: scale(0.95);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.2) !important;
+}
+
+/* Hide MAX button when in PLAN mode */
+body[data-mode="plan"] .tier-max-btn {    
+    visibility: hidden !important;
+    pointer-events: none !important; /* Ensures you can't click the invisible button */
+}
+
+/* Force Uppercase for Nav Buttons */
+#btn-plan, #btn-plan-mobile-new, 
+#btn-setup, #btn-setup-mobile-new {
+    text-transform: uppercase !important;
 }
 
 /* ==========================================================================
@@ -727,11 +732,12 @@ button[onclick="clearPlan()"]::after, button[onclick="clearEggPlan()"]::after {
 /* =========================================
    NEW FLOATING HEADER (Circle + Pill)
    ========================================= */
+/* 1. Put the container back to dead center */
 .floating-header-container {
     position: absolute;
     top: 0;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) !important; /* REVERTED */
     z-index: 600;
     display: flex;
     align-items: center;
@@ -739,22 +745,26 @@ button[onclick="clearPlan()"]::after, button[onclick="clearEggPlan()"]::after {
     pointer-events: none;
 }
 
-.fhc-circle {
-    width: 54px; height: 54px;
-    background: #e9e9ed;
+/* 2. Balance the Pill's visual weight */
+.fhc-pill {
+    min-width: 0 !important;
+    width: auto !important;
+    height: 40px;
+    background: #5a6d80;
     border: 2px solid #000000;
-    border-radius: 50%;
+    border-left: none;
+    border-radius: 0 20px 20px 0;
     
-    /* Flex Parent settings */
     display: flex; 
-    justify-content: center; 
     align-items: center;
-    font-size: 24px;
-    z-index: 10;
-    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
     
-    overflow: hidden;
-    padding: 0;
+    padding-left: 20px !important;
+    /* THE FIX: Extend the right tail to counter-balance the circle on the left */
+    padding-right: 45px !important; 
+    
+    margin-left: -18px;
+    z-index: 5;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
 }
 
 /* FIX: This makes the span fill the circle perfectly to center the image */
