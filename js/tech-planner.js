@@ -162,7 +162,6 @@ function updateCalculations() {
     const updateVal = (id, txt) => { const el = document.getElementById(id); if(el) el.innerText = txt; };
     updateVal('res-val', potStr); updateVal('time-val', timeStr); updateVal('res-val-desktop', potStr); updateVal('time-val-desktop', timeStr);
 
-    // --- NODE COLORING & UNLOCKS ---
     let vLvls;
     if (currentMode === 'setup') {
         vLvls = setupLevels;
@@ -181,7 +180,6 @@ function updateCalculations() {
         if (lvl >= m.m) el.classList.add('maxed');
     });
 
-    // --- RENDER LOG LIST ---
     const list = document.getElementById('log-list');
     if (list) {
         list.innerHTML = '';
@@ -193,25 +191,30 @@ function updateCalculations() {
             const finishDate = new Date(curTime); const finishTs = finishDate.getTime();
             const durStr = formatSmartTime(h.type === 'delay' ? h.mins : h.added);
             
-            // 3-Row Split Data
-            const dayStr = finishDate.toLocaleDateString([], { weekday: 'short' });   // "Thu"
-            const dateStr = finishDate.toLocaleDateString([], { month: 'short', day: 'numeric' }); // "Feb 14"
-            const timeOnlyStr = finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // "17:11"
-            
-            // Normal Full String
+            const dayStr = finishDate.toLocaleDateString([], { weekday: 'short' });
+            const dateStr = finishDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const timeOnlyStr = finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
             const finishDateStr = finishDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', ' + finishDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-            // 1. Determine States
+            // --- STATE LOGIC ---
             let isMovingThis = (movingStepIndex === h.idx);
             let isValidDrop = (movingStepIndex > -1 && !isMovingThis && validDropTargets[h.idx]);
             
             let classNames = ['log-row'];
             if (expandedLogIndex === h.idx) classNames.push('expanded'); 
             if (isWarTime(finishDate)) classNames.push('war-active');
-            if (isMovingThis) classNames.push('moving-active');
-            if (isValidDrop) classNames.push('drop-valid');
-            if (justMovedIndex === h.idx) classNames.push('flash-success');
             
+            // --- GREY OUT LOGIC ---
+            if (isMovingThis) {
+                classNames.push('moving-active');
+            } else if (isValidDrop) {
+                classNames.push('drop-valid');
+            } else if (movingStepIndex > -1) {
+                // If we are in move mode, but this row is neither the mover nor a valid target, it is INVALID
+                classNames.push('drop-invalid');
+            }
+
+            if (justMovedIndex === h.idx) classNames.push('flash-success');
             if (h.idx === 0 && validDropTargets['top']) classNames.push('has-top-btn');
 
             row.className = classNames.join(' ');
@@ -222,27 +225,31 @@ function updateCalculations() {
                 row.onclick = () => executeMove(h.idx);
             }
 
-            // 4. Build Content
+            // --- HTML CONTENT ---
             let iconHtml, nameHtml, rightGroupHtml;
 
-            // A. Compact Time HTML (3-Rows) - Added "log-time-style" class for font matching
-            const compactTimeHtml = `
-                <div class="move-time-group">
-                    <div class="mt-row log-time-style">${dayStr}</div>
-                    <div class="mt-row log-time-style">${dateStr}</div>
-                    <div class="mt-row log-time-style">${timeOnlyStr}</div>
-                </div>
-            `;
+           
+// Mobile Time Stack
+            let compactTimeHtml;
             
-            // B. Active Item Duration - Added "duration-style" class
-            // NOTE: We do NOT inject this directly into row.innerHTML anymore.
-            // We put it INSIDE the buttons container so it hides automatically.
-            const activeDurationHtml = `
-                <div class="active-duration-group">
-                    <img src="icons/icon_time.png" class="ad-icon">
-                    <span class="duration-style">${durStr}</span>
-                </div>
-            `;
+            if (movingStepIndex === h.idx) {
+                // MOVING ITEM: Show Duration ONLY (White + Icon)
+                compactTimeHtml = `
+                    <div class="move-time-group" style="flex-direction: row; gap: 5px;">
+                        <img src="icons/icon_time.png" style="width: 20px; height: 20px;">
+                        <div class="duration-style">${durStr}</div>
+                    </div>
+                `;
+            } else {
+                // NORMAL ITEM: Show Finish Time Stack (Green 3-Rows)
+                compactTimeHtml = `
+                    <div class="move-time-group">
+                        <div class="mt-row log-time-style">${dayStr}</div>
+                        <div class="mt-row log-time-style">${dateStr}</div>
+                        <div class="mt-row log-time-style">${timeOnlyStr}</div>
+                    </div>
+                `;
+            }
 
             if (h.type === 'delay') {
                 iconHtml = `<div class="log-node-preview" style="background-color: #bdc3c7;"><span style="font-size:1.4em; line-height:1; margin-top:2px;">💤</span></div>`;
@@ -255,6 +262,7 @@ function updateCalculations() {
                 iconHtml = `<div class="log-node-preview"><img src="${iconPath}" class="lnp-img" onerror="this.style.display='none'"></div><div class="log-tier-text">${toRoman(tierNum)}-${h.lvl}</div>`;
                 nameHtml = `<div class="log-name">${h.name} ${toRoman(tierNum)}-${h.lvl}</div>`;
                 
+                // Standard Right Group (Used for BOTH Normal and Moving rows now)
                 rightGroupHtml = `
                     <div class="log-right-group">
                         <div class="log-time">${finishDateStr}</div>
@@ -266,23 +274,32 @@ function updateCalculations() {
                 `;
             }
 
-            // 5. BUTTON LOGIC
             let actionButtons = '';
-            
             if (isMovingThis) {
-                // We inject the Duration Info HERE, inside the buttons area
+                // Cancel Button with Icon
                 actionButtons = `
-                    ${activeDurationHtml}
-                    <button class="btn-move-action btn-move-cancel" onclick="event.stopPropagation(); cancelMove()">❌ CANCEL</button>
+                    ${compactTimeHtml} 
+                    <button class="btn-move-action btn-move-cancel" onclick="event.stopPropagation(); cancelMove()">
+                        <img src="icons/icon_cancel.png" class="btn-icon"> CANCEL
+                    </button>
                 `;
             } else if (isValidDrop) {
                 if (h.idx === 0 && validDropTargets['top']) {
-                    actionButtons += `<button class="btn-move-action btn-move-top" onclick="event.stopPropagation(); executeMove('top')">⬆️ ABOVE</button>`;
+                    // Above Button with Icon
+                    actionButtons += `
+                        <button class="btn-move-action btn-move-top" onclick="event.stopPropagation(); executeMove('top')">
+                            <img src="icons/icon_above.png" class="btn-icon"> ABOVE
+                        </button>
+                    `;
                 }
-                actionButtons += `<button class="btn-move-action btn-move-below" onclick="event.stopPropagation(); executeMove(${h.idx})">⬇️ BELOW</button>`;
+                // Below Button with Icon
+                actionButtons += `
+                    <button class="btn-move-action btn-move-below" onclick="event.stopPropagation(); executeMove(${h.idx})">
+                        <img src="icons/icon_below.png" class="btn-icon"> BELOW
+                    </button>
+                `;
             }
 
-            // 6. Assemble HTML
             row.innerHTML = `
                 <div class="log-entry ${h.tree || ''}">
                     <div class="log-left-group">
@@ -307,7 +324,6 @@ function updateCalculations() {
                 `;
                 row.innerHTML += `<div class="log-controls">${controlsHTML}</div>`;
             }
-
             list.appendChild(row);
         });
     }

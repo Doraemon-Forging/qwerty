@@ -899,66 +899,38 @@ body[data-mode="plan"] .tier-max-btn {
 }
 
 /* =========================================
-   FINAL DASHBOARD FIX (Height & Position)
+   DASHBOARD FIX (ONLY MOVED CAPSULE)
    ========================================= */
 
-/* 1. The Main Dashboard Card */
 .dashboard-pane {
     position: relative !important;
-    overflow: visible !important; /* Allows header/footer to pop out */
-    
-    /* --- VERTICAL FIX --- */
-    /* Screen Height - (Workspace Pad 20px + Margin Top 25px + Workspace Pad 20px) */
+    overflow: visible !important;
     height: calc(100vh - 65px) !important; 
     margin-top: 25px !important;
-    
-    /* --- HORIZONTAL FIX --- */
     flex: 0 0 260px !important;
     width: 260px !important;
     min-width: 260px !important;
-    box-sizing: border-box !important; /* Ensures padding doesn't make it wider */
-
-    /* --- STYLE MATCHING (Chunky Borders) --- */
+    box-sizing: border-box !important;
     background: #ffffff;
-    border: 4px solid #2d3436 !important; /* Matches Right Pane */
-    border-radius: 24px !important;       /* Matches Right Pane */
-    
-    /* --- LAYOUT --- */
+    border: 4px solid #2d3436 !important;
+    border-radius: 24px !important;
     padding: 0 !important;       
     display: flex !important;
     flex-direction: column !important;
     z-index: 100;
 }
 
-/* 2. The Scrollable Area */
 .dashboard-scroll-wrapper {
     flex: 1;                     
     overflow-y: auto;            
     width: 100%;
-    
-    /* Spacing for Header & Footer */
     padding-top: 40px;           
-    padding-bottom: 50px; 
-    
+    padding-bottom: 20px; 
     padding-left: 15px;
     padding-right: 15px;
-    
-    /* Match the parent border radius so scrollbar doesn't cut corners */
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
     box-sizing: border-box;
 }
 
-/* 3. Tech Planner Title Pill */
-.fhc-pill {
-    min-width: 0 !important;
-    width: auto !important;
-    padding-left: 20px;
-    padding-right: 20px;
-    white-space: nowrap;
-}
-
-/* 4. The Gray Tray */
 .tools-group-box {
     background-color: #ecf0f1;
     border: 2px solid #000000;
@@ -971,7 +943,6 @@ body[data-mode="plan"] .tier-max-btn {
     margin-bottom: 0 !important;
 }
 
-/* 5. Tool Buttons */
 .tools-group-box .dash-btn {
     width: 100% !important;
     height: 45px !important;
@@ -983,34 +954,21 @@ body[data-mode="plan"] .tier-max-btn {
     transition: transform 0.1s;
     cursor: pointer;
 }
-.tools-group-box .dash-btn:active {
-    transform: translateY(2px) !important;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.15) !important;
-}
 
-/* 6. Footer Capsule (Exact Copy of Tree View Logic) */
+/* THE CAPSULE (Kept original colors and sizing) */
 .dashboard-capsule {
-    position: absolute !important;
-    bottom: 0 !important;       
-    left: 50% !important;
-    transform: translate(-50%, 50%) !important; /* Sits on the border */
-    
     z-index: 500;                  
-    background-color: #8e9aa0 !important;
+    background-color: #8e9aa0 !important; /* Original Grey */
     border: 2px solid #000000;
     border-radius: 12px;
-    
     display: flex;
     gap: 4px;
     padding: 4px 6px;
-    width: auto !important;
+    width: fit-content !important;
     height: auto !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-    
-    margin-bottom: 4px; /* Align visually with border thickness */
 }
 
-/* 7. Footer Buttons */
 .sys-btn {
     width: 36px;
     height: 36px;
@@ -1024,8 +982,6 @@ body[data-mode="plan"] .tier-max-btn {
     margin: 0;
     padding: 0;
 }
-.sys-btn:hover { background-color: #e3f2fd; }
-.sys-btn:active { transform: translateY(2px); }
 
 .sys-icon {
     width: 20px;

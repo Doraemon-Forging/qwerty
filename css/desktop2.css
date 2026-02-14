@@ -1276,11 +1276,10 @@
 }
 
 /* ==========================================================================
-   SECTION 9: MOVE MODE & DRAG-DROP (RESPONSIVE V14)
+   SECTION 9: MOVE MODE (FINAL ALIGNMENT FIX V22)
    ========================================================================== */
 
 /* --- 1. ROW VISUAL STATES --- */
-
 .log-row.moving-active {
     background-color: #fff8e1 !important; 
     border-left: none !important;         
@@ -1293,129 +1292,134 @@
     background-color: rgba(39, 174, 96, 0.05) !important; 
     transition: background-color 0.2s;
 }
-.log-row.drop-valid:active {
-    background-color: rgba(39, 174, 96, 0.2) !important;
-}
 
+/* GREY OUT LOGIC */
 .log-row.drop-invalid {
-    opacity: 0.4;
-    filter: grayscale(100%);
-    cursor: not-allowed;
+    opacity: 0.3 !important;
+    filter: grayscale(100%) !important;
+    background-color: #ecf0f1 !important; 
+    cursor: not-allowed !important;
+    border: none !important;
+    pointer-events: none !important;
 }
 
-/* --- 2. TOGGLE LOGIC --- */
+/* --- 2. LAYOUT & VISIBILITY --- */
+.move-time-group, .move-actions-container { display: none; }
 
-/* Default State */
-.move-time-group { display: none; }
-.active-duration-group { display: none; }
-.move-actions-container { display: none; }
-
-/* Hide Normal Elements in Move Mode */
+/* Hide Name in Move Mode */
 .log-row.moving-active .log-name,
 .log-row.drop-valid .log-name,
 .log-row.drop-invalid .log-name { display: none !important; }
 
-.log-row.moving-active .log-right-group,
-.log-row.drop-valid .log-right-group,
-.log-row.drop-invalid .log-right-group { display: none !important; }
-
+/* Hide Controls in Move Mode */
 .log-row.moving-active .log-controls { display: none !important; }
 
 
-/* --- 3. THE TIME GROUP (Responsive) --- */
+/* --- 3. MOBILE VIEW (Default) --- */
 
+/* Hide Normal Info on Mobile */
+.log-row.drop-valid .log-right-group,
+.log-row.moving-active .log-right-group { display: none !important; }
+
+/* Show Mobile 3-Row Stack */
 .move-time-group {
-    display: none; /* Hidden by default */
-    flex: 1; 
+    display: none; 
+    flex-direction: column; 
     align-items: center;
     justify-content: center;
+    line-height: 1.1;
+    flex: 1; 
     padding: 0 5px;
 }
+.log-row.drop-valid .move-time-group,
+.log-row.moving-active .move-time-group { display: flex !important; } /* Show on active too for mobile */
 
-.log-row.drop-valid .move-time-group {
-    display: flex !important;
-}
+.log-row.has-top-btn .move-time-group { display: none !important; }
 
-/* Exception */
-.log-row.moving-active .move-time-group,
-.log-row.has-top-btn .move-time-group {
-    display: none !important;
-}
-
-/* --- MOBILE (Default): 3-Row Stack --- */
-.move-time-group {
-    flex-direction: column; /* Stack vertically */
-    line-height: 1.1;
-}
-
-/* --- DESKTOP (Screen > 768px): 1-Row Line --- */
-@media (min-width: 769px) {
-    .move-time-group {
-        flex-direction: row; /* Side by side */
-        gap: 8px;            /* Space between Day, Date, Time */
-    }
-}
-
-
-/* --- 4. FONT FORMATTING (EDIT HERE) --- */
-
-/* A. The Date/Time Text (Thu Feb 14 17:11) */
-.log-time-style {
-    color: var(--accent-green); 
-    font-family: 'Fredoka One', 'Fredoka', sans-serif; 
-    font-size: 0.9rem; 
-    font-weight: 300; 
-    -webkit-text-stroke: 2.5px #000000; 
-    paint-order: stroke fill; 
-    color: #39FF14; 
-    margin-bottom: 4px;
-    margin-left: 5px; 
-    white-space: nowrap;
-}
-
-/* B. The Moving Item Duration (1h 30m) */
-.duration-style {
-    font-family: 'Fredoka One', cursive, sans-serif;
-    font-size: 0.9rem;           /* <--- CHANGE SIZE HERE */
-    color: #ffffff;              /* <--- CHANGE COLOR HERE (White) */
-    -webkit-text-stroke: 2.5px #000; /* <--- CHANGE OUTLINE THICKNESS HERE */
+/* Mobile Font Style */
+.mt-row, .log-time-style {
+    font-family: 'Fredoka', cursive, sans-serif !important;
+    font-size: 0.9rem !important;          
+    color: #00ff00 !important; 
+    -webkit-text-stroke: 2.5px #000 !important;
     paint-order: stroke fill;
     white-space: nowrap;
 }
 
-
-/* --- 5. ACTIVE ITEM DURATION CONTAINER --- */
-
-.active-duration-group {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-right: 8px; 
-}
-
-.log-row.moving-active .active-duration-group {
-    display: flex !important;
-}
-
-.ad-icon {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    filter: drop-shadow(0px 2px 0px rgba(0,0,0,0.5));
+/* FORMAT FOR MOVING ITEM DURATION */
+.duration-style {
+    font-family: 'Fredoka', cursive, sans-serif !important;
+    font-size: 0.9rem !important;        /* Change Size Here */
+    color: #ffffff !important;           /* Text Color (White) */
+    -webkit-text-stroke: 2.5px #000 !important; /* Outline Thickness (Black) */
+    font-weight: 600 !important;
 }
 
 
-/* --- 6. ACTION BUTTONS & STYLES --- */
+/* --- 4. DESKTOP VIEW (Override > 768px) --- */
+@media (min-width: 769px) {
+    /* 1. Hide Mobile Stack */
+    .log-row.drop-valid .move-time-group,
+    .log-row.moving-active .move-time-group { display: none !important; }
 
+    /* 2. Show Standard Right Group */
+    .log-row.drop-valid .log-right-group,
+    .log-row.moving-active .log-right-group {
+        display: flex !important;
+        flex: 1;                
+        justify-content: center; 
+        align-items: center;
+        margin: 0 20px;         
+    }
+    
+    /* 3. FORCE GAME FONT (White + Black Outline) */
+    /* This applies to the time text inside the right group */
+    .log-row.drop-valid .log-right-group,
+    .log-row.moving-active .log-right-group,
+    .log-row.drop-valid .log-right-group span,
+    .log-row.moving-active .log-right-group span {
+        font-family: 'Fredoka One', cursive, sans-serif !important;
+        font-size: 0.9rem !important;
+        color: #ffffff !important;
+        -webkit-text-stroke: 2.5px #000 !important;
+    }
+    
+    /* 4. ALIGNMENT TRICK for Moving Item */
+    /* Hide Date & Potion so Time sits perfectly in the center/right slot */
+    .log-row.moving-active .log-time { display: none !important; }
+    .log-row.moving-active .ld-part.pot { 
+        visibility: hidden !important; 
+        width: 0 !important; 
+        margin: 0 !important; 
+    }
+}
+    
+    /* --- 5. ALIGNMENT MAGIC (THE FIX) --- */
+    /* For the Moving Item ONLY: */
+    
+    /* A. Hide the Date (Date is top row, usually center) */
+    .log-row.moving-active .log-time {
+        display: none !important;
+    }
+    
+    /* B. Hide the Potion but KEEP ITS SPACE (Visibility Hidden) */
+    /* This forces the Time to stay exactly where it is in normal rows */
+    .log-row.moving-active .ld-part.pot {
+        visibility: hidden !important;
+    }
+
+
+
+/* --- 6. ACTION BUTTONS --- */
 .move-actions-container {
     justify-content: flex-end; 
     align-items: center;
     gap: 6px;
     height: 100%;
+    /* Remove flex:1 here so it doesn't push the centered group */
+    /* Actually, we need flex:0 or auto to let the Right Group take the center */
+    width: auto; 
 }
-
 .log-row.moving-active .move-actions-container,
 .log-row.drop-valid .move-actions-container {
     display: flex !important;
@@ -1427,60 +1431,43 @@
     width: auto;                   
     min-width: 70px;               
     max-width: 100px;  
-    
     border: 2px solid #000000;
     border-radius: 8px;
-    
     font-family: 'Fredoka One', sans-serif;
     font-size: 0.8rem;
     color: #ffffff;
     text-transform: uppercase;
     white-space: nowrap;
-    
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    
     box-shadow: 0 4px 0 rgba(0,0,0,0.2);
     transition: transform 0.1s;
 }
 
-.btn-move-action:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+.btn-icon {
+    width: 16px;       /* Adjust icon size */
+    height: 16px;
+    object-fit: contain;
+    margin-right: 6px; /* Space between icon and text */
+    vertical-align: middle;
+
 }
 
-.btn-move-top    { background-color: #34495e; }  
-.btn-move-cancel { background-color: #e74c3c; width: auto; flex: 1; }  
+.btn-move-action:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+.btn-move-top    { background-color: #27ae60; }  
+.btn-move-cancel { background-color: #e74c3c; width: auto; flex: 0 0 auto; } 
 .btn-move-below  { background-color: #27ae60; }  
 
-
 /* --- 7. ANIMATIONS --- */
-
 @keyframes dropPulse {
-    0% { 
-        box-shadow: inset 0 0 0 1000px #00e676; 
-        transform: scale(1.02); 
-        z-index: 100; 
-    }
-    15% {
-        box-shadow: inset 0 0 0 1000px #00e676; 
-        transform: scale(1.02);
-    }
-    40% { 
-        box-shadow: inset 0 0 0 0 transparent; 
-        transform: scale(1);
-    }
-    60% { 
-        box-shadow: inset 0 0 0 1000px #00e676; 
-    }
-    100% { 
-        box-shadow: inset 0 0 0 0 transparent;
-        transform: scale(1);
-    }
+    0% { box-shadow: inset 0 0 0 1000px #00e676; transform: scale(1.02); z-index: 100; }
+    15% { box-shadow: inset 0 0 0 1000px #00e676; transform: scale(1.02); }
+    40% { box-shadow: inset 0 0 0 0 transparent; transform: scale(1); }
+    60% { box-shadow: inset 0 0 0 1000px #00e676; }
+    100% { box-shadow: inset 0 0 0 0 transparent; transform: scale(1); }
 }
-
 .log-row.flash-success {
     animation: dropPulse 2.5s ease-out forwards;
     border-left: none !important;

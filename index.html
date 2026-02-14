@@ -65,50 +65,52 @@
 
     <div class="desktop-workspace">
         
-        <div class="pane dashboard-pane desktop-only">
-            
-            <div class="floating-header-container" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: max-content; z-index: 500;">
-                <div class="fhc-circle">
-                    <span>
-                        <img src="icons/Doraemon.png" alt="Icon" style="width: 110% !important; height: 110% !important; object-fit: contain;">
-                    </span>
-                </div>
-                <div class="fhc-pill" style="justify-content: center;">
-                    <span style="white-space: nowrap;">TECH PLANNER</span>
-                </div>
-            </div>
-
-            <div class="dashboard-scroll-wrapper">
-                <div class="tools-group-box">
-                    <button class="mode-btn dash-btn" id="btn-logs" onclick="setSidebarPanel('logs')">
-                        <img src="icons/icon_timeline.png" class="dash-icon"> Schedule
-                    </button>
-                    <button class="mode-btn dash-btn" id="btn-stats" onclick="setSidebarPanel('stats')">
-                        <img src="icons/icon_stats.png" class="dash-icon"> Stats
-                    </button>
-                    <button class="mode-btn dash-btn" id="btn-calc" onclick="setSidebarPanel('calc')">
-                        <img src="icons/anvil.png" class="dash-icon"> Forge Calc
-                    </button>
-                    <button class="mode-btn dash-btn" id="btn-daily" onclick="setSidebarPanel('daily')">
-                        <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
-                    </button>
-                    <button class="mode-btn dash-btn" id="btn-egg" onclick="setSidebarPanel('egg')">
-                        <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
-                    </button>
-                </div>
-            </div>
-            <div class="control-capsule dashboard-capsule bottom-capsule">
-                <button class="sys-btn" onclick="downloadData()" title="Save Data">
-                    <img src="icons/icon_save.png" class="sys-icon">
-                </button>
-                <button class="sys-btn" onclick="document.getElementById('file-upload').click()" title="Load Data">
-                    <img src="icons/icon_load.png" class="sys-icon">
-                </button>
-                <button class="sys-btn" onclick="toggleHelp()" title="Help">
-                    <img src="icons/icon_help.png" class="sys-icon" onerror="this.style.display='none';this.parentNode.innerHTML='❓'">
-                </button>
-            </div>
+<div class="pane dashboard-pane desktop-only">
+    
+    <div class="floating-header-container" style="position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: max-content; z-index: 500;">
+        <div class="fhc-circle">
+            <span>
+                <img src="icons/Doraemon.png" alt="Icon" style="width: 110% !important; height: 110% !important; object-fit: contain;">
+            </span>
         </div>
+        <div class="fhc-pill" style="justify-content: center;">
+            <span style="white-space: nowrap;">TECH PLANNER</span>
+        </div>
+    </div>
+
+    <div class="dashboard-scroll-wrapper">
+        <!-- MOVED CAPSULE TO THE TOP -->
+        <div class="dashboard-capsule" style="position: relative !important; bottom: auto !important; left: auto !important; transform: none !important; margin: 0 auto 15px auto !important; display: flex !important;">
+            <button class="sys-btn" onclick="downloadData()" title="Save Data">
+                <img src="icons/icon_save.png" class="sys-icon">
+            </button>
+            <button class="sys-btn" onclick="document.getElementById('file-upload').click()" title="Load Data">
+                <img src="icons/icon_load.png" class="sys-icon">
+            </button>
+            <button class="sys-btn" onclick="toggleHelp()" title="Help">
+                <img src="icons/icon_help.png" class="sys-icon">
+            </button>
+        </div>
+
+        <div class="tools-group-box">
+            <button class="mode-btn dash-btn" id="btn-logs" onclick="setSidebarPanel('logs')">
+                <img src="icons/icon_timeline.png" class="dash-icon"> Schedule
+            </button>
+            <button class="mode-btn dash-btn" id="btn-stats" onclick="setSidebarPanel('stats')">
+                <img src="icons/icon_stats.png" class="dash-icon"> Stats
+            </button>
+            <button class="mode-btn dash-btn" id="btn-calc" onclick="setSidebarPanel('calc')">
+                <img src="icons/anvil.png" class="dash-icon"> Forge Calc
+            </button>
+            <button class="mode-btn dash-btn" id="btn-daily" onclick="setSidebarPanel('daily')">
+                <img src="icons/icon_daily.png" class="dash-icon"> Daily Gain
+            </button>
+            <button class="mode-btn dash-btn" id="btn-egg" onclick="setSidebarPanel('egg')">
+                <img src="icons/icon_eggplan.png" class="dash-icon"> Egg Planner
+            </button>
+        </div>
+    </div>
+</div>
 
         <div class="workspace-card">
             
