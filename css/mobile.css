@@ -1,0 +1,701 @@
+/* mobile.css - Cleaned & Fixed Specificity */
+
+/* =========================================
+   1. GLOBAL RESET
+   ========================================= */
+.mobile-only { display: none; }
+
+/* =========================================
+   2. MOBILE OVERRIDES (Everything inside here)
+   ========================================= */
+@media (max-width: 768px) {
+    
+    /* =========================================
+       A. HIDE DESKTOP ELEMENTS
+       ========================================= */
+    .desktop-only, 
+    .d-header-row, 
+    .row-tabs, 
+    .new-header-container,
+    .new-mode-switch,
+    .control-capsule.desktop-only,
+    .pane.left-pane .segmented-control 
+    {
+        display: none !important;
+    }
+
+    /* =========================================
+       B. APP FRAME & WORKSPACE SETUP
+       ========================================= */
+    html, body {
+        height: 100% !important;
+        width: 100% !important;
+        overflow: hidden !important; 
+        position: fixed !important;
+        overscroll-behavior: none;
+        background: #ffffff !important;
+        color: #333 !important;
+    }
+
+    .workspace, .desktop-workspace {
+        height: 100dvh !important; 
+        width: 100vw !important;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff;
+        overflow: hidden !important; 
+    }
+
+    .workspace-card {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+        margin: 0 !important;
+        gap: 0 !important;
+    }
+
+    /* =========================================
+       C. PANE MANAGEMENT & SCROLLING
+       ========================================= */
+    .pane.left-pane, 
+    .pane.right-pane-wrapper {
+        display: none !important;
+        width: 100%;
+        height: 100% !important;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        flex: 1;
+    }
+
+    .pane.right-pane-wrapper {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        display: block; 
+    }
+
+    .sidebar-scroll-wrapper,
+    .pane-visual {
+        height: auto !important;
+        overflow: visible !important;
+        padding-top: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        border-radius: 0 !important;
+    }
+    
+    .sidebar-scroll-wrapper {
+        padding-bottom: 80px !important;
+    }
+
+    /* =========================================
+       D. VIEW LOGIC (Tab Switching)
+       ========================================= */
+    body.view-planner .pane.left-pane { display: block !important; }
+    body.view-planner .pane.right-pane-wrapper { display: none !important; }
+
+    /* 1. Hide Left Pane for these views */
+    body.view-log .pane.left-pane,
+    body.view-stats .pane.left-pane,
+    body.view-calc .pane.left-pane,
+    body.view-daily .pane.left-pane,
+    body.view-weekly .pane.left-pane,
+    body.view-war .pane.left-pane,
+    body.view-egg .pane.left-pane,
+    body.view-pet .pane.left-pane,
+    body.view-equipment .pane.left-pane,
+    body.view-help .pane.left-pane,  
+    body.view-more .pane.left-pane { 
+        display: none !important; 
+    }
+
+    /* 2. Show Right Pane for these views */
+    body.view-log .pane.right-pane-wrapper,
+    body.view-stats .pane.right-pane-wrapper,
+    body.view-calc .pane.right-pane-wrapper,
+    body.view-daily .pane.right-pane-wrapper,
+    body.view-weekly .pane.right-pane-wrapper,
+    body.view-war .pane.right-pane-wrapper,
+    body.view-pet .pane.right-pane-wrapper,
+    body.view-equipment .pane.right-pane-wrapper,
+    body.view-help .pane.right-pane-wrapper,  
+    body.view-egg .pane.right-pane-wrapper { 
+        display: block !important; 
+    }
+
+    /* 3. Mobile Equipment Layout Fix */
+    body.view-equipment .right-pane-wrapper {
+        display: flex !important;
+        position: absolute !important;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 100 !important;
+        background: #f4f5f7;
+    }
+    /* =========================================
+       E. TECH TREE (Left Pane)
+       ========================================= */
+    .tree-container { 
+        display: flex;             
+        justify-content: center;   
+        align-items: flex-start;
+        width: 100%;
+        height: 100% !important; 
+        overflow-x: auto !important; 
+        overflow-y: auto !important; 
+        padding: 0 !important;      
+        padding-bottom: 80px !important;
+        background-color: #ffffff !important; 
+        box-sizing: border-box;
+    }
+    
+    .tree-canvas {
+        padding-top: 10px !important; 
+        padding-bottom: 40px !important; 
+        min-width: 100vw; 
+        min-height: 100vh !important; 
+        height: auto !important;
+        margin: 0 auto; 
+    }
+
+    .tier-label { display: block; }
+    .node { width: 45px; height: 45px; } 
+
+    /* =========================================
+       F. HEADERS & STICKY NAVS
+       ========================================= */
+    .floating-header-container {
+        display: flex !important;
+        position: relative !important; 
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 20px auto 10px auto !important;
+        z-index: 10;
+    }
+
+    .fhc-pill {
+        white-space: nowrap !important;
+        min-width: 0 !important;
+        width: auto !important;
+        justify-content: center !important;
+        padding-left: 20px !important;
+        padding-right: 45px !important; 
+    }
+
+    .tree-sticky-nav {
+        display: none !important; 
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        background: #ffffff;
+        box-shadow: none !important; 
+    }
+
+    body.view-planner .tree-sticky-nav {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .tn-row-1 {
+        display: flex;
+        align-items: center;
+        justify-content: center !important; 
+        padding: 15px 10px 5px 10px; 
+        gap: 10px !important; 
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tn-row-1 .segmented-control {
+        flex: 0 1 300px !important; 
+        margin-right: 0 !important;
+        min-width: 120px;
+    }
+
+    .tn-row-2 { 
+        display: flex; 
+        width: 100%; 
+        background: #ffffff !important; 
+        padding: 8px 10px; 
+        gap: 8px; 
+        box-sizing: border-box;
+        align-items: center;
+        position: relative; 
+        z-index: 5;
+    }
+
+    .tn-tree-btn { 
+        flex: 1; 
+        height: 36px; 
+        background: #ffffff; 
+        border: 1px solid #f1f1f1; 
+        border-radius: 18px; 
+        color: #95a5a6; 
+        font-weight: bold; 
+        font-size: 0.85em; 
+        cursor: pointer; 
+        padding: 0 10px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        transition: transform 0.1s ease;
+        overflow: visible !important;
+    }
+
+    .tn-tree-btn.active {
+        z-index: 10;
+        background: transparent !important;
+        border-color: transparent !important;
+        color: #000000 !important;
+    }
+
+    .tn-tree-btn.active::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 135%;
+        border-radius: 18px;
+        border: 2px solid #000000;
+        z-index: -1;
+        box-shadow: 0 4px 5px rgba(0,0,0,0.15);
+    }
+
+    .tn-tree-btn.active#mtab-forge::before { background: #5eff8b; }
+    .tn-tree-btn.active#mtab-spt::before { background: #fcfe5d; }
+    .tn-tree-btn.active#mtab-power::before { background: #e17373; }
+
+    /* =========================================
+       G. CUSTOM DATE INPUTS
+       ========================================= */
+    #start-date, #egg-date-desktop { display: none !important; }
+
+    .custom-date-group {
+        display: flex !important;
+        align-items: center;
+        gap: 4px;
+        justify-content: flex-end;
+    }
+
+    .cd-select {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Fredoka', sans-serif !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        -webkit-text-stroke: 0px transparent !important;
+        border: 2px solid #000000 !important;
+        border-radius: 6px;
+        padding: 4px 1px !important; 
+        text-align: center;
+        text-indent: 0;
+        height: 32px;
+        outline: none;
+    }
+
+    .cd-month { width: 60px !important; } 
+    .cd-day   { width: 45px !important; }
+    .cd-time  { width: 45px !important; }
+    .cd-sep {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 1rem;
+        color: #000000 !important;
+        -webkit-text-stroke: 0px transparent !important;
+        margin: 0 1px;
+        font-weight: bold;
+    }
+
+    /* =========================================
+       H. BOTTOM NAVIGATION
+       ========================================= */
+    .bottom-nav {
+        display: flex !important; 
+        position: fixed; 
+        bottom: 0; 
+        left: 0;
+        width: 100%; 
+        height: 65px; 
+        background: #eef6fb; 
+        border-top: 1px solid #000000; 
+        z-index: 9999;
+        justify-content: space-around; 
+        align-items: center;
+        padding-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .b-nav-item { background: transparent; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; height: 100%; cursor: pointer; padding: 5px 0; }
+    .b-icon { width: 40px; height: 40px; object-fit: contain; margin-bottom: 2px; opacity: 0.4; }
+    .b-label { font-size: 0.7rem; font-weight: 600; color: #ffffff; font-family: 'Fredoka One', sans-serif; }
+    .b-nav-item.active .b-icon { opacity: 1; transform: scale(1.1); }
+    .b-nav-item.active .b-label { color: #00a2ff; }
+
+    /* =========================================
+       I. LOG ENTRIES
+       ========================================= */
+    .log-entry {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important; 
+        gap: 20px !important;      
+        padding-right: 15px !important; 
+    }
+
+    .log-left-group { flex: 1 !important; min-width: 0 !important; margin-right: 0 !important; }
+    .log-icon-wrapper { display: flex !important; flex-direction: column; align-items: center; margin-right: 8px; min-width: 40px; }
+    .log-node-preview { width: 45px !important; height: 45px !important; border-radius: 50% !important; overflow: hidden !important; display: flex; align-items: center; justify-content: center; background: #fff; }
+    .log-tier-text { font-size: 0.65rem !important; font-weight: 900 !important; color: #2c3e50; margin-top: 2px; }
+    .log-name {
+        font-family: 'Fredoka', sans-serif !important;
+        font-size: 0.9rem !important;
+        font-weight: 650 !important;
+        color: #ffffff !important;
+        paint-order: stroke fill !important;
+        line-height: 1.2;
+        max-width: 100% !important; 
+        width: auto !important;
+        white-space: normal !important;
+        margin-right: 0 !important;
+    }
+    .log-right-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end !important; 
+        gap: 0px;
+        min-width: auto !important; 
+        flex: 0 0 auto !important;
+        width: auto !important;
+        text-align: right !important;
+        line-height: 1;
+    }
+    .log-time {
+        font-family: 'Fredoka', sans-serif !important;
+        font-size: 0.9rem !important;
+        font-weight: 650 !important;
+        paint-order: stroke fill !important;
+        -webkit-text-stroke: 2.5px #000000; 
+    }
+    .log-details {
+        display: flex !important;
+        flex-direction: column-reverse !important; 
+        align-items: flex-end !important;  
+        justify-content: center !important;
+        gap: 2px; 
+        margin-top: 0px;
+    }
+    .ld-part { font-size: 0.9rem !important; font-weight: 650 !important; font-family: 'Fredoka', sans-serif !important; justify-content: flex-end !important; width: 100% !important; }
+    .ld-icon { width: 18px !important; height: 18px !important; }
+
+    /* =========================================
+       J. STATS HEADER FIXES
+       ========================================= */
+    .stats-header { padding: 10px 12px; }
+    .stats-header span:not(.progress-badge) { font-size: 1.2rem; }
+    .stats-header .progress-badge { font-size: 0.9rem; }
+    .stats-header img.nav-icon { width: 38px !important; height: 38px !important; }
+
+    /* =========================================
+       K. "MORE" TAB
+       ========================================= */
+    .more-view-container {
+        display: none; position: fixed; top: 0; left: 0;
+        width: 100%; height: calc(100% - 65px); background: #f4f6f8;
+        z-index: 5000; overflow-y: auto; 
+        padding: 0 !important; 
+        box-sizing: border-box; flex-direction: column; 
+        gap: 0 !important; 
+    }
+    .more-view-container.active { display: flex !important; }
+
+    .more-top-bar {
+        position: sticky; top: 0; left: 0; width: 100%; height: 75px; 
+        background: #eef6fb; display: flex; justify-content: center; align-items: center;
+        padding: 0 15px; box-sizing: border-box; border-bottom: 1px solid #000000;
+        z-index: 10; flex-shrink: 0;
+    }
+    .mtb-actions { display: flex; gap: 12px; width: 100%; justify-content: space-between; }
+    
+    .mobile-floating-header {
+        position: absolute !important; top: 0 !important; left: 50% !important;
+        transform: translate(-50%, -50%) !important; margin: 0 !important; z-index: 20;
+    }
+    .mobile-tools-tray { margin: 20px !important; padding-top: 35px !important; }
+    .mobile-tools-tray .dash-btn {
+        display: flex !important; flex-direction: row !important; align-items: center !important;
+        justify-content: flex-start !important; padding-left: 15px !important;
+        white-space: nowrap !important; font-size: 1.05rem !important; 
+    }
+
+    .sys-btn-mobile {
+        flex: 1; height: 45px; background: #ffffff !important;
+        border: 2px solid #000000 !important; border-radius: 10px !important; 
+        box-shadow: none !important; display: flex; align-items: center;
+        justify-content: center; gap: 6px; padding: 0 5px; margin: 0;
+        cursor: pointer; transition: transform 0.1s;
+    }
+    .sys-btn-mobile:active { transform: translateY(2px) !important; box-shadow: none !important; }
+    .sys-btn-mobile img { width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2)); }
+    .sys-btn-mobile span, .btn-sys span {
+        font-family: 'Fredoka', sans-serif; font-size: 1rem; font-weight: 650;
+        color: #ffffff; -webkit-text-stroke: 2.5px #000000; paint-order: stroke fill; transform: translateY(-2.5px);
+    }
+
+    .sidebar { display: block; background: #ffffff; padding-bottom: 0px !important; }
+
+    /* =========================================
+       L. 3D FLOATING BUTTONS
+       ========================================= */
+    .mobile-floating-container {
+        display: none; position: fixed; bottom: 80px; left: 50%;
+        transform: translateX(-50%); z-index: 800; pointer-events: none; 
+    }
+    body.view-planner #float-tree { display: block !important; }
+    body.view-log     #float-logs { display: block !important; }
+    body.view-egg     #float-egg  { display: block !important; }
+
+    .mobile-floating-container .control-capsule {
+        pointer-events: auto; background-color: #ecf0f1; border: 2px solid #000000;
+        border-radius: 12px; padding: 4px 6px; display: flex; gap: 6px;        
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2); height: 44px; align-items: center;
+    }
+
+    .tn-action-btn {
+        border: 2px solid #000000 !important; height: 32px; min-width: 34px;
+        padding: 0 8px; display: flex; align-items: center; justify-content: center;
+        border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.15); margin: 0 !important; 
+    }
+    .mobile-floating-container .tn-action-btn {
+        width: 34px !important; height: 34px !important; min-width: 0 !important;
+        border-radius: 8px !important; position: relative; padding: 0 !important;
+        font-size: 0 !important; transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .mobile-floating-container .tn-action-btn::after {
+        content: ""; position: absolute; top: 45%; left: 50%;
+        transform: translate(-50%, -50%); width: 65%; height: 65%;
+        background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 2;
+    }
+
+    .mobile-floating-container .reset-neutral::after { background-image: url('../icons/button_reset.png'); }
+    .mobile-floating-container button[id*="btn-undo"]::after { background-image: url('../icons/button_undo.png'); }
+    .mobile-floating-container button[id*="btn-redo"]::after { background-image: url('../icons/button_redo.png'); }
+
+    /* =========================================
+       ANTI-STICKY HOVER (Kills the "Up" glitch)
+       ========================================= */
+    .mobile-floating-container button:not(:disabled):hover {
+        transform: translateY(0) !important; 
+        filter: none !important;
+    }
+    .mobile-floating-container .reset-neutral:not(:disabled):hover {
+        box-shadow: inset 0 -5px 0 0 #c0392b !important;
+    }
+    .mobile-floating-container button:not(.reset-neutral):not(:disabled):hover {
+        box-shadow: inset 0 -5px 0 0 #005680 !important;
+    }
+
+    /* =========================================
+       BASE COLORS & PRESS ANIMATIONS
+       ========================================= */
+    .mobile-floating-container .reset-neutral { 
+        background-color: #ff4757 !important; 
+        box-shadow: inset 0 -5px 0 0 #c0392b !important; 
+    }
+    .mobile-floating-container .reset-neutral:active { 
+        transform: translateY(3px) !important; /* Added !important */
+        box-shadow: inset 0 -2px 0 0 #c0392b !important; 
+    }
+    
+    .mobile-floating-container button:not(.reset-neutral):not(:disabled) { 
+        background-color: #00b0ff !important; 
+        box-shadow: inset 0 -5px 0 0 #005680 !important; 
+    }
+    .mobile-floating-container button:not(.reset-neutral):not(:disabled):active { 
+        transform: translateY(3px) !important; /* Added !important */
+        box-shadow: inset 0 -2px 0 0 #005680 !important; 
+    }
+    
+    .mobile-floating-container button:disabled { 
+        background-color: #dcdcdc !important; 
+        box-shadow: inset 0 -5px 0 0 #95a5a6 !important; 
+        cursor: default; 
+    }
+    .mobile-floating-container button:disabled::after { 
+        filter: grayscale(100%); opacity: 0.5; 
+    }
+    /* =========================================
+       LAYOUT FIXES (Calc, Daily, Weekly)
+       ========================================= */
+    .calc-val-group {
+        display: flex !important; flex-wrap: wrap !important;
+        justify-content: flex-end !important; row-gap: 4px !important; width: auto !important;
+    }
+    .calc-val-group:not(.single-val) .calc-val-before { width: 100% !important; text-align: right !important; }
+    .calc-multiline-date { justify-content: flex-end !important; width: 100% !important; }
+
+    .rarity-capsule { text-align: center !important; }
+    .rarity-header { justify-content: center !important; }
+    .rarity-header-item { display: flex !important; justify-content: center !important; align-items: center !important; flex: 1 !important; }
+    .rarity-table .calc-val-group { justify-content: center !important; }
+    .rarity-table .calc-val-group:not(.single-val) .calc-val-before { text-align: center !important; }
+
+    .weekly-toggle-wrapper .seg-btn { font-size: 0.9rem !important; }
+    .weekly-toggle-wrapper .seg-btn.active { font-size: 1rem !important; } 
+    .weekly-pill-grid { gap: 6px; }
+    .weekly-pill-grid .daily-res-value { font-size: 0.85rem !important; } 
+    .weekly-pill-grid .calc-icon-left { width: 16px !important; height: 16px !important; }
+
+    /* =========================================
+       MOBILE HOME CARD LAYOUT (BENTO BOX)
+       ========================================= */
+    #mobile-more-view {
+        background-color: #dcecfa !important;
+        background-image: radial-gradient(#b8d4ea 2.5px, transparent 2.5px) !important;
+        background-size: 20px 20px !important;
+    }
+    
+    /* THE NEW, GHOST-FREE WRAPPER */
+    .bento-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 25px; 
+        
+        /* Exactly 20px padding on the bottom. No more, no less. */
+        padding: 20px 15px 20px 15px !important; 
+        
+        width: 100%;
+        height: max-content; /* Forces the box to perfectly hug the buttons */
+        box-sizing: border-box;
+    }
+
+    .mobile-banner-container { width: 100%; display: flex; justify-content: center; margin-bottom: 5px; }
+    .main-banner-img { width: 95%; filter: drop-shadow(0 4px 0 rgba(0,0,0,0.15)); }
+
+    /* --- SAVE / LOAD ROW (Unchanged) --- */
+    .sys-btn-row { display: flex; gap: 12px; padding: 0 5px; margin-bottom: 5px; }
+    .btn-sys {
+        flex: 1; height: 48px; background-color: #c0eafa !important; 
+        border: 2px solid #000000 !important; border-radius: 12px !important;
+        box-shadow: inset 0 -5px 0 0 #67a7ce, 0 4px 5px rgba(0,0,0,0.2) !important;
+        font-family: 'Fredoka', sans-serif; font-size: 1rem; color: #ffffff !important; 
+        -webkit-text-stroke: 2px #000000; font-weight: 650; display: flex;
+        align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+        transition: transform 0.1s; margin: 0 !important;
+    }
+    .btn-sys:active { transform: translateY(3px) !important; box-shadow: inset 0 -2px 0 0 #005d96, 0 1px 2px rgba(0,0,0,0.2) !important; }
+    .btn-sys img, .sys-btn-mobile img { 
+    width: auto !important; 
+    height: 26px !important; 
+    object-fit: contain; 
+    transform: translateY(-3px); /* <--- ADD THIS: Pushes the image UP by 3 pixels */
+}
+
+    /* --- ZONE HEADERS --- */
+    .zone-title {
+        font-family: 'Fredoka One', sans-serif;
+        font-size: 1rem;
+        color: #ffffff;
+        -webkit-text-stroke: 2.5px #000000;
+        paint-order: stroke fill;
+        margin-bottom: 10px;
+        padding-left: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* --- BENTO BASE BUTTON STYLE --- */
+    .bento-btn {
+        border: 2px solid #000000 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 6px 0 rgba(0,0,0,0.15) !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s;
+        text-decoration: none;
+        padding: 0;
+    }
+    .bento-btn:active {
+        transform: translateY(4px) !important;
+        box-shadow: 0 2px 0 rgba(0,0,0,0.15) !important;
+    }
+
+    /* --- ZONE 1: THE VIPs (Tech Tree & Schedule) --- */
+    .zone-vip { display: flex; flex-direction: column; gap: 12px; }
+    .btn-vip {
+        width: 100%; height: 70px;
+        justify-content: flex-start;
+        padding-left: 20px; gap: 15px;
+    }
+    .btn-vip.tech { background-color: #ffda79 !important; } /* Premium Gold */
+    .btn-vip.sched { background-color: #78e08f !important; } /* Vibrant Green */
+    .btn-vip img { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.2)); }
+    .btn-vip span {
+        font-family: 'Fredoka One', sans-serif; font-size: 1.3rem;
+        color: #ffffff; -webkit-text-stroke: 2.5px #000000; paint-order: stroke fill;
+    }
+
+    /* --- ZONE 2: TRACKERS (2x2 Grid, Horizontal Layout) --- */
+    .zone-trackers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-tracker {
+        height: 60px;
+        flex-direction: row; 
+        justify-content: flex-start;
+        padding-left: 12px; gap: 10px;
+        background-color: #f8f0fc !important; /* Soft Tracker Pink/Purple */
+    }
+    .btn-tracker img { width: 32px; height: 32px; object-fit: contain; }
+    .btn-tracker span {
+        font-family: 'Fredoka One', sans-serif; font-size: 0.95rem;
+        color: #ffffff; /* Turns the inside white */
+        -webkit-text-stroke: 2px #000000; /* Adds the thick black outline */
+        paint-order: stroke fill;
+        line-height: 1.1; text-align: left;
+    }
+    /* --- ZONE 3: CALCULATORS (2x2 Grid, Vertical Layout) --- */
+    .zone-calcs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn-calc {
+        height: 95px; /* Chunky squares */
+        flex-direction: column; 
+        gap: 8px;
+        background-color: #ffffff !important;
+    }
+    .calc-icon-circle {
+        width: 42px; height: 42px;
+        background-color: #eaf4ff; /* Soft pastel circle to make icon pop */
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .btn-calc img { width: 32px; height: 32px; object-fit: contain; }
+    .btn-calc span {
+        font-family: 'Fredoka One', sans-serif; font-size: 0.9rem;
+        color: #ffffff; text-align: center; line-height: 1.1;
+    }
+
+} 
+
+/* =========================================
+       MASTER MODAL LAYER FIX (Forces to very front)
+       ========================================= */
+    #tableModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 999999 !important; /* Forces it above literally everything */
+        display: none; /* Keeps it hidden until clicked */
+    }
+    
+    .modal-backdrop, .modal {
+        z-index: 999998 !important;
+    }
