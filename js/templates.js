@@ -246,14 +246,12 @@ const HTML_PET = `
                             </div>
                         </div>
                     </div>
+
                     <hr class="pet-hr">
-                    <div class="pet-block">
-                        <div class="calc-row-input" style="align-items: flex-start;">
-                            <label class="merge-label-long" style="margin-top: 6px;">Fodder Pet:</label>
-                            <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
-                                <select id="merge-fodder-rarity" class="calc-select-chunky" style="width: 150px; font-size: 0.9rem; padding: 0 4px;" onchange="updateMergeNameOptions('fodder')"></select>
-                            </div>
-                        </div>
+                    <div class="calc-row-input">
+                        <label class="merge-label-long">Fodder Pet:</label>
+                        <select id="merge-fodder-rarity" class="calc-select-chunky" style="width: 150px; font-size: 0.9rem; padding: 0 4px;" onchange="updateMergeResult()"></select>
+                    </div>
                         <div class="calc-row-input">
                             <label>Level:</label>
                             <input type="number" id="merge-fodder-lvl" class="calc-input-chunky" style="width: 60px;" placeholder="1" min="1" max="100" oninput="updateMergeResult()" onblur="validateMergeInputs()">
@@ -1266,7 +1264,7 @@ const HTML_HELP = `
 
     .github-credit-link span {
         font-size: 0.85rem; 
-    }
+            }
 </style>
 
 <a href="https://github.com/Doraemon-Forging/TechPlanner" target="_blank" class="github-credit-link">
