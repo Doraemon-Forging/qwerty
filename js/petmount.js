@@ -980,14 +980,16 @@ function updateMountMergeResult() {
 
     if (newLvlBefore > 0) {
         const rawStatBefore = getMountRawStat(tRarity, newLvlBefore);
-        finalHp = Math.round(rawStatBefore * curMultHP);
-        finalDmg = Math.round(rawStatBefore * curMultDmg);
+        // REMOVED Math.round to preserve decimals
+        finalHp = rawStatBefore * curMultHP;
+        finalDmg = rawStatBefore * curMultDmg;
     }
 
     if (newLvl > 0) {
         const rawStatAfter = getMountRawStat(tRarity, newLvl);
-        finalHpProj = Math.round(rawStatAfter * projMultHP);
-        finalDmgProj = Math.round(rawStatAfter * projMultDmg);
+        // REMOVED Math.round to preserve decimals
+        finalHpProj = rawStatAfter * projMultHP;
+        finalDmgProj = rawStatAfter * projMultDmg;
     }
     // UI Update - Card
     const resName = document.getElementById('mount-merge-res-name');
@@ -997,9 +999,13 @@ function updateMountMergeResult() {
     const resTotal = document.getElementById('mount-merge-res-total');
     const resMax = document.getElementById('mount-merge-res-max');
 
+    // NEW: Updated formatter to handle 1 decimal place
     const formatStatWithPercent = (v1, v2, iconPath) => {
-        const s1 = formatPetStats(v1) + "%";
-        const s2 = formatPetStats(v2) + "%";
+        // Helper to format number to 1 decimal place
+        const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "%";
+        
+        const s1 = fmt(v1);
+        const s2 = fmt(v2);
         const iconHtml = `<img src="${iconPath}" style="width: 20px; height: 20px; object-fit: contain; vertical-align: middle;">`;
         
         if (s1 === s2) return `<div style="display:flex; align-items:center; gap:4px; justify-content: flex-end;">${iconHtml}<span>${s1}</span></div>`;

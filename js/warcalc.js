@@ -83,9 +83,9 @@ function initWarCalc() {
     html += `
         <div class="wc-row">
             <div class="wc-label">Forge Upgrade Nodes:</div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink: 0; white-space: nowrap;">
                 <input type="number" id="wc-forge-nodes" value="0" min="0" oninput="updateWarForgeNodesCap(); updateWarCalc()" style="width: 70px;">
-                <span style="font-size:1.1rem; font-weight:700;">/ <span id="wc-forge-nodes-max">10</span></span>
+                <span style="font-size:1.1rem; font-weight:700; white-space: nowrap;">/ <span id="wc-forge-nodes-max">10</span></span>
             </div>
         </div>
     `;
@@ -145,9 +145,9 @@ function initWarCalc() {
         </div>
         <div class="wc-row">
             <div class="wc-label">Mount Summon Exp:</div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink: 0; white-space: nowrap;">
                 <input type="number" id="wc-mount-exp" value="0" min="0" oninput="updateWarMountExpCap(); updateWarCalc()" style="width: 70px;">
-                <span style="font-size:1.1rem; font-weight:700;">/ <span id="wc-mount-max">2</span></span>
+                <span style="font-size:1.1rem; font-weight:700; white-space: nowrap;">/ <span id="wc-mount-max">2</span></span>
             </div>
         </div>
     `;

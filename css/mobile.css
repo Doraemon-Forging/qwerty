@@ -313,31 +313,79 @@
         font-weight: bold;
     }
 
-    /* =========================================
-       H. BOTTOM NAVIGATION
+/* =========================================
+       H. BOTTOM NAVIGATION ("Bubbly Light Theme")
        ========================================= */
     .bottom-nav {
-        display: flex !important; 
-        position: fixed; 
-        bottom: 0; 
-        left: 0;
-        width: 100%; 
-        height: 65px; 
-        background: #eef6fb; 
-        border-top: 1px solid #000000; 
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0; left: 0; width: 100%;
+        height: 70px !important;
+       
+        /* The Light, Friendly Background */
+        background: #eef6fb !important;
+        border-top: 3px solid #000000 !important;
+       
+        /* Adds a subtle white "plastic" highlight to the top inner edge */
+        box-shadow: inset 0 3px 0 rgba(255,255,255,0.6), 0 -4px 10px rgba(0,0,0,0.05) !important;
+       
         z-index: 9999;
-        justify-content: space-around; 
+        justify-content: space-around;
         align-items: center;
         padding-bottom: env(safe-area-inset-bottom);
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
     }
-    
-    .b-nav-item { background: transparent; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; height: 100%; cursor: pointer; padding: 5px 0; }
-    .b-icon { width: 40px; height: 40px; object-fit: contain; margin-bottom: 2px; opacity: 0.4; }
-    .b-label { font-size: 0.7rem; font-weight: 600; color: #ffffff; font-family: 'Fredoka One', sans-serif; }
-    .b-nav-item.active .b-icon { opacity: 1; transform: scale(1.1); }
-    .b-nav-item.active .b-label { color: #00a2ff; }
+   
+    .b-nav-item {
+        background: transparent !important;
+        border: none !important;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        flex: 1; height: 100%; cursor: pointer; padding: 5px 0 5px 0;
+        position: relative;
+        /* Adds a fun, bouncy cartoon physics curve */
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+   
+    /* --- INACTIVE STATE --- */
+    .b-icon {
+        width: 100%; max-width: 28px !important; height: 28px !important;
+        object-fit: contain; margin-bottom: 4px;
+        /* Dims unselected icons into soft grey ghosts */
+        filter: grayscale(100%) opacity(0.35) !important;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+   
+    .b-label {
+        font-family: 'Fredoka', sans-serif !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: #7f8c8d !important; /* Soft medium grey */
+        -webkit-text-stroke: 0px transparent !important; /* No outline when inactive */
+        line-height: 1; display: block;
+        transition: all 0.2s ease;
+    }
+   
+    /* --- ACTIVE (THE "STICKER POP") STATE --- */
+    .b-nav-item.active {
+        /* Pulls the ENTIRE button up physically */
+        transform: translateY(-6px);
+    }
 
+    .b-nav-item.active .b-icon {
+        /* Restores full game color and adds a soft shadow below the icon */
+        filter: drop-shadow(0 4px 2px rgba(0,0,0,0.15)) !important;
+        transform: scale(1.15);
+    }
+   
+    .b-nav-item.active .b-label {
+        color: #ffffff !important; /* Pure white inside */
+        font-weight: 800 !important;
+        font-size: 0.8rem !important; /* Slightly larger */
+        /* BRINGING BACK THE THICK BLACK OUTLINE */
+        -webkit-text-stroke: 2.5px #000000 !important;
+        paint-order: stroke fill !important;
+        transform: translateY(2px);
+    }
     /* =========================================
        I. LOG ENTRIES
        ========================================= */

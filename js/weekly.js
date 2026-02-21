@@ -48,10 +48,12 @@ const CLAN_WAR_REWARDS = {
     "B-Tier": { "Win": [4000, 140000, 2800, 11, 2000, 1000], "Lose": [2000, 70000, 1400, 5, 1000, 550] },
     "C-Tier": { "Win": [2900, 96000, 1900, 8, 1500, 750], "Lose": [1400, 48000, 960, 4, 720, 400] },
     "D-Tier": { "Win": [2000, 67000, 1350, 5, 1000, 540], "Lose": [1000, 33000, 670, 3, 500, 270] },
-    "E-Tier": { "Win": [1400, 47000, 950, 4, 700, 380], "Lose": [700, 24000, 470, 2, 350, 190] }
+    "E-Tier": { "Win": [1400, 47000, 950, 4, 700, 380], "Lose": [700, 24000, 470, 2, 350, 190] },
+    "None":   { "Win": [0, 0, 0, 0, 0, 0], "Lose": [0, 0, 0, 0, 0, 0] }
 };
 
 const INDIV_REWARDS = {
+    "None": { val: 0,      rewards: [0, 0, 0, 0, 0, 0] }, 
     "10k":  { val: 10000,  rewards: [100, 0, 60, 1, 0, 0] },
     "20k":  { val: 20000,  rewards: [0, 5000, 0, 0, 70, 35] },
     "50k":  { val: 50000,  rewards: [140, 0, 84, 1, 0, 0] },
@@ -445,11 +447,11 @@ function updateWeekly() {
             basePotionB: totalPotionB,         basePotionA: totalPotionA,
             baseMountKeyB: finalRewards.mountKey, baseMountKeyA: finalRewards.mountKey,
 
-            effHB: totalEffHB,                 effHA: totalEffHA,
-            grandB: totalGrandGoldB,           grandA: totalGrandGoldA,
-            cardsB: totalCardsB,               cardsA: totalCardsA,
-            eggsB: totalEggsB,                 eggsA: totalEggsA,
-            mountsB: leagueMYieldB,            mountsA: leagueMYieldA
+            effHB: totalEffHB,                effHA: totalEffHA,
+            grandB: totalGrandGoldB,          grandA: totalGrandGoldA,
+            cardsB: totalCardsB,              cardsA: totalCardsA,
+            eggsB: totalEggsB,                eggsA: totalEggsA,
+            mountsB: leagueMYieldB,           mountsA: leagueMYieldA
         });
 
         processTab('league', {

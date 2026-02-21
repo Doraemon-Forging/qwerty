@@ -10,30 +10,6 @@ const HTML_CALC = `
                     <select id="calc-forge-lv" class="calc-select-chunky" onchange="updateCalculator()"></select>
                 </div>
                 <div class="calc-row-input">
-                    <label>Hammer:</label>
-                    <input type="text" id="calc-hammers" value="50,000" class="calc-input-chunky" 
-                           onfocus="unformatInput(this)" 
-                           onblur="formatInput(this); updateCalculator()" 
-                           oninput="cleanInput(this); updateCalculator()">
-                </div>
-            </div>
-            <div id="calc-res-1" class="calc-result-box"></div>
-        </div>
-        <div class="calc-tool-card">
-            <div class="calc-card-input-area">
-                <div class="calc-row-input">
-                    <label>Target Gold:</label>
-                    <input type="text" id="calc-target" value="10,000,000" class="calc-input-chunky" 
-                           onfocus="unformatInput(this)" 
-                           onblur="formatInput(this); updateCalculator()" 
-                           oninput="cleanInput(this); updateCalculator()">
-                </div>
-            </div>
-            <div id="calc-res-2" class="calc-result-box"></div>
-        </div>
-        <div class="calc-tool-card">
-            <div class="calc-card-input-area">
-                <div class="calc-row-input">
                     <label>Upgrade Start:</label>
                     <input type="datetime-local" id="calc-start-date" class="calc-date-chunky desktop-only" onchange="updateCalculator(); syncCalcMobileDate(this.value)">
                     <div id="calc-mobile-custom-date" class="mobile-only custom-date-group">
@@ -47,10 +23,35 @@ const HTML_CALC = `
             </div>
             <div id="calc-res-5" class="calc-result-box"></div>
         </div>
+
+        <div class="calc-tool-card">
+            <div class="calc-card-input-area">
+                <div class="calc-row-input">
+                    <label>Hammer:</label>
+                    <input type="text" id="calc-hammers" value="50,000" class="calc-input-chunky" style="width: 140px;"
+                           onfocus="unformatInput(this)" 
+                           onblur="formatInput(this); updateCalculator()" 
+                           oninput="cleanInput(this); updateCalculator()">
+                </div>
+            </div>
+            <div id="calc-res-1" class="calc-result-box"></div>
+        </div>
+
+        <div class="calc-tool-card">
+            <div class="calc-card-input-area">
+                <div class="calc-row-input">
+                    <label>Target Gold:</label>
+                    <input type="text" id="calc-target" value="10,000,000" class="calc-input-chunky" style="width: 140px;"
+                           onfocus="unformatInput(this)" 
+                           onblur="formatInput(this); updateCalculator()" 
+                           oninput="cleanInput(this); updateCalculator()">
+                </div>
+            </div>
+            <div id="calc-res-2" class="calc-result-box"></div>
+        </div>
     </div>
 </div>
 `;
-
 const HTML_WAR = `
 <div id="panel-war" class="sidebar-panel" style="display:none;">
     <div class="log-container">
@@ -640,6 +641,7 @@ const HTML_WEEKLY = `
                             <option value="C-Tier">C-Tier</option>
                             <option value="D-Tier">D-Tier</option>
                             <option value="E-Tier">E-Tier</option>
+                            <option value="None">None</option>
                         </select>
                         <select id="weekly-war-win" class="war-select select-small" style="width: 65px;" onchange="updateWeekly()">
                             <option value="Win" selected>Win</option>
@@ -664,18 +666,19 @@ const HTML_WEEKLY = `
                             <option value="50k">50k</option>
                             <option value="20k">20k</option>
                             <option value="10k">10k</option>
+                            <option value="None">None</option>
                         </select>
                     </div>
                 </div>
                 <div class="daily-input-row">
-                    <label class="daily-label" style="font-size: 0.9rem;">Mount Summoning Lv:</label>
+                    <label class="daily-label" style="font-size: 0.9rem;">Mount Summon Lv:</label>
                     <input type="number" id="weekly-mount-summon-lvl" class="daily-input" value="1" min="1" max="50" oninput="updateMountExpCap(); updateWeekly()" style="width: 75px;">
                 </div>
                 <div class="daily-input-row daily-input-row-pad" style="margin-bottom: 5px;">
-                    <label class="daily-label" style="font-size: 0.9rem;">Mount Summoning Exp:</label>
-                    <div class="war-select-group flex-center" style="color: #000; font-family: 'Fredoka', sans-serif; font-weight: 700; -webkit-text-stroke: 0px;">
+                    <label class="daily-label" style="font-size: 0.9rem;">Mount Summon Exp:</label>
+                    <div class="war-select-group flex-center" style="color: #000; font-family: 'Fredoka', sans-serif; font-weight: 700; -webkit-text-stroke: 0px; flex-shrink: 0; white-space: nowrap;">
                         <input type="number" id="weekly-mount-summon-exp" class="daily-input" value="0" min="0" oninput="updateMountExpCap(); updateWeekly()" style="width: 60px; margin-right: 5px;">
-                        <span style="font-size: 1rem; margin-left: 2px;">/ <span id="weekly-mount-max">2</span></span>
+                        <span style="font-size: 1rem; margin-left: 2px; white-space: nowrap;">/ <span id="weekly-mount-max">2</span></span>
                     </div>
                 </div>
             </div>
@@ -1182,7 +1185,7 @@ const HTML_HELP = `
                     <span class="help-header-text">4. Review Stats & Yields</span>
                     <ul class="help-body-text help-ul">
                         <li><b>Overall Bonuses:</b> Open the <b>Stats</b> tab for a complete summary of all the stat boosts your current tech setup provides.</li>
-                        <li><b>Calculate Yields:</b> Head to the <b>Daily & Weekly Gain</b> tabs and input your in-game progression (like Dungeon levels or League ranks). The calculators will use both your active Setup <i>and</i> your Planned upgrades to figure out your exact resource generation.</li>
+                        <li><b>Calculate Yields:</b> Head to the <b>Daily & Weekly Gain</b> tabs and input your in-game progression (like Dungeon levels or League ranks). You can see the expected value of the resources that you get. </li>
                     </ul>
                 </div>
 
@@ -1235,9 +1238,40 @@ const HTML_HELP = `
                         <img src="icons/AbyssDoraemon.png" alt="Profile" style="max-width: 150px; height: auto;">
                     </div>
                     
-                    <a href="https://github.com/Doraemon-Forging/TechPlanner" target="_blank" style="color: #80bde5; text-decoration: none; font-weight: 800; margin-top: 5px; display: inline-block; font-family: 'Fredoka', sans-serif;">
-                        🔗 View on GitHub
-                    </a>
+<style>
+    .github-credit-link {
+        color: #ffffff; /* Current Text Color */
+        text-decoration: none;
+        font-weight: 800;
+        margin-top: 0px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'Fredoka', sans-serif;
+    }
+
+    .github-credit-link svg {
+        fill: #466370; /* Current Icon Color */
+        transition: fill 0.1s ease-in-out;
+    }
+
+    .github-credit-link:hover {
+        color: #80bde5; 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .github-credit-link:hover svg {
+        fill: #80bde5;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+    }
+</style>
+
+<a href="https://github.com/Doraemon-Forging/TechPlanner" target="_blank" class="github-credit-link">
+    <svg height="22" width="22" viewBox="0 0 16 16">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+    </svg>
+    <span>Doraemon-Forging/TechPlanner</span>
+</a>
                 </div>
 
                 <div class="help-card-inner" style="text-align: center;">

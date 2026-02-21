@@ -200,13 +200,6 @@ function updateCalculator() {
     let h1 = effHammerHtml;
     h1 += genLine('Gold', formatResourceValue(effH1 * curStats.avgGold, 'gold'), formatResourceValue(effH2 * projStats.avgGold, 'gold'), 'fm_gold');
     
-    // --- MOVED COST CALCULATION HERE ---
-    if (typeof forgeLevelData !== 'undefined' && forgeLevelData[fLv]) {
-        const cRaw = forgeLevelData[fLv][0];
-        h1 += genLine('Cost', formatResourceValue(Math.round(cRaw * (1 - curStats.forgeDisc / 100)), 'gold'), formatResourceValue(Math.round(cRaw * (1 - projStats.forgeDisc / 100)), 'gold'), 'fm_gold');
-    }
-    // -----------------------------------
-    
     let yieldHtml = `<div style="margin-top: 15px; padding-top: 5px;">
                         <div style="font-family: 'Fredoka', sans-serif; font-weight: 600 !important; letter-spacing: 0.5px; font-size: 1rem; text-align: center; margin-bottom: 10px; color: #000000; -webkit-text-stroke: 0px #7f8c8d; paint-order: stroke fill;">Expected Item Yield</div>`;    
     const rates = typeof CALC_FORGE_RATES !== 'undefined' ? CALC_FORGE_RATES[fLv] || CALC_FORGE_RATES[1] : [];
@@ -236,6 +229,10 @@ function updateCalculator() {
     if (res2) res2.innerHTML = genLine('Hammer Needed', formatResourceValue(gTarget / curStats.avgGold * (1 - curStats.free / 100), 'hammer'), formatResourceValue(gTarget / projStats.avgGold * (1 - projStats.free / 100), 'hammer'), 'fm_hammer');
     
     if (typeof forgeLevelData !== 'undefined' && forgeLevelData[fLv]) {
+        // --- MOVED COST CALCULATION HERE ---
+        const cRaw = forgeLevelData[fLv][0];
+        let h5 = genLine('Cost', formatResourceValue(Math.round(cRaw * (1 - curStats.forgeDisc / 100)), 'gold'), formatResourceValue(Math.round(cRaw * (1 - projStats.forgeDisc / 100)), 'gold'), 'fm_gold');
+
         const baseMins = forgeLevelData[fLv][1] * 60;
         const sDateVal = document.getElementById('calc-start-date').value;
         const mainStartTime = sDateVal ? new Date(sDateVal).getTime() : Date.now();
@@ -247,9 +244,9 @@ function updateCalculator() {
         const dFinish = new Date(mainStartTime + f1 * 60000); const dFinishProj = new Date(mainStartTime + f2 * 60000);
         const formatDT = (d) => `<span class="calc-multiline-date">${d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}<span class="calc-date-comma">, </span><span class="calc-time-block">${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}</span></span>`;
         let finishHtml = (dFinish.getTime() === dFinishProj.getTime()) ? `<div class="calc-val-group calc-date-single"><span>${formatDT(dFinish)}</span></div>` : `<div class="calc-val-group"><span class="calc-val-before">${formatDT(dFinish)}</span><span class="calc-arrow">➜</span><span class="calc-val-after">${formatDT(dFinishProj)}</span></div>`;
-        let h5 = `<div class="calc-line"><div class="calc-label">Finish</div>${finishHtml}</div>`;
+        h5 += `<div class="calc-line"><div class="calc-label">Finish</div>${finishHtml}</div>`;
         h5 += genLine('Duration', formatSmartTime(f1), formatSmartTime(f2));
-        // --- COST REMOVED FROM HERE ---
+
         const res5 = document.getElementById('calc-res-5'); if (res5) res5.innerHTML = h5;
     }
 
