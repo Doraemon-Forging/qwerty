@@ -332,5 +332,20 @@ function renderEggLog() {
 function addEggToQueue(type) { pushEggHistory(); const item = { type: 'egg', key: type }; if (eggInsertIdx > -1) { eggPlanQueue.splice(eggInsertIdx, 0, item); eggInsertIdx = -1; document.getElementById('egg-selector-box').classList.remove('egg-insert-active'); } else { eggPlanQueue.push(item); } renderEggLog(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); }
 function markEggDone(idx, timestamp) { try { pushEggHistory(); eggPlanQueue.splice(0, idx + 1); const d = new Date(timestamp); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); const localIso = d.toISOString().slice(0, 16); syncEggDate(localIso); expandedEggIdx = -1; } catch (e) { console.error(e); } }
 function addEggDelay(idx) { const m = prompt("Enter delay in MINUTES:"); if (m) { pushEggHistory(); eggPlanQueue.splice(idx + 1, 0, { type: 'delay', mins: parseFloat(m) }); expandedEggIdx = -1; renderEggLog(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); } }
-function deleteEggStep(idx) { pushEggHistory(); eggPlanQueue.splice(idx, 1); renderEggLog(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); }
-function clearEggPlan() { if (confirm("Clear egg list?")) { pushEggHistory(); eggPlanQueue = []; renderEggLog(); if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); } }
+function deleteEggStep(idx) { 
+    openConfirmModal("Delete this step?", () => {
+        pushEggHistory(); 
+        eggPlanQueue.splice(idx, 1); 
+        renderEggLog(); 
+        if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); 
+    });
+}
+
+function clearEggPlan() { 
+    openConfirmModal("Clear Egg list?", () => {
+        pushEggHistory(); 
+        eggPlanQueue = []; 
+        renderEggLog(); 
+        if (typeof saveToLocalStorage === 'function') saveToLocalStorage(); 
+    });
+}

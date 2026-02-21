@@ -463,7 +463,21 @@ function saveToLocalStorage() {
     } 
 }
 
-function uploadData(el) { const r = new FileReader(); r.onload = (e) => { try { const d = JSON.parse(e.target.result); loadState(d); saveToLocalStorage(); alert("Data loaded successfully!"); } catch (err) { alert("Error loading file."); } }; r.readAsText(el.files[0]); el.value = ''; }
+function uploadData(el) { 
+    const r = new FileReader(); 
+    r.onload = (e) => { 
+        try { 
+            const d = JSON.parse(e.target.result); 
+            loadState(d); 
+            saveToLocalStorage(); 
+            // Success pop-up removed. It will now load silently.
+        } catch (err) { 
+            alert("Error loading file. Invalid or corrupted data."); 
+        } 
+    }; 
+    r.readAsText(el.files[0]); 
+    el.value = ''; 
+}
 function downloadData() { const d = captureFullState(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], { type: 'application/json' })); a.download = 'Tech_Planner.json'; a.click(); }
 
 // --- INITIALIZATION ---

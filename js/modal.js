@@ -632,3 +632,39 @@ function openEqAvgBreakdownModal(hpB, hpM, hpA, dmgB, dmgM, dmgA) {
 
     renderMasterModal('eqAvgBreakdown', html);
 }
+
+// --- CUSTOM CONFIRMATION MODAL (Clean Box) ---
+function openConfirmModal(message, onConfirmCallback) {
+    window.currentConfirmCallback = onConfirmCallback;
+    const modal = document.getElementById('tableModal');
+    const content = modal.querySelector('.modal-content');
+    
+    // 1. MODAL BOX OVERALL SIZE
+    // We add 'width' and 'margin' here to override the default huge 480px width
+    content.style.setProperty('width', '280px', 'important');
+    content.style.padding = "20px 15px 15px 15px"; // <-- TWEAK THIS: Shrink padding if it feels too empty
+    content.style.backgroundColor = "#FFFFFF";
+    content.style.borderRadius = "16px";
+    content.style.border = "3px solid #000000";
+    
+    content.innerHTML = `
+        <div style="font-family: 'Fredoka', sans-serif; font-size: 1rem; font-weight: 600; text-align: center; color: #ffffff; margin-bottom: 20px; line-height: 1.3;">
+            ${message}
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button class="btn-confirm-ok" onclick="document.getElementById('tableModal').style.display='none'; if(window.currentConfirmCallback) window.currentConfirmCallback();" style="flex: 1; max-width: 100px; height: 42px; border: 2px solid #000000; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-color: #00b0ff; box-shadow: inset 0 -4px 0 0 #005680; transition: transform 0.1s;">
+            <img src="icons/button_ok.png" style="width: 22px; height: 22px; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.2)); transform: translateY(-2px);">
+        </button>
+        
+        <button class="btn-confirm-cancel" onclick="document.getElementById('tableModal').style.display='none'" style="flex: 1; max-width: 100px; height: 42px; border: 2px solid #000000; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-color: #ff4757; box-shadow: inset 0 -4px 0 0 #c0392b; transition: transform 0.1s;">
+            <img src="icons/icon_cancel.png" style="width: 22px; height: 22px; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.2)); transform: translateY(-2px);">
+        </button>
+    </div>
+    <style>
+        .btn-confirm-ok:active { transform: translateY(3px); box-shadow: inset 0 -1px 0 0 #005680 !important; }
+        .btn-confirm-cancel:active { transform: translateY(3px); box-shadow: inset 0 -1px 0 0 #c0392b !important; }
+    </style>
+    `;
+    modal.style.display = 'block';
+}

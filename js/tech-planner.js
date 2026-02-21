@@ -91,18 +91,19 @@ const node = document.createElement('div'); node.className = 'node'; node.id = f
 }
 
 function maxTier(tree, tier) {
-    if (!confirm(`Max all nodes in ${tree.toUpperCase()} Tier ${tier}?`)) return;
-    pushHistory();
-    TREES[tree].structure.forEach(nDef => {
-        const fullId = `${tree}_T${tier}_${nDef.id}`;
-        const meta = getMeta(fullId);
-        if (meta) {
-            setupLevels[fullId] = meta.m;
-            const ensure = (cid) => getParents(cid).forEach(pid => { if ((setupLevels[pid] || 0) === 0) { setupLevels[pid] = 1; ensure(pid); } });
-            ensure(fullId);
-        }
+    openConfirmModal(`Max all nodes in ${tree.toUpperCase()} tier ${toRoman(tier)}?`, () => {
+        pushHistory();
+        TREES[tree].structure.forEach(nDef => {
+            const fullId = `${tree}_T${tier}_${nDef.id}`;
+            const meta = getMeta(fullId);
+            if (meta) {
+                setupLevels[fullId] = meta.m;
+                const ensure = (cid) => getParents(cid).forEach(pid => { if ((setupLevels[pid] || 0) === 0) { setupLevels[pid] = 1; ensure(pid); } });
+                ensure(fullId);
+            }
+        });
+        updateCalculations();
     });
-    updateCalculations();
 }
 
 // --- CALCULATION ENGINE ---
@@ -544,10 +545,17 @@ function setMode(m) {
 
 function toggleExp(i) { expandedLogIndex = expandedLogIndex === i ? -1 : i; updateCalculations(); }
 function delStep(i) {
-    if (!confirm(`Delete this step?`)) return;
-    const q = [...planQueue]; q.splice(i, 1);
-    let clean = false; while (!clean) { const sim = calcState(q); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) q.splice(sim.brokenSteps[j], 1); else clean = true; }
-    pushHistory(); planQueue = q; expandedLogIndex = -1; updateCalculations();
+    openConfirmModal("Delete this step?", () => {
+        const q = [...planQueue]; q.splice(i, 1);
+        let clean = false; 
+        while (!clean) { 
+            const sim = calcState(q); 
+            if (sim.brokenSteps.length > 0) 
+                for (let j = sim.brokenSteps.length - 1; j >= 0; j--) q.splice(sim.brokenSteps[j], 1); 
+            else clean = true; 
+        }
+        pushHistory(); planQueue = q; expandedLogIndex = -1; updateCalculations();
+    });
 }
 
 // --- SMART DROP LOGIC ---
@@ -707,14 +715,25 @@ function activateInsert(idx) {
     
     updateCalculations(); 
 }
-function clearPlan() { if (confirm("Clear Schedule?")) { pushHistory(); planQueue = []; updateCalculations(); } }
+function clearPlan() { 
+    openConfirmModal("Clear Schedule?", () => {
+        pushHistory(); planQueue = []; updateCalculations(); 
+    });
+}
 function resetCurrentTree() {
-    if (!confirm(`Reset ${activeTreeKey.toUpperCase()}?`)) return;
-    pushHistory();
-    Object.keys(setupLevels).forEach(id => { if (id.startsWith(activeTreeKey + "_")) delete setupLevels[id]; });
-    planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
-    let clean = false; while (!clean) { const sim = calcState(planQueue); if (sim.brokenSteps.length > 0) for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1); else clean = true; }
-    updateCalculations();
+    openConfirmModal(`Reset ${activeTreeKey.toUpperCase()} tree?`, () => {
+        pushHistory();
+        Object.keys(setupLevels).forEach(id => { if (id.startsWith(activeTreeKey + "_")) delete setupLevels[id]; });
+        planQueue = planQueue.filter(item => (item.type === 'node') ? !item.id.startsWith(activeTreeKey + "_") : true);
+        let clean = false; 
+        while (!clean) { 
+            const sim = calcState(planQueue); 
+            if (sim.brokenSteps.length > 0) 
+                for (let j = sim.brokenSteps.length - 1; j >= 0; j--) planQueue.splice(sim.brokenSteps[j], 1); 
+            else clean = true; 
+        }
+        updateCalculations();
+    });
 }
 
 // --- UNDO / REDO ---
