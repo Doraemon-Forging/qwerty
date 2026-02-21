@@ -1,4 +1,4 @@
-/* mobile.css - Cleaned & Fixed Specificity */
+/* mobile.css */
 
 /* =========================================
    1. GLOBAL RESET
@@ -685,11 +685,12 @@
     .zone-vip { display: flex; flex-direction: column; gap: 12px; }
     .btn-vip {
         width: 100%; height: 70px;
-        justify-content: flex-start;
-        padding-left: 20px; gap: 15px;
+        justify-content: center !important; 
+        padding: 0 !important;              
+        gap: 15px;
     }
-    .btn-vip.tech { background-color: #ffda79 !important; } /* Premium Gold */
-    .btn-vip.sched { background-color: #78e08f !important; } /* Vibrant Green */
+    .btn-vip.tech { background-color: #ffda79 !important; } 
+    .btn-vip.sched { background-color: #78e08f !important; } 
     .btn-vip img { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.2)); }
     .btn-vip span {
         font-family: 'Fredoka One', sans-serif; font-size: 1.3rem;
@@ -701,17 +702,19 @@
     .btn-tracker {
         height: 60px;
         flex-direction: row; 
-        justify-content: flex-start;
-        padding-left: 12px; gap: 10px;
-        background-color: #f8f0fc !important; /* Soft Tracker Pink/Purple */
+        justify-content: center !important; 
+        padding: 0 !important;              
+        gap: 10px;
+        background-color: #f8f0fc !important; 
     }
     .btn-tracker img { width: 32px; height: 32px; object-fit: contain; }
     .btn-tracker span {
         font-family: 'Fredoka One', sans-serif; font-size: 0.95rem;
-        color: #ffffff; /* Turns the inside white */
-        -webkit-text-stroke: 2px #000000; /* Adds the thick black outline */
+        color: #ffffff; 
+        -webkit-text-stroke: 2px #000000; 
         paint-order: stroke fill;
-        line-height: 1.1; text-align: left;
+        line-height: 1.1; 
+        text-align: center !important;      
     }
     /* --- ZONE 3: CALCULATORS (2x2 Grid, Vertical Layout) --- */
     .zone-calcs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
