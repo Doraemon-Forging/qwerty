@@ -340,10 +340,11 @@ function updateCalculations() {
 
            if (movingStepIndex === -1) {
                 const controlsHTML = `
+
+                    <button class="btn-game-ctrl btn-move" onclick="event.stopPropagation(); startMove(${h.idx})">MOVE</button>
+                    <button class="btn-game-ctrl btn-insert" onclick="event.stopPropagation(); activateInsert(${h.idx})">INSERT</button>                     
                     <button class="btn-game-ctrl btn-done" onclick="event.stopPropagation(); markDone(${h.idx}, ${finishTs})">DONE</button>
                     <button class="btn-game-ctrl btn-delay" onclick="event.stopPropagation(); addDelay(${h.idx})">DELAY</button>
-                    <button class="btn-game-ctrl btn-move" onclick="event.stopPropagation(); startMove(${h.idx})">MOVE</button>
-                    <button class="btn-game-ctrl btn-insert" onclick="event.stopPropagation(); activateInsert(${h.idx})">INSERT</button>                    
                     <button class="btn-game-ctrl btn-del" onclick="event.stopPropagation(); delStep(${h.idx})">DELETE</button>
                 `;
                 row.innerHTML += `<div class="log-controls">${controlsHTML}</div>`;
@@ -467,19 +468,22 @@ function handleClick(id, isRight) {
                 pushHistory();
                 
                 if (insertModeIndex > -1) { 
-                    // Capture the exact spot before we reset the index
                     let insertedIndex = insertModeIndex; 
                     
                     planQueue.splice(insertedIndex, 0, { type: 'node', id }); 
                     insertModeIndex = -1; 
+                    
+                    ['capsule-logs', 'float-logs', 'float-tree'].forEach(elId => {
+                        const el = document.getElementById(elId);
+                        if (el) el.classList.remove('is-inserting');
+                    });
+                    
                     setMode('plan'); 
                     
-                    // Force the view back to the Logs tab on mobile
                     if (window.innerWidth <= 768 && typeof switchMobileView === 'function') {
                         switchMobileView('logs');
                     }
                     
-                    // Wait for the DOM to update, then scroll directly to the new item
                     setTimeout(() => {
                         const rows = document.querySelectorAll('#log-list .log-row');
                         if (rows[insertedIndex]) {
@@ -520,7 +524,13 @@ function showFloatingLabel(nodeId) {
 // --- LOG & PLAN MANAGEMENT ---
 function setMode(m) {
     currentMode = m; document.body.dataset.mode = m;
-    if (m !== 'plan') insertModeIndex = -1;
+    if (m !== 'plan') {
+        insertModeIndex = -1;
+        ['capsule-logs', 'float-logs', 'float-tree'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('is-inserting');
+        });
+    }
     const updateBtn = (id, isActive) => {
         const el = document.getElementById(id);
         if (el) { el.className = `seg-btn ${isActive ? 'active' : ''}`; if (id.includes('plan')) { if (insertModeIndex > -1) { el.innerText = "Insert"; el.classList.add('insert'); } else { el.innerText = "PLAN"; el.classList.remove('insert'); } } }
@@ -580,15 +590,32 @@ function startMove(idx) {
 }
 
 function cancelMove() {
+    if (insertModeIndex > -1) {
+        insertModeIndex = -1;
+        ['capsule-logs', 'float-logs', 'float-tree'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('is-inserting');
+        });
+        
+        setMode('plan'); 
+
+        // --- NEW: Force mobile view back to schedule (logs) ---
+        if (window.innerWidth <= 768 && typeof switchMobileView === 'function') {
+            switchMobileView('logs');
+        }
+        // ------------------------------------------------------
+
+        updateCalculations();
+        return; 
+    }
+
     movingStepIndex = -1;
     validDropTargets = [];
     
-    // --- UPDATED: Targets BOTH Desktop and Mobile capsules ---
-    const capDesk = document.getElementById('capsule-logs');
-    const capMob = document.getElementById('float-logs');
-    if (capDesk) capDesk.classList.remove('is-moving');
-    if (capMob) capMob.classList.remove('is-moving');
-    // ---------------------------------------------------------
+    ['capsule-logs', 'float-logs', 'float-tree'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('is-moving');
+    });
 
     updateCalculations();
 }
@@ -658,7 +685,28 @@ function markDone(targetIdx, timestamp) {
 }
 
 function addDelay(i) { const m = prompt("Enter delay in MINUTES:"); if (m) { pushHistory(); planQueue.splice(i + 1, 0, { type: 'delay', mins: parseFloat(m) }); expandedLogIndex = -1; updateCalculations(); } }
-function activateInsert(idx) { insertModeIndex = idx + 1; expandedLogIndex = -1; setMode('plan'); updateCalculations(); }
+function activateInsert(idx) { 
+    insertModeIndex = idx + 1; 
+    expandedLogIndex = -1; 
+    setMode('plan'); 
+    
+    ['capsule-logs', 'float-logs', 'float-tree'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('is-inserting');
+    });
+
+    // Automatically build the Cancel button on the Tree screen if it's missing
+    const ftCapsule = document.querySelector('#float-tree .control-capsule');
+    if (ftCapsule && !ftCapsule.querySelector('.floating-cancel-btn')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn-move-action floating-cancel-btn';
+        cancelBtn.onclick = (e) => { e.stopPropagation(); cancelMove(); };
+        cancelBtn.innerHTML = '<img src="icons/icon_cancel.png" class="btn-icon" style="width:16px; height:16px; margin-right:6px; display:block; filter:none;"> CANCEL';
+        ftCapsule.appendChild(cancelBtn);
+    }
+    
+    updateCalculations(); 
+}
 function clearPlan() { if (confirm("Clear Schedule?")) { pushHistory(); planQueue = []; updateCalculations(); } }
 function resetCurrentTree() {
     if (!confirm(`Reset ${activeTreeKey.toUpperCase()}?`)) return;

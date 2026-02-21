@@ -760,11 +760,24 @@
 #capsule-logs button.floating-cancel-btn .btn-icon,
 #float-logs button.floating-cancel-btn .btn-icon { width: 16px !important; height: 16px !important; margin-right: 6px !important; display: block !important; filter: none !important; }
 
+/* --- HIDE NORMAL BUTTONS --- */
 #capsule-logs.is-moving button:not(.floating-cancel-btn),
-#float-logs.is-moving .control-capsule button:not(.floating-cancel-btn) { display: none !important; }
+#capsule-logs.is-inserting button:not(.floating-cancel-btn),
+#float-logs.is-moving .control-capsule button:not(.floating-cancel-btn),
+#float-logs.is-inserting .control-capsule button:not(.floating-cancel-btn),
+#float-tree.is-inserting .control-capsule button:not(.floating-cancel-btn) { 
+    display: none !important; 
+}
 
+/* --- SHOW CANCEL BUTTON --- */
 #capsule-logs.is-moving button.floating-cancel-btn,
-#float-logs.is-moving button.floating-cancel-btn { display: flex !important; }
+#capsule-logs.is-inserting button.floating-cancel-btn,
+#float-logs.is-moving button.floating-cancel-btn,
+#float-logs.is-inserting button.floating-cancel-btn,
+#float-logs.is-inserting .control-capsule button.floating-cancel-btn,
+#float-tree.is-inserting .control-capsule button.floating-cancel-btn { 
+    display: flex !important; 
+}
 
 .btn-move-action:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 .btn-move-top    { background-color: #27ae60; }  
