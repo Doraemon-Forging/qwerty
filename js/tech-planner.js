@@ -91,7 +91,7 @@ const node = document.createElement('div'); node.className = 'node'; node.id = f
 }
 
 function maxTier(tree, tier) {
-    openConfirmModal(`Max all nodes in ${tree.toUpperCase()} tier ${toRoman(tier)}?`, () => {
+    openConfirmModal(`Max all nodes in ${tree.toUpperCase()} tier ${toRoman(tier)} ?`, () => {
         pushHistory();
         TREES[tree].structure.forEach(nDef => {
             const fullId = `${tree}_T${tier}_${nDef.id}`;
