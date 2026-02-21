@@ -691,7 +691,7 @@ const HTML_WEEKLY = `
         <div id="weekly-tab-total">
             <div class="daily-card card-compact">
                 <div class="daily-card-header strip-blue">
-                    <span class="daily-header-title">TOTAL REWARDS</span>
+                    <span class="daily-header-title">WEEKLY TOTAL REWARDS</span>
                 </div>
                 <div class="daily-card-body">
                     <div class="calc-line"><span class="calc-label">Hammer</span><div class="calc-val-group" id="weekly-base-hammer"></div></div>
