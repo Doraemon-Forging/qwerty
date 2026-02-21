@@ -68,7 +68,6 @@ function getEqMinLevel(maxLv) {
     return floor;
 }
 
-// Reusable DOM renderer for HP/DMG Lines (Now with Hero Support)
 function renderEqLine(id, valBefore, valAfter, iconType, isHero = false) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -77,11 +76,10 @@ function renderEqLine(id, valBefore, valAfter, iconType, isHero = false) {
     const fmtBefore = formatCombatStat(valBefore);
     const fmtAfter = formatCombatStat(valAfter);
     
-    // Pump up the sizing for the Totals row
-    const textStyle = isHero ? 'font-size: 1.15rem; font-weight: 800;' : 'font-weight: 700;';
+    // STRIPPED out the hardcoded 1.15rem font-size so it matches perfectly
+    const textStyle = isHero ? 'font-weight: 800;' : 'font-weight: 700;';
     const iconSize = isHero ? '20px' : '16px';
     
-    // FIXED: Changed text-clean-black to text-clean-green for valBlockA
     const valBlockB = `<div style="display:flex; align-items:center; gap:5px; justify-content:center;"><img src="icons/icon_${iconType}.png" style="width:${iconSize}; height:${iconSize}; object-fit:contain;"><span class="text-clean-black" style="${textStyle}">${fmtBefore}</span></div>`;
     const valBlockA = `<div style="display:flex; align-items:center; gap:5px; justify-content:center;"><img src="icons/icon_${iconType}.png" style="width:${iconSize}; height:${iconSize}; object-fit:contain;"><span class="text-clean-green" style="${textStyle}">${fmtAfter}</span></div>`;
     
@@ -89,10 +87,10 @@ function renderEqLine(id, valBefore, valAfter, iconType, isHero = false) {
         el.innerHTML = `<span class="calc-val-before" style="width:100%; display:flex; justify-content:${isHero ? 'center' : 'flex-end'};">${valBlockB}</span>`;
         el.classList.add('single-val'); 
     } else {
-        // FIXED: Added check for mobile to split into 2 rows
         const isMobile = window.innerWidth <= 768;
 
-        if (isMobile) {
+        // FIXED: Only split the normal rows on mobile. Keep the Hero (Totals) perfectly horizontal.
+        if (isMobile && !isHero) {
              el.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:flex-end; width:100%;">
                     <span class="calc-val-before" style="display:flex; justify-content:flex-end; margin-bottom:2px;">${valBlockB}</span>
@@ -311,9 +309,9 @@ function updateEquipment() {
         let hpCol = isTotalSingle ? `<span style="width:100%; display:flex; justify-content:center;">${hpBlockB}</span>` : `<span style="display:flex; flex:1; justify-content:flex-end;">${hpBlockB}</span><span class="text-clean-arrow">➜</span><span style="display:flex; flex:1; justify-content:flex-start;">${hpBlockA}</span>`;
         let dmgCol = isTotalSingle ? `<span style="width:100%; display:flex; justify-content:center;">${dmgBlockB}</span>` : `<span style="display:flex; flex:1; justify-content:flex-end;">${dmgBlockB}</span><span class="text-clean-arrow">➜</span><span style="display:flex; flex:1; justify-content:flex-start;">${dmgBlockA}</span>`;
 
-        html += `<div class="calc-line" style="background-color: #ecf0f1; border: 2px solid #000; margin-bottom: 10px; padding: 8px 5px; display: flex; align-items: center;">
-                    <div class="calc-val-group" style="flex: 1; display: flex; justify-content: center; align-items: center;">${hpCol}</div>
-                    <div class="calc-val-group" style="flex: 1; display: flex; justify-content: center; align-items: center;">${dmgCol}</div>
+        html += `<div class="calc-line" style="background-color: #ecf0f1; border: 2px solid #000; margin-bottom: 10px; padding: 10px 5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <div class="calc-val-group eq-inline-group">${hpCol}</div>
+                    <div class="calc-val-group eq-inline-group">${dmgCol}</div>
                  </div>`;
 
         let currentGroup = 'hp';

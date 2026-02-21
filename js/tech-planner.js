@@ -344,7 +344,7 @@ function updateCalculations() {
                     <button class="btn-game-ctrl btn-delay" onclick="event.stopPropagation(); addDelay(${h.idx})">DELAY</button>
                     <button class="btn-game-ctrl btn-move" onclick="event.stopPropagation(); startMove(${h.idx})">MOVE</button>
                     <button class="btn-game-ctrl btn-insert" onclick="event.stopPropagation(); activateInsert(${h.idx})">INSERT</button>                    
-                    <button class="btn-game-ctrl btn-del" onclick="event.stopPropagation(); delStep(${h.idx})">DEL</button>
+                    <button class="btn-game-ctrl btn-del" onclick="event.stopPropagation(); delStep(${h.idx})">DELETE</button>
                 `;
                 row.innerHTML += `<div class="log-controls">${controlsHTML}</div>`;
             }
@@ -354,9 +354,15 @@ function updateCalculations() {
     drawLines();
     if (typeof renderStats === 'function') renderStats();
     if (typeof updateCalculator === 'function') updateCalculator(); 
+    if (typeof updateWarCalc === 'function') updateWarCalc(); 
+    if (typeof renderEggLog === 'function') renderEggLog(); 
     if (typeof updateDaily === 'function') updateDaily();  
     if (typeof updateWeekly === 'function') updateWeekly(); 
-    if (typeof updateMountMergeResult === 'function') updateMountMergeResult(); // <-- Added this line!
+    if (typeof updatePetMount === 'function') updatePetMount(); 
+    if (typeof updateMergeResult === 'function') updateMergeResult(); 
+    if (typeof updateMountMergeResult === 'function') updateMountMergeResult(); 
+    if (typeof updateEquipment === 'function') updateEquipment(); 
+
     const pBtn = document.getElementById('btn-plan');
     if (pBtn) {
         if (insertModeIndex > -1) { pBtn.innerHTML = "INSERTING..."; pBtn.classList.add('insert'); } 

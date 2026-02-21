@@ -884,6 +884,28 @@ const HTML_EQUIPMENT = `
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         
     }
+
+    #panel-equipment .eq-inline-group {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    #panel-equipment .eq-inline-group > *,
+    #panel-equipment .eq-inline-group .calc-val-before,
+    #panel-equipment .eq-inline-group .calc-val-after {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        width: auto !important;
+        margin: 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #panel-equipment .eq-inline-group br {
+        display: none !important;
+    }
 </style>
 
 <div id="panel-equipment" class="sidebar-panel" style="display:none;">
@@ -965,10 +987,10 @@ const HTML_EQUIPMENT = `
             </div>
             <div class="daily-card-body">
                 
-                <div class="calc-line" style="background-color: #ecf0f1; border: 2px solid #000; margin-bottom: 10px; padding: 8px 5px; display: flex; align-items: center;">
-                    <div class="calc-val-group" id="eq-res-total-hp" style="flex: 1; display: flex; justify-content: center; align-items: center;"></div>
-                    <div class="calc-val-group" id="eq-res-total-dmg" style="flex: 1; display: flex; justify-content: center; align-items: center;"></div>
-                </div>
+                <div class="calc-line" style="background-color: #ecf0f1; border: 2px solid #000; margin-bottom: 10px; padding: 10px 5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+    <div class="eq-inline-group" id="eq-res-total-hp"></div>
+    <div class="eq-inline-group" id="eq-res-total-dmg"></div>
+</div>
 
                 <div class="calc-line" style="background-color: #ecf0f1; padding-left: 10px;">
                     <div class="calc-label-flex" style="width: 110px; flex-shrink: 0; display: flex; align-items: center; gap: 8px;"><div style="width: 30px; height: 30px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><img src="icons/eqhelmet.png" style="width: 22px; height: 22px; object-fit: contain;"></div><span class="eq-label">Helmet</span></div>
@@ -1129,7 +1151,7 @@ const HTML_HELP = `
             <div class="config-card" style="padding: 15px; background-color: #EBF5FB !important;">
                 
                 <div class="help-card-inner">
-                    <span class="help-header-text">1. Setup Your Base</span>
+                    <span class="help-header-text">1. Setup Your Current Tech</span>
                     <div class="help-body-text">Switch to <b>SETUP</b> mode to match your current in-game tech levels.</div>
                     <ul class="help-body-text help-ul">
                         <li><b>Level Up:</b> Click a node.</li>
@@ -1173,24 +1195,24 @@ const HTML_HELP = `
                 <div class="help-card-inner">
                     <span class="help-header-text" style="font-size: 1.3rem !important; text-align: center;">Tool Overview</span>
                     <div class="help-body-text" style="text-align: center; margin-bottom: 12px;">
-                        This tool has two main purposes: <b>scheduling your tech upgrades</b> and <b>simulating how those upgrades affect your game.</b>
+                        This tool has two main purposes: <b>scheduling your tech upgrades</b> and <b>simulating how those upgrades affect your gameplay.</b>
                     </div>
                     <div class="help-body-text" style="font-size: 0.85rem !important; font-style: italic; background-color: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px dashed #bdc3c7;">
-                        <b>Note:</b> Throughout these tools, you will frequently see values written with an arrow (e.g., 100 <span style="font-family: 'Fredoka One', sans-serif;">➔</span> <span class="help-highlight">120</span>). The first number is based on your <b>Setup</b>'s tech, and the green number after the arrow uses the tech of your finished <b>Planned</b> upgrades.
+                        <b>Note:</b> When you see <b>100 <span style="font-family: 'Fredoka One', sans-serif;">➔</span> <span class="help-highlight">120</span></b>: the first number is based on your <b>Setup</b>, and the green number is from your finished <b>Plan</b>.
                     </div>
                 </div>
 
                 <div class="help-card-inner">
                     <ul class="help-body-text help-ul" style="padding-left: 15px !important; margin-top: 0 !important;">
-                        <li><b>Stats:</b> A complete summary of the overall boosts provided by your tech.</li>
+                        <li><b>Stats:</b> A complete summary of the overall boosts provided by each of your tech.</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">
                         <li><b>Daily Gain:</b> Calculates your daily resource generation from dungeons, idle gold, and idle hammers.</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">
                         <li><b>Weekly Gain:</b> Calculates resources earned from the weekly league and clan war, plus your total weekly haul (which includes 7x your Daily Gain).</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">
-                        <li><b>Equipment:</b> View expected HP and damage. See exactly how increasing your max item level affects the item levels you pull, your overall power, and your economy (since gold earned per hammer depends entirely on item level, not tier).</li>
+                        <li><b>Equipment:</b> View expected HP and damage. See exactly how increasing your max item level affects the item levels you pull, your overall power, and your economy.</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">
-                        <li><b>Forge Calc:</b> Crunch the numbers to see the value of your hammer and Forge upgrades.</li>
+                        <li><b>Forge Calc:</b> Crunch the numbers to see the value of your hammer and stuffs related to Forge upgrades.</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">
                         <li><b>War Calc:</b> Estimate your expected clan war points based on the resources you plan to spend.</li>
                         <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 8px 0;">

@@ -3,13 +3,33 @@
  * Entry point. Handles initialization, global navigation, and data persistence.
  */
 
+// --- SCROLL MEMORY ---
+const scrollMemory = { panels: {}, trees: {}, mobile: {} };
+let currentPanel = 'logs';
+let currentTree = 'forge';
+let currentMobile = 'more';
+
 // --- GLOBAL UI NAVIGATION ---
 function selectTree(treeKey) {
+    const treeCont = document.getElementById('tree-container');
+    
+    // 1. Instantly save current tree's scroll
+    if (treeCont) scrollMemory.trees[currentTree] = { top: treeCont.scrollTop, left: treeCont.scrollLeft };
+
     if (typeof switchTree === 'function') switchTree(treeKey);
     const names = { forge: 'Forge', spt: 'SPT', power: 'Power' };
     const btn = document.getElementById('tree-select-label');
     if (btn && names[treeKey]) btn.innerHTML = `${names[treeKey]} ▼`;
+    
     setMainView('tree');
+
+    // 2. Instantly load new tree's scroll (No Timeout!)
+    currentTree = treeKey;
+    if (treeCont) {
+        const pos = scrollMemory.trees[treeKey] || { top: 0, left: 0 };
+        treeCont.scrollTop = pos.top;
+        treeCont.scrollLeft = pos.left;
+    }
 }
 
 function setMainView(viewName) {
@@ -48,7 +68,19 @@ function setMainView(viewName) {
 }
 
 function setSidebarPanel(panelName) {
+    const scrollWrapper = document.querySelector('.sidebar-scroll-wrapper');
+    const rightPaneWrapper = document.querySelector('.right-pane-wrapper'); // <--- NEW: Target mobile scroller
+
+    if (scrollWrapper) scrollMemory.panels[currentPanel] = scrollWrapper.scrollTop;
+    if (rightPaneWrapper) Reflect.set(scrollMemory.panels, currentPanel + "_rp", rightPaneWrapper.scrollTop);
+    Reflect.set(scrollMemory.panels, currentPanel + "_win", window.scrollY || document.documentElement.scrollTop || 0);
+
+    if (scrollWrapper) scrollWrapper.scrollTop = 0;
+    if (rightPaneWrapper) rightPaneWrapper.scrollTop = 0;
+    window.scrollTo(0, 0);
+
     const panels = ['logs', 'calc', 'egg', 'stats', 'daily', 'weekly', 'war', 'pet', 'equipment', 'help'];
+    
     panels.forEach(p => {
         const el = document.getElementById('panel-' + p); if (el) el.style.display = 'none';
         const btn = document.getElementById('btn-' + p); if (btn) btn.classList.remove('active-tool');
@@ -84,7 +116,7 @@ function setSidebarPanel(panelName) {
 
     // --- MOBILE FIX START ---
     if (window.innerWidth <= 768) {
-    document.body.classList.remove('view-planner', 'view-log', 'view-calc', 'view-egg', 'view-stats', 'view-war', 'view-daily', 'view-weekly', 'view-more', 'view-pet', 'view-equipment', 'view-help');
+        document.body.classList.remove('view-planner', 'view-log', 'view-calc', 'view-egg', 'view-stats', 'view-war', 'view-daily', 'view-weekly', 'view-more', 'view-pet', 'view-equipment', 'view-help');
         const moreMenu = document.getElementById('mobile-more-view'); 
         if (moreMenu) moreMenu.classList.remove('active');
         document.body.classList.add(panelName === 'logs' ? 'view-log' : 'view-' + panelName);
@@ -116,14 +148,41 @@ function setSidebarPanel(panelName) {
     if (panelName === 'equipment') {
         if (typeof updateEquipment === 'function') updateEquipment();
     }
+
+   
+    currentPanel = panelName;
+    let savedWrapper = scrollMemory.panels[panelName] || 0;
+    let savedRp = Reflect.get(scrollMemory.panels, panelName + "_rp") || 0; 
+    let savedWin = Reflect.get(scrollMemory.panels, panelName + "_win") || 0;
+    
+    if (scrollWrapper) scrollWrapper.scrollTop = savedWrapper;
+    if (rightPaneWrapper) rightPaneWrapper.scrollTop = savedRp; 
+    window.scrollTo(0, savedWin);
+    document.documentElement.scrollTop = savedWin;
+    document.body.scrollTop = savedWin;
 }
 
 function switchMobileView(viewName) {
+    const scrollWrapper = document.querySelector('.sidebar-scroll-wrapper');
+    const rightPaneWrapper = document.querySelector('.right-pane-wrapper'); // <--- NEW: Target mobile scroller
+    const moreMenu = document.getElementById('mobile-more-view'); 
+    
+    scrollMemory.mobile[currentMobile] = {
+        win: window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0,
+        wrapper: scrollWrapper ? scrollWrapper.scrollTop : 0,
+        rp: rightPaneWrapper ? rightPaneWrapper.scrollTop : 0, // <--- Target mobile memory
+        more: moreMenu ? moreMenu.scrollTop : 0
+    };
+
+    if (scrollWrapper) scrollWrapper.scrollTop = 0;
+    if (rightPaneWrapper) rightPaneWrapper.scrollTop = 0;
+    if (moreMenu) moreMenu.scrollTop = 0;
+    window.scrollTo(0, 0);
+
     const viewClasses = ['view-planner', 'view-log', 'view-stats', 'view-more', 'view-calc', 'view-daily', 'view-weekly', 'view-egg', 'view-war', 'view-pet', 'view-equipment', 'view-help'];
     document.body.classList.remove(...viewClasses);
 
-    const moreMenu = document.getElementById('mobile-more-view'); 
-    if(moreMenu) moreMenu.classList.remove('active');
+    if (moreMenu) moreMenu.classList.remove('active');
     
     document.querySelectorAll('.b-nav-item').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`.b-nav-item[data-target="${viewName}"]`);
@@ -142,7 +201,7 @@ function switchMobileView(viewName) {
         if (sidebar) sidebar.style.display = 'none'; 
         setMainView('tree');
     } else if (viewName === 'more') {
-        if(moreMenu) moreMenu.classList.add('active'); 
+        if (moreMenu) moreMenu.classList.add('active'); 
         if (sidebar) sidebar.style.display = 'none'; 
         document.body.classList.add('view-more');
     } else {
@@ -153,6 +212,16 @@ function switchMobileView(viewName) {
             sidebar.style.display = 'block';
         }
     }
+
+    currentMobile = viewName;
+    const pos = scrollMemory.mobile[viewName] || { win: 0, wrapper: 0, rp: 0, more: 0 };
+    
+    window.scrollTo(0, pos.win);
+    document.documentElement.scrollTop = pos.win;
+    document.body.scrollTop = pos.win;
+    if (scrollWrapper) scrollWrapper.scrollTop = pos.wrapper;
+    if (rightPaneWrapper) rightPaneWrapper.scrollTop = pos.rp; 
+    if (moreMenu) moreMenu.scrollTop = pos.more;
 }
 
 function toggleHelp() { const el = document.getElementById('helpModal'); if(el) el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
@@ -438,12 +507,15 @@ function init() {
     setSidebarPanel('logs'); 
 
     if (typeof switchTree === 'function') {
-        switchTree(typeof activeTreeKey !== 'undefined' ? activeTreeKey : 'forge');
+        const startTree = typeof activeTreeKey !== 'undefined' ? activeTreeKey : 'forge';
+        switchTree(startTree);
+        currentTree = startTree; // <--- ADD THIS
     }
 
     const isMobile = window.innerWidth <= 768;
     if (isMobile && typeof switchMobileView === 'function') {
         switchMobileView('more');
+        currentMobile = 'more';  // <--- ADD THIS
     }
 
     if (typeof historyStack !== 'undefined') historyStack = []; 
