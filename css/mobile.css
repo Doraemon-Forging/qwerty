@@ -228,6 +228,10 @@
         z-index: 5;
     }
 
+    .tn-row-2 .segmented-control {
+        margin: 0 auto !important; 
+    }
+
     .tn-tree-btn { 
         flex: 1; 
         height: 36px; 
@@ -635,7 +639,7 @@
         box-shadow: inset 0 -5px 0 0 #67a7ce, 0 4px 5px rgba(0,0,0,0.2) !important;
         font-family: 'Fredoka', sans-serif; font-size: 1rem; color: #ffffff !important; 
         -webkit-text-stroke: 2px #000000; font-weight: 650; display: flex;
-        align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+        align-items: center; justify-content: center; gap: 3px; cursor: pointer;
         transition: transform 0.1s; margin: 0 !important;
     }
     .btn-sys:active { transform: translateY(3px) !important; box-shadow: inset 0 -2px 0 0 #005d96, 0 1px 2px rgba(0,0,0,0.2) !important; }
@@ -747,3 +751,11 @@
     .modal-backdrop, .modal {
         z-index: 999998 !important;
     }
+
+    
+@media screen and (max-width: 768px) {
+    select, .war-select, .daily-input, input {
+        text-align: center !important;
+        text-align-last: center !important; 
+    }
+}

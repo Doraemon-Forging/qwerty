@@ -252,7 +252,6 @@ const HTML_PET = `
                             <label class="merge-label-long" style="margin-top: 6px;">Fodder Pet:</label>
                             <div style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
                                 <select id="merge-fodder-rarity" class="calc-select-chunky" style="width: 150px; font-size: 0.9rem; padding: 0 4px;" onchange="updateMergeNameOptions('fodder')"></select>
-                                <select id="merge-fodder-id" class="calc-select-chunky" style="width: 150px; font-size: 0.9rem; padding: 0 4px;" onchange="updateMergeResult()"></select>
                             </div>
                         </div>
                         <div class="calc-row-input">
@@ -713,7 +712,7 @@ const HTML_WEEKLY = `
                     <div class="calc-line"><span class="calc-label">Effective Hammer</span><div class="calc-val-group" id="res-weekly-eff-hammer"></div></div>
                     <div class="calc-line"><span class="calc-label">Gold After Hammering</span><div class="calc-val-group" id="res-weekly-grand"></div></div>
                     <div class="calc-line"><span class="calc-label">Skill Summoned</span><div class="calc-val-group" id="res-weekly-cards"></div></div>
-                    <div class="calc-line"><span class="calc-label">Eggs</span><div class="calc-val-group" id="res-weekly-eggs"></div></div>
+                    <div class="calc-line"><span class="calc-label">Egg</span><div class="calc-val-group" id="res-weekly-eggs"></div></div>
                     <div class="calc-line"><span class="calc-label">Mount Summoned</span><div class="calc-val-group" id="res-weekly-mounts"></div></div>
                     <div class="rarity-section">
                         <div class="rarity-capsule">Skill, Egg, and Mount Rarity</div>
@@ -771,7 +770,7 @@ const HTML_WEEKLY = `
                     <div class="calc-line"><span class="calc-label">Effective Hammer</span><div class="calc-val-group" id="res-league-eff-hammer"></div></div>
                     <div class="calc-line"><span class="calc-label">Gold After Hammering</span><div class="calc-val-group" id="res-league-grand"></div></div>
                     <div class="calc-line"><span class="calc-label">Skill Summoned</span><div class="calc-val-group" id="res-league-cards"></div></div>
-                    <div class="calc-line"><span class="calc-label">Eggs</span><div class="calc-val-group" id="res-league-eggs"></div></div>
+                    <div class="calc-line"><span class="calc-label">Egg</span><div class="calc-val-group" id="res-league-eggs"></div></div>
                     <div class="calc-line"><span class="calc-label">Mount Summoned</span><div class="calc-val-group" id="res-league-mounts"></div></div>
                     <div class="rarity-section">
                         <div class="rarity-capsule">Skill, Egg, and Mount Rarity</div>
