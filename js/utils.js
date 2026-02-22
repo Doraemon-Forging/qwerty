@@ -194,10 +194,17 @@ function showTable(title, iconSrc, statData, headers, rows, pageSize = 30, custo
     }
 
     const thHTML = headers.map(h => `<th>${h}</th>`).join('');
+    
+    // ADD THIS: Check the title to see if we should hide the disclaimer
+    let disclaimerHTML = '<div class="modal-disclaimer">Values may differ slightly from the game</div>';
+    if (title === "TECH RESEARCH TIMER" || title === "EQUIPMENT SELL PRICE") {
+        disclaimerHTML = ''; // Hide it for these two
+    }
+
     content.innerHTML = `
         <div class="modal-header-fixed"><h2 class="modal-title-text">${title}</h2>${statHTML}<div id="modal-tabs-container" class="segmented-control" style="display:none;"></div></div>
         <div id="modal-scroll-area" class="modal-body-scroll"><table class="clean-table"><thead><tr>${thHTML}</tr></thead><tbody id="modal-tbody"></tbody></table></div>
-        <div class="modal-footer"><div class="modal-disclaimer">Values may differ slightly from the game</div><button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'"><span>&times;</span></button></div>
+        <div class="modal-footer">${disclaimerHTML}<button class="btn-close-floating" onclick="document.getElementById('tableModal').style.display='none'"><span>&times;</span></button></div>
     `;
 
     const tbody = document.getElementById('modal-tbody');

@@ -100,8 +100,9 @@
 .modal-body-scroll {
     flex: 1; 
     overflow-y: auto; 
-    padding: 0 5px; 
+    padding: 0; /* Changed from '0 5px' to remove the inner gap */
     background: transparent;
+    overflow-x: hidden; /* Prevents horizontal scrollbar triggering on Windows */
 }
 
 .modal-body-scroll::-webkit-scrollbar {
@@ -116,13 +117,19 @@
     border-radius: 10px;
 }
 
+.modal-body-scroll div {
+    box-sizing: border-box;
+}
+
 /* =========================================
    5. TABLE STYLING
    ========================================= */
 .clean-table {
     width: 100%;
+    margin: 0; /* Force removal of default browser margins */
+    box-sizing: border-box; /* Ensures padding/borders don't add to width */
+    table-layout: fixed; /* Forces immediate and strict 100% width rendering */
     border-collapse: separate;
-    /* CHANGED: Increased gap from 4px to 8px */
     border-spacing: 0 8px; 
 }
 
