@@ -560,16 +560,16 @@
     .main-banner-img { width: 95%; filter: drop-shadow(0 4px 0 rgba(0,0,0,0.15)); }
 
     .sys-btn-row { display: flex; gap: 12px; padding: 0 5px; margin-bottom: 5px; }
-    .btn-sys {
+.btn-sys {
         flex: 1; height: 48px; background-color: #c0eafa !important; 
         border: 2px solid #000000 !important; border-radius: 12px !important;
-        box-shadow: inset 0 -5px 0 0 #67a7ce, 0 4px 5px rgba(0,0,0,0.2) !important;
+        box-shadow: inset 0 -5px 0 0 #67a7ce !important; /* ONLY the inward shadow */
         font-family: 'Fredoka', sans-serif; font-size: 1rem; color: #ffffff !important; 
         -webkit-text-stroke: 2px #000000; font-weight: 650; display: flex;
         align-items: center; justify-content: center; gap: 3px; cursor: pointer;
         transition: transform 0.1s; margin: 0 !important;
     }
-    .btn-sys:active { transform: translateY(3px) !important; box-shadow: inset 0 -2px 0 0 #005d96, 0 1px 2px rgba(0,0,0,0.2) !important; }
+    .btn-sys:active { transform: translateY(3px) !important; box-shadow: inset 0 -2px 0 0 #005d96 !important; }
     .btn-sys img, .sys-btn-mobile img { 
         width: auto !important; 
         height: 26px !important; 
@@ -748,4 +748,4 @@
         display: none !important;
     }
 
-} /* END OF MOBILE MEDIA QUERY */
+} 

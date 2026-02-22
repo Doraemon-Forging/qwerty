@@ -67,14 +67,19 @@ function renderStats() {
     const slots = [];
     if (TREES.power && TREES.power.structure) { TREES.power.structure.forEach(s => { if (TREES.power.meta[s.id].isSlot) slots.push(s.id); }); }
     
-    slots.forEach(sid => {
-        let l = 0; for (let t = 1; t <= 5; t++) l += (setupLevels[`power_T${t}_${sid}`] || 0);
-        totalAvgCur += getSlotStats(99 + l * 2, state.totalSellBonusCur).avg;
-        totalAvgSellIso += getSlotStats(99 + l * 2, state.totalSellBonusProj).avg;
-    });
-    const globCur = slots.length > 0 ? totalAvgCur / slots.length : 0;
-    const globProj_SellIso = slots.length > 0 ? totalAvgSellIso / slots.length : 0;
-
+    let totalAvgSellCombined = 0; // Added for the Combined math
+        slots.forEach(sid => {
+            let l = 0; for (let t = 1; t <= 5; t++) l += (setupLevels[`power_T${t}_${sid}`] || 0);
+            let lProj = 0; for (let t = 1; t <= 5; t++) lProj += (state.levels[`power_T${t}_${sid}`] || 0);
+            
+            totalAvgCur += getSlotStats(99 + l * 2, state.totalSellBonusCur).avg;
+            totalAvgSellIso += getSlotStats(99 + l * 2, state.totalSellBonusProj).avg;
+            totalAvgSellCombined += getSlotStats(99 + lProj * 2, state.totalSellBonusProj).avg; // Calculates with BOTH upgrades
+        });
+        const globCur = slots.length > 0 ? totalAvgCur / slots.length : 0;
+        const globProj_SellIso = slots.length > 0 ? totalAvgSellIso / slots.length : 0;
+        const globProj_SellCombined = slots.length > 0 ? totalAvgSellCombined / slots.length : 0;
+    
     ['forge', 'spt', 'power'].forEach(key => {
         const treeData = TREES[key];
         let currentCount = 0;
@@ -98,16 +103,59 @@ function renderStats() {
             const iconRegex = /([\d\.\,kmb]+)\s*(<img[^>]+>)/g;
             if (txtCur && typeof txtCur === 'string') txtCur = txtCur.replace(iconRegex, '$2 $1');
             if (txtProj && typeof txtProj === 'string') txtProj = txtProj.replace(iconRegex, '$2 $1');
+            
             let infoBtnHTML = '';
-            if (key === 'forge' && ns.id === 'sell') { txtCur += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globCur, 'gold')})</span>`; txtProj += ` (Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellIso, 'gold')})</span>`; infoBtnHTML = `<button class="btn-info" onclick="showEqSellTable(${curT * 2},${projT * 2},1)">i</button>`; }
+            let disclaimerHTML = ''; 
+            
+           if (key === 'forge' && ns.id === 'sell') { 
+                txtCur += ` <span style="color:#000000;">(Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globCur, 'gold')})</span>`; 
+                
+                // If the item levels change, the Combined average will be greater than the Isolated average.
+                if (globProj_SellCombined > globProj_SellIso) {
+                    // SHOW ADVANCED UI (Item levels changed)
+                    txtProj += ` <span>(Isolated avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellIso, 'gold')} <span style="margin: 0 4px;">|</span> Overall avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellCombined, 'gold')})</span>`; 
+                    
+                    disclaimerHTML = `<div style="width: 100%; font-size: 0.75rem; color: #95a5a6; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #c8d6e5; line-height: 1.3; font-family: 'Fredoka', sans-serif; letter-spacing: 0.2px; text-shadow: none; -webkit-text-stroke: 0; font-weight: 500;">*Isolated avg assumes item levels are constant. Overall avg includes item level changes.</div>`;
+                } else {
+                    // SHOW SIMPLE UI (Item levels did NOT change)
+                    txtProj += ` <span>(Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(globProj_SellIso, 'gold')})</span>`; 
+                    // disclaimerHTML remains empty, so the box stays normal!
+                }
+                
+                infoBtnHTML = `<button class="btn-info" onclick="showEqSellTable(${curT * 2},${projT * 2},1)">i</button>`; 
+            }
             else if (meta.isSlot) { const sCur = getSlotStats(99 + curT * 2, state.totalSellBonusCur); const sProj = getSlotStats(99 + projT * 2, state.totalSellBonusCur); txtCur = `Max ${99 + curT * 2} (Range: ${sCur.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sCur.avg, 'gold')})</span>`; txtProj = `Max ${99 + projT * 2} (Range: ${sProj.range} | Avg: <img src="icons/fm_gold.png" class="stat-key-icon"> ${formatResourceValue(sProj.avg, 'gold')})</span>`; }
             else if (meta.isDiscount) { infoBtnHTML = `<button class="btn-info" onclick="showPotionTable(${curT * 2}, ${projT * 2})">i</button>`; }
             else if (key === 'spt' && ns.id === 'timer') { infoBtnHTML = `<button class="btn-info" onclick="showTechTimerTable(${curT * 4}, ${projT * 4})">i</button>`; }
             else if (key === 'forge' && ns.id === 'disc') { infoBtnHTML = `<button class="btn-info" onclick="showForgeTable('cost',${curT * 2},${projT * 2},1)">i</button>`; }
             else if (key === 'forge' && ns.id === 'timer') { infoBtnHTML = `<button class="btn-info" onclick="showForgeTable('timer',${curT * 4},${projT * 4},1)">i</button>`; }
-            let finalHTML = txtCur; if (projT > curT) finalHTML += `<span class="stat-arrow">➜</span> <span class="stat-new">${txtProj}</span>`;
+            
+            let finalHTML = txtCur; 
+                if (projT > curT || (key === 'forge' && ns.id === 'sell' && globProj_SellCombined > globCur)) {
+                    finalHTML += `<span class="stat-arrow">➜</span> <span class="stat-new">${txtProj}</span>`;
+                }
             const row = document.createElement('div'); row.className = 'stats-row ' + key; 
-            row.innerHTML = `<div class="stat-icon-box"><img src="icons/${key}_${ns.id}.png" class="stat-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="stat-icon-fallback" style="display:none">?</div></div><div class="stat-info"><div class="stat-name">${meta.n} ${infoBtnHTML}</div><div class="stat-value">${finalHTML}</div></div>`;
+            
+            // 4. Change the layout dynamically ONLY if there is a disclaimer
+            if (disclaimerHTML !== '') {
+                // Stack everything vertically
+                row.style.flexDirection = 'column';
+                row.style.alignItems = 'flex-start';
+                
+                // Group the icon and text into their own inner row, forcing the icon to center perfectly with the text!
+                row.innerHTML = `
+                    <div style="display: flex; align-items: center; width: 100%;">
+                        <div class="stat-icon-box"><img src="icons/${key}_${ns.id}.png" class="stat-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="stat-icon-fallback" style="display:none">?</div></div>
+                        <div class="stat-info" style="flex: 1;"><div class="stat-name">${meta.n} ${infoBtnHTML}</div><div class="stat-value">${finalHTML}</div></div>
+                    </div>
+                    ${disclaimerHTML}
+                `;
+            } else {
+                // Keep the standard row format for all other stats
+                row.innerHTML = `<div class="stat-icon-box"><img src="icons/${key}_${ns.id}.png" class="stat-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="stat-icon-fallback" style="display:none">?</div></div><div class="stat-info"><div class="stat-name">${meta.n} ${infoBtnHTML}</div><div class="stat-value">${finalHTML}</div></div>`;
+            }
+            
+
             group.appendChild(row);
         });
         if (hasStats) container.appendChild(group);
